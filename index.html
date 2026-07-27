@@ -6,7 +6,19 @@
 <meta name="description" content="MoleQuest — a game-based study app for NSW HSC Chemistry.">
 <meta name="color-scheme" content="dark light">
 <title>MoleQuest — HSC Chemistry</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚗️</text></svg>">
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0a0f1c">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icon-192.png" sizes="192x192" type="image/png">
+
+<!-- iOS ignores the manifest for home-screen installs, so it needs its own tags. -->
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MoleQuest">
+
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>

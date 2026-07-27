@@ -14,6 +14,36 @@ xdg-open index.html      # macOS: open index.html   Windows: start index.html
 Progress is saved to `localStorage` in that browser. Settings → *Export save* writes a JSON
 backup you can import on another device.
 
+## Putting it on your phone
+
+The app is a PWA: install it to your home screen and it runs full-screen with **no network
+at all** — the service worker precaches every file, so it works on a train, in a classroom,
+or in aeroplane mode.
+
+**1. Publish it (one time).** On GitHub: **Settings → Pages → Source: "Deploy from a
+branch" → Branch: `claude/hsc-chemistry-study-app-04o2ri` / `(root)` → Save.** After about
+a minute the site is live at:
+
+```
+https://thefinster2.github.io/Study-App/
+```
+
+**2. Install it.** Open that URL on your phone, then:
+
+- **iOS/Safari** — Share → *Add to Home Screen*
+- **Android/Chrome** — ⋮ → *Add to Home screen* (or the install prompt)
+
+Open it once while online so the precache completes; after that it works with no signal.
+
+**Prefer no public URL?** Serve it over your own Wi-Fi instead — run
+`python3 -m http.server 8000` in this folder and browse to `http://<your-computer-ip>:8000`
+from your phone. Offline install still works, since service workers are allowed on
+`localhost` and over HTTPS but not over plain HTTP to a LAN IP — so on that route you get
+the app, but not the offline caching.
+
+Progress lives in `localStorage` per device, so your phone and laptop keep separate
+save files. Use Settings → *Export save* / *Import save* to move one across.
+
 ---
 
 ## Game modes
@@ -104,6 +134,9 @@ Classic `<script>` tags in dependency order (no ES modules), so it runs straight
 
 ```
 index.html            shell, script order
+manifest.webmanifest  PWA metadata: icons, standalone display, shortcuts
+sw.js                 service worker — precaches every file for offline use
+assets/               app icons (SVG source + rendered PNGs)
 css/styles.css        design system + 6 themes as CSS custom properties
 js/data/*.js          content banks — pure data
 js/core/util.js       DOM helpers, formula→subscript renderer, seeded RNG
@@ -125,6 +158,10 @@ Two conventions worth knowing:
   `UI.onLeave()`, which the router calls before swapping screens — that's what stops
   timers leaking between modes.
 
+If you add or rename a file, add it to `PRECACHE` in `sw.js` and bump `CACHE` to
+`molequest-v2` (etc.), or offline users will keep serving the old version. The content
+validator diffs `PRECACHE` against the files on disk and fails if they drift.
+
 ---
 
 ## Accessibility & compatibility
@@ -136,8 +173,12 @@ widely-supported CSS (`color-mix`, custom properties, grid).
 
 ## Testing
 
-`node --check` passes on all 33 JS files. Content is validated separately — every stored
+`node --check` passes on all 34 JS files. Content is validated separately — every stored
 equation is re-balanced from its parsed formulas, every pathway puzzle is BFS-checked
-against its declared step count, and every achievement is asserted not to unlock on a
-fresh save. A Playwright script drives all ten modes, a boss fight, a shop purchase, a
-crate opening, a theme switch and a reload-persistence check, failing on any console error.
+against its declared step count, every achievement is asserted not to unlock on a fresh
+save, and the service worker's precache list is diffed against the files on disk. A
+Playwright script drives all ten modes, a boss fight, a shop purchase, a crate opening, a
+theme switch and a reload-persistence check, plus horizontal-overflow checks across 17
+screens at 390 px and 360 px. A second script serves the app from a subpath, confirms the
+service worker registers and precaches, then cuts the network and verifies every screen
+still renders and that progress saved while offline survives a reload.

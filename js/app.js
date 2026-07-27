@@ -26,6 +26,13 @@
   U.$("#coin-pill").addEventListener("click", () => UI.go("/shop"));
   U.$("#streak-pill").addEventListener("click", () => UI.go("/progress"));
 
+  // Persist immediately when the app is backgrounded or closed. `visibilitychange`
+  // is the only event mobile browsers reliably fire before reclaiming a tab.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") S.flush();
+  });
+  window.addEventListener("pagehide", () => S.flush());
+
   // The first gesture anywhere unlocks the WebAudio context.
   const unlockAudio = () => { CHEM.Sound.click(); document.removeEventListener("pointerdown", unlockAudio); };
   document.addEventListener("pointerdown", unlockAudio);
@@ -66,6 +73,52 @@
         U.el("div", { class: "tiny muted", text: desc })
       ])
     ]);
+  }
+
+  /* ── offline support ───────────────────────────────────────
+     Registered only over http(s): service workers are unavailable on file://,
+     and attempting it there throws. The app works fine either way. */
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    window.addEventListener("load", () => {
+      // Read this BEFORE registering: on a first visit there is no controller, and the
+      // new worker's clients.claim() will fire controllerchange. That is not an update,
+      // so it must not trigger a reload — otherwise every first load reloads itself.
+      const hadController = !!navigator.serviceWorker.controller;
+
+      navigator.serviceWorker.register("sw.js").then(reg => {
+        reg.addEventListener("updatefound", () => {
+          const incoming = reg.installing;
+          if (!incoming) return;
+          incoming.addEventListener("statechange", () => {
+            // "installed" with an existing controller means an update is waiting,
+            // rather than the very first install.
+            if (incoming.state === "installed" && navigator.serviceWorker.controller) {
+              offerUpdate(incoming);
+            }
+          });
+        });
+      }).catch(err => console.warn("Offline support unavailable:", err));
+
+      let reloading = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (!hadController || reloading) return;
+        reloading = true;
+        location.reload();
+      });
+    });
+  }
+
+  function offerUpdate(worker) {
+    const bar = U.el("div", { class: "toast xp", style: "pointer-events:auto" }, [
+      U.el("span", { class: "toast-ico", text: "⬆️" }),
+      U.el("span", { text: "New version ready" }),
+      U.el("button", {
+        class: "btn btn-sm btn-primary", style: "margin-left:8px",
+        text: "Reload",
+        on: { click: () => worker.postMessage("SKIP_WAITING") }
+      })
+    ]);
+    U.$("#toasts").appendChild(bar);
   }
 
   /* reveal the app */

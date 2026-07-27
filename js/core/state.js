@@ -66,12 +66,24 @@ CHEM.State = (function () {
     return override === undefined ? base : override;
   }
 
+  function write() {
+    try { localStorage.setItem(KEY, JSON.stringify(data)); }
+    catch (e) { console.warn("Could not save progress.", e); }
+  }
+
   function save() {
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-      try { localStorage.setItem(KEY, JSON.stringify(data)); }
-      catch (e) { console.warn("Could not save progress.", e); }
-    }, 200);
+    saveTimer = setTimeout(write, 200);
+  }
+
+  /** Write immediately, cancelling any pending debounce.
+      Mobile browsers can kill a backgrounded tab without warning, so the app
+      calls this on visibilitychange/pagehide — otherwise the last few seconds
+      of progress are lost whenever someone switches apps mid-question. */
+  function flush() {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+    write();
   }
 
   function emit() { listeners.forEach(fn => fn(data)); save(); }
@@ -332,7 +344,7 @@ CHEM.State = (function () {
   }
 
   return {
-    load, save, onChange, emit,
+    load, save, flush, onChange, emit,
     get data() { return data; },
     xpNeeded, levelTitle, addXP, addCoins, spendCoins,
     touchStreak, streakBonus,
