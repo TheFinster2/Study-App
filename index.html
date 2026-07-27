@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="lab">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="MoleQuest — a game-based study app for NSW HSC Chemistry.">
+<meta name="color-scheme" content="dark light">
+<title>MoleQuest — HSC Chemistry</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚗️</text></svg>">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<canvas id="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="boot" class="boot">
+  <div class="boot-flask">⚗️</div>
+  <div class="boot-title">MoleQuest</div>
+  <div class="boot-sub">Loading reagents…</div>
+</div>
+
+<header id="topbar" class="topbar" hidden>
+  <button class="avatar-btn" id="avatar-btn" title="Your profile">
+    <span class="avatar-ring"><span id="avatar-emoji">🧑‍🔬</span></span>
+  </button>
+
+  <div class="topbar-mid">
+    <div class="lvl-line">
+      <span class="lvl-badge" id="lvl-badge">Lv 1</span>
+      <span class="lvl-title" id="lvl-title">Lab Rat</span>
+      <span class="lvl-xp" id="lvl-xp">0 / 100 XP</span>
+    </div>
+    <div class="xpbar"><div class="xpbar-fill" id="xpbar-fill"></div></div>
+  </div>
+
+  <div class="topbar-right">
+    <div class="pill pill-streak" id="streak-pill" title="Daily streak">
+      <span class="pill-icon">🔥</span><span id="streak-count">0</span>
+    </div>
+    <div class="pill pill-coin" id="coin-pill" title="Moles — spend them in the Shop">
+      <span class="pill-icon">🪙</span><span id="coin-count">0</span>
+    </div>
+    <button class="icon-btn" id="settings-btn" title="Settings">⚙️</button>
+  </div>
+</header>
+
+<main id="view" class="view" tabindex="-1"></main>
+
+<nav id="navbar" class="navbar" hidden>
+  <a class="nav-item" href="#/home"    data-nav="home"><span class="nav-ico">🏠</span><span>Lab</span></a>
+  <a class="nav-item" href="#/play"    data-nav="play"><span class="nav-ico">🎮</span><span>Play</span></a>
+  <a class="nav-item" href="#/study"   data-nav="study"><span class="nav-ico">🃏</span><span>Study</span></a>
+  <a class="nav-item" href="#/progress" data-nav="progress"><span class="nav-ico">📈</span><span>Progress</span></a>
+  <a class="nav-item" href="#/shop"    data-nav="shop"><span class="nav-ico">🛒</span><span>Shop</span></a>
+</nav>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<div id="modal-root" class="modal-root" hidden></div>
+
+<!-- ── data ───────────────────────────────────────────────────── -->
+<script src="js/data/ions.js"></script>
+<script src="js/data/questions-y11.js"></script>
+<script src="js/data/questions-m5.js"></script>
+<script src="js/data/questions-m6.js"></script>
+<script src="js/data/questions-m7.js"></script>
+<script src="js/data/questions-m8.js"></script>
+<script src="js/data/equations.js"></script>
+<script src="js/data/organic.js"></script>
+<script src="js/data/flashcards.js"></script>
+<script src="js/data/shop.js"></script>
+<script src="js/data/achievements.js"></script>
+
+<!-- ── core ───────────────────────────────────────────────────── -->
+<script src="js/core/util.js"></script>
+<script src="js/core/audio.js"></script>
+<script src="js/core/fx.js"></script>
+<script src="js/core/state.js"></script>
+<script src="js/core/bank.js"></script>
+<script src="js/core/ui.js"></script>
+
+<!-- ── games ──────────────────────────────────────────────────── -->
+<script src="js/games/quiz.js"></script>
+<script src="js/games/balance.js"></script>
+<script src="js/games/ionmatch.js"></script>
+<script src="js/games/naming.js"></script>
+<script src="js/games/calc.js"></script>
+<script src="js/games/titration.js"></script>
+<script src="js/games/pathway.js"></script>
+<script src="js/games/precipitate.js"></script>
+<script src="js/games/boss.js"></script>
+
+<!-- ── screens ────────────────────────────────────────────────── -->
+<script src="js/screens/home.js"></script>
+<script src="js/screens/play.js"></script>
+<script src="js/screens/study.js"></script>
+<script src="js/screens/progress.js"></script>
+<script src="js/screens/shop.js"></script>
+<script src="js/screens/misc.js"></script>
+
+<script src="js/app.js"></script>
+</body>
+</html>

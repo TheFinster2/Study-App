@@ -1,0 +1,88 @@
+/* Flashcard deck for the Leitner spaced-repetition trainer. */
+window.CHEM = window.CHEM || {};
+CHEM.DATA = CHEM.DATA || {};
+
+CHEM.DATA.flashcards = [
+/* Module 5 */
+{ id:"f5-01", mod:"M5", front:"Define dynamic equilibrium", back:"A reversible reaction in a closed system where the forward and reverse reactions occur at equal rates, so the concentrations of all species remain constant." },
+{ id:"f5-02", mod:"M5", front:"State Le Chatelier's principle", back:"If a system at equilibrium is disturbed, the system shifts to partially oppose the change and establish a new equilibrium." },
+{ id:"f5-03", mod:"M5", front:"What is the ONLY factor that changes the value of K?", back:"Temperature. Concentration, pressure, volume and catalysts change the position of equilibrium but not the value of K." },
+{ id:"f5-04", mod:"M5", front:"What does a very large K tell you?", back:"Equilibrium lies far to the right — products dominate. It says nothing about how fast equilibrium is reached." },
+{ id:"f5-05", mod:"M5", front:"Compare Q and K: what happens when Q < K?", back:"There is too little product, so the net reaction proceeds forward (right) until Q = K." },
+{ id:"f5-06", mod:"M5", front:"Which species are left out of an equilibrium expression?", back:"Pure solids and pure liquids — their concentration is fixed by density and is absorbed into K." },
+{ id:"f5-07", mod:"M5", front:"Write the Ksp expression for Ca₃(PO₄)₂", back:"Ksp = [Ca²⁺]³[PO₄³⁻]² — and if s is the molar solubility, Ksp = 108s⁵." },
+{ id:"f5-08", mod:"M5", front:"What is the common ion effect?", back:"Adding an ion already present in a solubility equilibrium shifts it left, reducing solubility. Ksp is unchanged." },
+{ id:"f5-09", mod:"M5", front:"Compromise conditions in the Haber process?", back:"400–500 °C and 200–400 atm with an iron catalyst. Low T favours yield but is too slow; high P favours yield but is expensive and hazardous." },
+{ id:"f5-10", mod:"M5", front:"Why does ocean acidification dissolve coral?", back:"CO₂ + H₂O ⇌ H₂CO₃ ⇌ H⁺ + HCO₃⁻. Extra H⁺ consumes CO₃²⁻, shifting CaCO₃(s) ⇌ Ca²⁺ + CO₃²⁻ to the right." },
+{ id:"f5-11", mod:"M5", front:"ΔH_solution is determined by what balance?", back:"Lattice enthalpy absorbed (breaking the lattice) versus hydration enthalpy released (ions attracting water)." },
+{ id:"f5-12", mod:"M5", front:"Effect on K of reversing a reaction? Of doubling it?", back:"Reversing: K→1/K. Multiplying coefficients by n: K→Kⁿ. Adding reactions: multiply their K values." },
+
+/* Module 6 */
+{ id:"f6-01", mod:"M6", front:"Brønsted–Lowry definitions", back:"Acid = proton (H⁺) donor. Base = proton acceptor. Works in non-aqueous systems, unlike Arrhenius." },
+{ id:"f6-02", mod:"M6", front:"What is a conjugate acid–base pair?", back:"Two species differing by exactly one proton, e.g. NH₄⁺/NH₃ or H₂CO₃/HCO₃⁻." },
+{ id:"f6-03", mod:"M6", front:"Define amphiprotic and give an example", back:"A species that can both donate and accept a proton — e.g. HCO₃⁻, H₂O, HSO₄⁻, H₂PO₄⁻." },
+{ id:"f6-04", mod:"M6", front:"Strong vs concentrated", back:"Strong = ionises completely (intrinsic property). Concentrated = large amount of solute per litre. Independent ideas." },
+{ id:"f6-05", mod:"M6", front:"pH, pOH and Kw relationships", back:"pH = −log[H₃O⁺]; pOH = −log[OH⁻]; Kw = [H₃O⁺][OH⁻] = 1.0 × 10⁻¹⁴ at 25 °C; pH + pOH = 14." },
+{ id:"f6-06", mod:"M6", front:"Why is pure water at 50 °C still neutral despite pH < 7?", back:"Neutrality means [H₃O⁺] = [OH⁻]. Autoionisation is endothermic, so heating raises Kw and lowers the neutral pH below 7." },
+{ id:"f6-07", mod:"M6", front:"Ka expression for a weak acid HA", back:"Ka = [H₃O⁺][A⁻]/[HA]. For a dilute weak acid, [H₃O⁺] ≈ √(Ka × c)." },
+{ id:"f6-08", mod:"M6", front:"Relationship between acid strength and conjugate base strength", back:"The stronger the acid, the weaker its conjugate base. Ka × Kb = Kw for a conjugate pair." },
+{ id:"f6-09", mod:"M6", front:"pH at equivalence: strong acid + weak base", back:"Below 7 — the salt's cation hydrolyses to give H₃O⁺. Use methyl orange or methyl red." },
+{ id:"f6-10", mod:"M6", front:"pH at equivalence: weak acid + strong base", back:"Above 7 — the conjugate base hydrolyses to give OH⁻. Use phenolphthalein." },
+{ id:"f6-11", mod:"M6", front:"How does a buffer resist pH change?", back:"It contains a weak acid and its conjugate base in similar amounts. The acid neutralises added OH⁻, the conjugate base neutralises added H⁺." },
+{ id:"f6-12", mod:"M6", front:"Requirements of a primary standard", back:"High purity, known and stable composition, not hygroscopic, reasonably high molar mass, readily soluble. e.g. anhydrous Na₂CO₃." },
+{ id:"f6-13", mod:"M6", front:"Rinsing rules for titration glassware", back:"Burette and pipette: rinse with the solution they will deliver. Conical flask and volumetric flask: distilled water only." },
+{ id:"f6-14", mod:"M6", front:"When is a back titration used?", back:"When the sample is insoluble, impure, volatile or reacts too slowly for a sharp end point. Moles reacted = moles added − moles left over." },
+{ id:"f6-15", mod:"M6", front:"Enthalpy of neutralisation for strong acid + strong base", back:"About −57 kJ mol⁻¹, because the reaction is always H⁺(aq) + OH⁻(aq) → H₂O(l). Weak acids give a slightly smaller value." },
+{ id:"f6-16", mod:"M6", front:"Difference between end point and equivalence point", back:"Equivalence point = stoichiometrically equal moles. End point = where the indicator changes colour. A good indicator makes them nearly coincide." },
+
+/* Module 7 */
+{ id:"f7-01", mod:"M7", front:"Homologous series — definition", back:"A family of compounds with the same functional group and general formula, differing by CH₂, with a gradual trend in physical properties." },
+{ id:"f7-02", mod:"M7", front:"Order of intermolecular force strength", back:"Dispersion < dipole–dipole < hydrogen bonding < ion–dipole. All are far weaker than covalent or ionic bonds." },
+{ id:"f7-03", mod:"M7", front:"Boiling point order for equal-carbon compounds", back:"Alkane < aldehyde/ketone < alcohol < carboxylic acid. Acids form hydrogen-bonded dimers." },
+{ id:"f7-04", mod:"M7", front:"Test for unsaturation", back:"Bromine water is decolourised (orange → colourless) by an alkene via addition. Alkanes only react in UV light, by substitution." },
+{ id:"f7-05", mod:"M7", front:"Markovnikov's rule", back:"When HX or H₂O adds to an unsymmetrical alkene, the H adds to the carbon already carrying more hydrogens." },
+{ id:"f7-06", mod:"M7", front:"Oxidation products of primary, secondary and tertiary alcohols", back:"Primary → aldehyde → carboxylic acid. Secondary → ketone. Tertiary → no reaction (no H on the carbinol carbon)." },
+{ id:"f7-07", mod:"M7", front:"Distil vs reflux when oxidising a primary alcohol", back:"Distil the aldehyde out as it forms to stop at the aldehyde; reflux to drive oxidation through to the carboxylic acid." },
+{ id:"f7-08", mod:"M7", front:"How is an ester named?", back:"Alkyl group from the alcohol first, then the acid as '-oate'. Methanol + propanoic acid → methyl propanoate." },
+{ id:"f7-09", mod:"M7", front:"What is saponification?", back:"Base hydrolysis of a triglyceride with NaOH, producing glycerol and the sodium salts of fatty acids — soap." },
+{ id:"f7-10", mod:"M7", front:"Why do soaps fail in hard water?", back:"Ca²⁺ and Mg²⁺ form insoluble scum with fatty acid anions. Anionic detergents (sulfonates) form soluble calcium salts instead." },
+{ id:"f7-11", mod:"M7", front:"Addition vs condensation polymers", back:"Addition: monomers with C=C join with no by-product (PE, PVC, PS). Condensation: two functional groups join, releasing H₂O (nylon, polyester)." },
+{ id:"f7-12", mod:"M7", front:"LDPE vs HDPE", back:"LDPE is branched — poor packing, weaker dispersion forces, flexible, lower melting point. HDPE is linear — dense, rigid, stronger." },
+{ id:"f7-13", mod:"M7", front:"Fermentation equation and conditions", back:"C₆H₁₂O₆ → 2C₂H₅OH + 2CO₂, using yeast at ~25–37 °C in anaerobic conditions." },
+{ id:"f7-14", mod:"M7", front:"Why are amines basic?", back:"The nitrogen lone pair accepts a proton to form an ammonium ion. Amides are much less basic — the lone pair is delocalised onto the C=O." },
+{ id:"f7-15", mod:"M7", front:"Distinguish an alcohol from a carboxylic acid in the lab", back:"Add Na₂CO₃: the acid fizzes (CO₂), the alcohol does not. The acid also turns blue litmus red." },
+
+/* Module 8 */
+{ id:"f8-01", mod:"M8", front:"Flame test colours to memorise", back:"Li crimson, Na intense yellow, K lilac, Ca brick red, Sr scarlet, Ba apple green, Cu blue-green, Pb bluish-white." },
+{ id:"f8-02", mod:"M8", front:"Hydroxide precipitate colours", back:"Fe²⁺ green, Fe³⁺ red-brown, Cu²⁺ pale blue, Pb²⁺ white (redissolves in excess NaOH)." },
+{ id:"f8-03", mod:"M8", front:"Silver halide precipitate colours and ammonia solubility", back:"AgCl white, soluble in dilute NH₃. AgBr cream, needs concentrated NH₃. AgI yellow, insoluble in concentrated NH₃." },
+{ id:"f8-04", mod:"M8", front:"Test for carbonate", back:"Add dilute acid — effervescence of CO₂, which turns limewater milky (CaCO₃ precipitate)." },
+{ id:"f8-05", mod:"M8", front:"Test for sulfate", back:"Acidify with dilute HNO₃ (to remove carbonate/sulfite), then add BaCl₂. A white BaSO₄ precipitate confirms sulfate." },
+{ id:"f8-06", mod:"M8", front:"Test for phosphate", back:"Add ammonium molybdate in nitric acid and warm — a yellow precipitate forms." },
+{ id:"f8-07", mod:"M8", front:"What is AAS used for and why is it so sensitive?", back:"Trace metal ions at ppm/ppb. A hollow cathode lamp of the same element emits exactly the wavelengths that element absorbs, giving high selectivity." },
+{ id:"f8-08", mod:"M8", front:"Beer–Lambert relationship", back:"Absorbance is proportional to concentration (and path length) at low concentrations, so a calibration curve of A vs c is linear." },
+{ id:"f8-09", mod:"M8", front:"What does the molecular ion peak tell you?", back:"The molar mass of the intact molecule. M+2 ≈ M⁺ suggests Br; M+2 ≈ ⅓M⁺ suggests Cl." },
+{ id:"f8-10", mod:"M8", front:"Key IR absorptions", back:"O-H alcohol 3200–3600 (broad); O-H acid 2500–3300 (very broad); C=O 1670–1750 (strong, sharp); N-H 3300–3500; C-H ~2850–3000." },
+{ id:"f8-11", mod:"M8", front:"What do the three features of a ¹H NMR spectrum tell you?", back:"Number of signals = number of H environments. Integration = relative number of H. Splitting (n+1 rule) = number of H on adjacent carbons." },
+{ id:"f8-12", mod:"M8", front:"What does ¹³C NMR reveal?", back:"The number of chemically distinct carbon environments — symmetry reduces the count. Chemical shift indicates the type of carbon." },
+{ id:"f8-13", mod:"M8", front:"Rf value definition", back:"Rf = distance travelled by the spot ÷ distance travelled by the solvent front. Always between 0 and 1 for a given system." },
+{ id:"f8-14", mod:"M8", front:"Mohr titration principle", back:"Ag⁺ titrated against Cl⁻ with K₂CrO₄ indicator. AgCl (lower Ksp) precipitates first; red-brown Ag₂CrO₄ marks the end point." },
+{ id:"f8-15", mod:"M8", front:"Causes and consequences of eutrophication", back:"Nitrate/phosphate run-off → algal bloom → algae die → bacterial decomposition consumes dissolved oxygen → fish kills." },
+{ id:"f8-16", mod:"M8", front:"How do CFCs destroy ozone?", back:"UV cleaves C-Cl to give Cl•. Cl• + O₃ → ClO• + O₂, then ClO• + O• → Cl• + O₂. The radical is regenerated, so it is catalytic." },
+{ id:"f8-17", mod:"M8", front:"Define atom economy", back:"(Mass of desired product ÷ total mass of all products) × 100, from the balanced equation. Measures inherent waste, unlike percentage yield." },
+{ id:"f8-18", mod:"M8", front:"Tollens' vs Fehling's test", back:"Both distinguish aldehydes from ketones. Tollens' gives a silver mirror; Fehling's gives a brick-red Cu₂O precipitate. Ketones do not react." },
+
+/* Cross-module fundamentals */
+{ id:"fx-01", mod:"M2", front:"Key mole formulas", back:"n = m/M; n = cV; n = V/Vm (Vm = 24.79 L mol⁻¹ at 25 °C, 100 kPa); N = n × 6.022 × 10²³." },
+{ id:"fx-02", mod:"M2", front:"Combined gas law and ideal gas law", back:"P₁V₁/T₁ = P₂V₂/T₂ and PV = nRT with R = 8.314 J K⁻¹ mol⁻¹. Temperature must always be in kelvin." },
+{ id:"fx-03", mod:"M2", front:"Dilution formula", back:"c₁V₁ = c₂V₂. The number of moles of solute is unchanged by adding water." },
+{ id:"fx-04", mod:"M4", front:"Calorimetry formula", back:"q = mcΔT, then ΔH = −q/n. c(water) = 4.18 J g⁻¹ K⁻¹. Sign convention: exothermic ΔH is negative." },
+{ id:"fx-05", mod:"M4", front:"Gibbs free energy", back:"ΔG = ΔH − TΔS. Spontaneous when ΔG < 0. Watch units — ΔS is usually J K⁻¹ mol⁻¹ while ΔH is kJ mol⁻¹." },
+{ id:"fx-06", mod:"M4", front:"Hess's law", back:"The enthalpy change of a reaction is independent of the path taken. Reverse an equation → change the sign of ΔH; multiply an equation → multiply ΔH." },
+{ id:"fx-07", mod:"M3", front:"Rules for assigning oxidation numbers", back:"Element = 0; monatomic ion = its charge; O = −2 (except peroxides −1); H = +1 (−1 in metal hydrides); the sum equals the overall charge." },
+{ id:"fx-08", mod:"M3", front:"OIL RIG and cell electrodes", back:"Oxidation Is Loss, Reduction Is Gain of electrons. Oxidation always at the anode; reduction always at the cathode." },
+{ id:"fx-09", mod:"M1", front:"Why does ionisation energy dip at Al and S in Period 3?", back:"Al: the 3p electron is higher in energy than 3s. S: repulsion between paired electrons in one 3p orbital makes removal easier." },
+{ id:"fx-10", mod:"M1", front:"Why do ionic solids not conduct but molten ionic compounds do?", back:"Charge carriers must be mobile. Ions are locked in the lattice when solid, but free to move once melted or dissolved." },
+{ id:"fx-11", mod:"M2", front:"Percentage yield vs atom economy", back:"% yield = (actual/theoretical) × 100 — how much of the possible product you got. Atom economy — how much of the reactant mass is in the useful product." },
+{ id:"fx-12", mod:"M6", front:"ppm conversions", back:"1 ppm = 1 mg L⁻¹ = 1 mg kg⁻¹ for dilute aqueous solutions (density ≈ 1 g mL⁻¹). 1 ppb = 1 µg L⁻¹." }
+];
