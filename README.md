@@ -2,7 +2,8 @@
 
 A game-based study app for **NSW HSC Chemistry** (Modules 1–8, weighted towards Year 12
 Modules 5–8). Eleven game modes, 60 levels with prestige, three difficulty modes, a currency
-you spend on unlocks, five boss fights, spaced-repetition flashcards and a reference sheet.
+you spend on unlocks, five boss fights, spaced-repetition flashcards, a three-game arcade
+you buy playtime in, and a reference sheet.
 
 No build step, no dependencies, no account, no network. **Open `index.html` and play.**
 
@@ -69,6 +70,25 @@ Le Chatelier heals himself every third question, Carbon the Chainmaster doubles 
 of wrong answers, Spectra hides the module and topic labels. Beat one to unlock the next;
 all four unlock **The Final Paper**.
 
+### 🕹️ The Arcade
+
+Three arcade games you **rent by the minute** with Moles — 5, 15 or 30 minutes at a time.
+
+| Game | | Cheapest ticket |
+|---|---|---|
+| 💠 **Ion Crush** | 8×8 match-3 on six polyatomic ions, with cascades and chain multipliers | 250 🪙 / 5 min |
+| 🏃 **Mole Runner** | Endless side-scroller: jump the hazards (hold to jump higher), duck the fume clouds, it speeds up as you go | 200 🪙 / 5 min |
+| 🔬 **Isotope 2048** | Slide-and-merge, but the ladder is the periodic table — two Hydrogens make Helium, all the way to Argon | 220 🪙 / 5 min |
+
+**They pay nothing.** No XP, no Moles, no achievements — only a high score. That's
+deliberate: an endless runner that paid XP would be a better farm than studying, which is
+exactly the hole that was just closed everywhere else. The arcade is a *sink* for the
+currency you earn by answering questions.
+
+Your credit is a stopwatch, not a session: it only counts down while the game is actually
+on screen, so leaving mid-run banks the rest for later. Ion Crush and Mole Runner unlock at
+level 3, Isotope 2048 at level 5. High scores and unspent time survive a reload.
+
 ---
 
 ## How the systems work
@@ -103,8 +123,8 @@ once in Settings; it applies to every mode.
 
 **Moles (🪙).** The currency, and deliberately scarce — game payouts are scaled to 60%.
 Spend them on seven power-ups (50/50, Skip, Time Freeze, Buffer, Catalyst, Insight,
-Adrenaline), **ten lab skins**, **twenty-two avatars**, and three tiers of random supply
-crate. Most of the good items are level-gated as well as priced.
+Adrenaline), **ten lab skins**, **twenty-two avatars**, three tiers of random supply
+crate, and **arcade playtime**. Most of the good items are level-gated as well as priced.
 
 **Weekly quests.** Three rotating objectives per ISO week, drawn from a twelve-quest pool
 by a seeded shuffle. Progress is derived by diffing your cumulative stats against a
@@ -180,7 +200,8 @@ js/core/fx.js         canvas particles, confetti, floating XP
 js/core/state.js      save file, XP/levels/coins/streaks/SRS/achievements
 js/core/bank.js       question aggregation, filtering, adaptive draw
 js/core/ui.js         hash router, toasts, modals, the reward pipeline
-js/games/*.js         one file per game mode (11 of them)
+js/core/arcade.js     ticket economy, the play clock, arcade screens
+js/games/*.js         one file per game mode (11 of them) + 3 arcade games
 js/screens/*.js       one file per screen
 js/app.js             route registration + bootstrap
 ```
@@ -188,7 +209,9 @@ js/app.js             route registration + bootstrap
 Two conventions worth knowing:
 
 - **All rewards go through `UI.award({xp, coins})`.** Level-ups, achievement checks and
-  their toasts/confetti happen in exactly one place, so no game mode can forget them.
+  the accuracy gate happen in exactly one place, so no game mode can forget them — and the
+  arcade games simply never call it, which is what makes "the arcade pays nothing"
+  structural rather than a promise.
 - **Games get their chrome from `UI.gameShell()`** and register teardown with
   `UI.onLeave()`, which the router calls before swapping screens — that's what stops
   timers leaking between modes.
@@ -208,7 +231,7 @@ widely-supported CSS (`color-mix`, custom properties, grid).
 
 ## Testing
 
-`node --check` passes on all 37 JS files. Content is validated separately — every stored
+`node --check` passes on all 42 JS files. Content is validated separately — every stored
 equation is re-balanced from its parsed formulas, every pathway puzzle is BFS-checked
 against its declared step count, every achievement is asserted not to unlock on a fresh
 save, the service worker's precache list is diffed against the files on disk, and the
@@ -220,4 +243,10 @@ service worker registers and precaches, then cuts the network and verifies every
 still renders and that progress saved while offline survives a reload. A third drives a
 zero-knowledge bot through every mode — always picking option A, spamming "Got it",
 declaring a titration end point at 0 mL — and fails if any mode pays more than 25 XP, if
-the sustained rate exceeds 2,000 XP/hour, or if pure guessing reaches level 2.
+the sustained rate exceeds 2,000 XP/hour, or if pure guessing reaches level 2. A fourth
+covers the arcade: it checks tickets charge and credit the right number of seconds, that a
+player short of Moles is refused, that the clock runs while playing and stops the moment
+you leave, that a fresh Ion Crush board has no ready-made match but at least one legal
+move, that the runner and 2048 boards actually respond, that high scores and unspent time
+survive a reload — and, most importantly, that playing the arcade leaves XP, level and
+Moles untouched.

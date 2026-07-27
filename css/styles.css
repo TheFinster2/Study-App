@@ -595,3 +595,57 @@ code,.mono{ font-family:"Cascadia Code",ui-monospace,"SF Mono",Menlo,Consolas,mo
   .formula{ font-size:16px; }
   .coeff{ width:38px; height:38px; font-size:15px; }
 }
+
+/* ── arcade ─────────────────────────────────────────────────── */
+.arcade-stage{ display:grid; gap:10px; justify-items:center; }
+.arcade-hero{ display:flex; align-items:center; gap:14px; margin-bottom:10px; }
+.arcade-hero-ico{ font-size:42px; line-height:1;
+  filter:drop-shadow(0 0 18px color-mix(in srgb,var(--gc,var(--accent)) 60%,transparent)); }
+.arcade-booth{ border-color:color-mix(in srgb,var(--accent) 25%,transparent); }
+
+/* Ion Crush */
+.crush-board{
+  display:grid; grid-template-columns:repeat(8,1fr); gap:4px;
+  width:min(92vw,430px); aspect-ratio:1/1;
+  padding:8px; border-radius:18px;
+  background:var(--card-2); border:1px solid var(--line);
+}
+.crush-cell{
+  border:0; border-radius:9px; cursor:pointer; padding:0;
+  font-family:inherit; font-weight:800; font-size:clamp(9px,2.1vw,13px);
+  color:#10182a; display:grid; place-items:center;
+  transition:transform .12s, filter .12s;
+}
+.crush-cell:hover{ filter:brightness(1.12); }
+.crush-cell.sel{ transform:scale(.86); outline:3px solid var(--ink); outline-offset:-3px; z-index:2; }
+.crush-cell.popping{ animation:crushPop .18s ease-in forwards; }
+@keyframes crushPop{ to{ transform:scale(.2); opacity:0; } }
+.crush-cell.shake{ animation:sshake .3s; }
+
+/* Mole Runner */
+.runner-wrap{ width:min(96vw,800px); }
+.runner-canvas{
+  width:100%; height:auto; display:block; border-radius:16px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--bg-2) 80%,transparent),var(--bg-1));
+  border:1px solid var(--line); touch-action:none;
+}
+
+/* Isotope 2048 */
+.merge-board{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:8px;
+  width:min(88vw,380px); aspect-ratio:1/1;
+  padding:8px; border-radius:18px;
+  background:var(--card-2); border:1px solid var(--line);
+  touch-action:none;
+}
+.merge-tile{
+  border-radius:12px; display:grid; place-items:center; gap:0;
+  background:var(--card); color:#fff; animation:mergeIn .16s ease-out;
+}
+.merge-tile.empty{ background:rgba(255,255,255,.04); }
+.merge-sym{ font-weight:900; font-size:clamp(17px,4.6vw,26px); line-height:1; }
+.merge-num{ font-size:clamp(8px,1.9vw,11px); opacity:.75; font-variant-numeric:tabular-nums; }
+@keyframes mergeIn{ from{ transform:scale(.75); opacity:.4; } }
+.merge-pad{ display:grid; gap:6px; justify-items:center; margin-top:4px; }
+.merge-pad .btn{ min-width:46px; }
+@media(min-width:760px){ .merge-pad{ display:none; } }

@@ -17,6 +17,7 @@
   UI.route("study",  (view, args) => CHEM.Screens.study.screen(view, args));
   UI.route("progress",     view => CHEM.Screens.progress(view));
   UI.route("shop",         view => CHEM.Screens.shop(view));
+  UI.route("arcade", (view, args) => CHEM.Arcade.screen(view, args));
   UI.route("achievements", view => CHEM.Screens.achievements(view));
   UI.route("settings",     view => CHEM.Screens.settings(view));
 

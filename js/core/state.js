@@ -33,7 +33,8 @@ CHEM.State = (function () {
     scores: {},
     settings: { sound: true, motion: true, volume: 0.8, difficulty: "standard" },
     daily: { day: null, progress: 0, claimed: false, spec: null },
-    weekly: { week: null, baseline: null, quests: [], claimed: [] }
+    weekly: { week: null, baseline: null, quests: [], claimed: [] },
+    arcade: { tickets: {}, scores: {}, played: {} }
   });
 
   let data = DEFAULT();

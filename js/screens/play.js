@@ -106,6 +106,39 @@ CHEM.Screens.play = (function () {
       bossGrid.appendChild(card);
     });
     view.appendChild(bossGrid);
+
+    /* arcade — pure fun, paid for with Moles, awards no XP */
+    view.appendChild(U.el("h2", {}, [
+      document.createTextNode("The Arcade"),
+      U.el("span", { class: "h2-sub", text: "spend Moles, earn nothing but bragging rights" })
+    ]));
+    const arcadeGrid = U.el("div", { class: "grid g3" });
+    CHEM.DATA.arcade.forEach(g => {
+      const locked = lvl < (g.minLevel || 1);
+      const credit = CHEM.Arcade.timeLeft(g.id);
+      const card = U.el("button", {
+        class: "game-card" + (locked ? " locked" : ""),
+        style: `--gc:${g.colour}`, disabled: locked
+      }, [
+        U.el("div", { class: "game-ico", text: g.icon }),
+        U.el("div", { class: "game-name", text: g.name }),
+        U.el("div", { class: "game-desc", text: g.blurb }),
+        U.el("div", { class: "game-foot" }, [
+          credit > 0
+            ? U.el("span", { class: "chip on", text: "🎟️ " + U.fmtTime(credit) })
+            : U.el("span", { class: "chip", text: "from " + g.tickets[0].cost + " 🪙" }),
+          locked ? U.el("span", { class: "chip lock-tag", text: "🔒 Lv " + g.minLevel }) : null
+        ])
+      ]);
+      if (!locked) card.addEventListener("click", () => UI.go("/arcade/" + g.id));
+      arcadeGrid.appendChild(card);
+    });
+    view.appendChild(arcadeGrid);
+    view.appendChild(U.el("button", {
+      class: "btn btn-ghost btn-block", style: "margin-top:10px",
+      text: "🕹️ Open the Arcade",
+      on: { click: () => UI.go("/arcade") }
+    }));
   }
 
   /* ── dispatcher for #/game/<id>/<arg> ─────────────────────── */
