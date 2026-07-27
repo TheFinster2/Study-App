@@ -10,15 +10,15 @@ CHEM.State = (function () {
     v: 1,
     createdAt: Date.now(),
     profile: { name: "Chemist", avatar: "🧑‍🔬", theme: "lab" },
-    xp: 0, level: 1, xpIntoLevel: 0, coins: 150,
+    xp: 0, level: 1, xpIntoLevel: 0, coins: 100, prestige: 0, lifetimeXp: 0,
     streak: { count: 0, lastDay: null, longest: 0 },
     stats: {
       answered: 0, correct: 0, bestStreak: 0, perfectRuns: 0,
       equationsBalanced: 0, ionsMatched: 0, titrations: 0, perfectTitrations: 0,
       pathways: 0, namingCorrect: 0, calcsCorrect: 0,
       bossWins: 0, flawlessBoss: 0, clutchWins: 0, perfectPrecipitation: 0,
-      mistakesFixed: 0, peakCoins: 150, nightOwl: false, earlyBird: false,
-      timePlayed: 0
+      mistakesFixed: 0, peakCoins: 100, nightOwl: false, earlyBird: false,
+      timePlayed: 0, survivalBest: 0, hardWins: 0, nightmareWins: 0, cardsMastered: 0
     },
     modules: {},
     modesPlayed: {},
@@ -31,8 +31,9 @@ CHEM.State = (function () {
     achievements: {},
     history: {},
     scores: {},
-    settings: { sound: true, motion: true, hardMode: false },
-    daily: { day: null, progress: 0, claimed: false, spec: null }
+    settings: { sound: true, motion: true, volume: 0.8, difficulty: "standard" },
+    daily: { day: null, progress: 0, claimed: false, spec: null },
+    weekly: { week: null, baseline: null, quests: [], claimed: [] }
   });
 
   let data = DEFAULT();
@@ -90,29 +91,67 @@ CHEM.State = (function () {
   function onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); }
 
   /* ── levelling ───────────────────────────────────────────── */
-  const xpNeeded = level => Math.round(100 * Math.pow(1.18, level - 1));
+  /* Polynomial curve: level 10 costs ~2,240 XP and level 40 ~14,900, so the
+     later titles are a genuine grind rather than an afternoon's work. */
+  const xpNeeded = level => Math.round(100 * Math.pow(level, 1.35));
+
+  const MAX_LEVEL = 60;
 
   function levelTitle(level) {
     const t = CHEM.DATA.levelTitles;
     return t[Math.min(level - 1, t.length - 1)];
   }
 
-  /** Award XP. Returns { levelsGained, newLevel }. */
+  function difficulty() {
+    const id = data.settings.difficulty || "standard";
+    return CHEM.DATA.difficulties.find(d => d.id === id) || CHEM.DATA.difficulties[0];
+  }
+
+  /** Difficulty bonus compounded with the permanent prestige bonus (+12% each). */
+  function xpMultiplier() {
+    return difficulty().xp * (1 + (data.prestige || 0) * 0.12);
+  }
+
+  const canPrestige = () => data.level >= MAX_LEVEL;
+
+  /** Ascend: reset level and XP, keep everything else, gain a permanent XP bonus. */
+  function doPrestige() {
+    if (!canPrestige()) return false;
+    data.prestige = (data.prestige || 0) + 1;
+    data.level = 1;
+    data.xpIntoLevel = 0;
+    data.xp = 0;
+    addCoins(2500, true);
+    grantPowerup("double", 3);
+    emit();
+    return true;
+  }
+
+  function masteryTier(pct) {
+    const tiers = CHEM.DATA.masteryTiers;
+    let out = tiers[0];
+    for (const t of tiers) if (pct >= t.at) out = t;
+    return out;
+  }
+
+  /** Award XP (already multiplied by the caller). Returns { levelsGained, newLevel }. */
   function addXP(amount) {
     if (!amount || amount <= 0) return { levelsGained: 0, newLevel: data.level };
     data.xp += amount;
+    data.lifetimeXp = (data.lifetimeXp || 0) + amount;
     data.xpIntoLevel += amount;
     const today = U.dayKey();
     data.history[today] = (data.history[today] || 0) + amount;
 
     let gained = 0;
-    while (data.xpIntoLevel >= xpNeeded(data.level)) {
+    // Level 60 is the ceiling — further XP banks toward a prestige instead.
+    while (data.level < MAX_LEVEL && data.xpIntoLevel >= xpNeeded(data.level)) {
       data.xpIntoLevel -= xpNeeded(data.level);
       data.level++;
       gained++;
-      // Levelling up pays out — 25 Moles per level reached.
-      addCoins(25 * data.level, true);
+      addCoins(30 * data.level, true);
     }
+    if (data.level >= MAX_LEVEL) data.xpIntoLevel = Math.min(data.xpIntoLevel, xpNeeded(MAX_LEVEL));
     emit();
     return { levelsGained: gained, newLevel: data.level };
   }
@@ -154,7 +193,7 @@ CHEM.State = (function () {
   }
 
   /** Bonus for showing up: grows with streak length, capped so it stays sane. */
-  const streakBonus = () => Math.min(10 + data.streak.count * 5, 100);
+  const streakBonus = () => Math.min(5 + data.streak.count * 3, 60);
 
   /* ── answer recording ────────────────────────────────────── */
   function recordAnswer(mod, isCorrect, questionId) {
@@ -272,9 +311,14 @@ CHEM.State = (function () {
       modules: data.modules,
       modesPlayed: data.modesPlayed,
       themesOwned: data.owned.themes.length,
+      avatarsOwned: data.owned.avatars.length,
       pathwaysSolvedUnique: Object.keys(data.pathwaysSolved).length,
       bossesBeaten: Object.keys(data.bossesBeaten).length,
-      cardsMastered: Object.values(data.srs).filter(x => x.box >= 5).length
+      cardsMastered: Object.values(data.srs).filter(x => x.box >= 5).length,
+      prestige: data.prestige || 0,
+      questsDone: data.stats.questsDone || 0,
+      // Exposed as a function so mastery achievements use the same weighting as the UI.
+      masteryOf: mastery
     });
   }
 
@@ -337,6 +381,89 @@ CHEM.State = (function () {
     return true;
   }
 
+  /* ── weekly quests ───────────────────────────────────────
+     Each quest names a cumulative stat. Progress is that stat minus a snapshot
+     taken when the week rolled over, so no per-event plumbing is needed. */
+  const QUEST_POOL = [
+    { id:"q_answer",  stat:"answered",          target:180, xp:1400, coins:700, icon:"📝",
+      name:"Grind it out", desc:"Answer 180 questions" },
+    { id:"q_correct", stat:"correct",           target:120, xp:1600, coins:800, icon:"🎯",
+      name:"On target", desc:"Get 120 questions right" },
+    { id:"q_balance", stat:"equationsBalanced", target:30,  xp:1300, coins:650, icon:"⚖️",
+      name:"Conservation duty", desc:"Balance 30 equations" },
+    { id:"q_ions",    stat:"ionsMatched",       target:60,  xp:1100, coins:550, icon:"🧩",
+      name:"Ion sweep", desc:"Match 60 ion pairs" },
+    { id:"q_titrate", stat:"titrations",        target:10,  xp:1500, coins:750, icon:"🧪",
+      name:"Volumetric week", desc:"Complete 10 titrations" },
+    { id:"q_path",    stat:"pathways",          target:12,  xp:1400, coins:700, icon:"🔗",
+      name:"Synthesis sprint", desc:"Solve 12 pathway puzzles" },
+    { id:"q_calc",    stat:"calcsCorrect",      target:45,  xp:1400, coins:700, icon:"🔢",
+      name:"Number crunch", desc:"Solve 45 calculations" },
+    { id:"q_name",    stat:"namingCorrect",     target:45,  xp:1300, coins:650, icon:"🏷️",
+      name:"Nomenclature drill", desc:"Name 45 compounds correctly" },
+    { id:"q_boss",    stat:"bossWins",          target:3,   xp:2200, coins:1100, icon:"⚔️",
+      name:"Boss hunter", desc:"Defeat 3 Exam Bosses" },
+    { id:"q_perfect", stat:"perfectRuns",       target:5,   xp:2000, coins:1000, icon:"✨",
+      name:"Flawless five", desc:"Finish 5 perfect runs" },
+    { id:"q_cards",   stat:"cardsMastered",     target:20,  xp:1500, coins:750, icon:"🃏",
+      name:"Deck builder", desc:"Have 20 flashcards mastered" },
+    { id:"q_survive", stat:"survivalBest",      target:25,  xp:1800, coins:900, icon:"💀",
+      name:"Last stand", desc:"Reach a 25-question Survival run" }
+  ];
+
+  /** ISO-ish week key, e.g. "2026-W31". */
+  function weekKey(d) {
+    const t = d || new Date();
+    const target = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+    // Thursday of the current week determines the ISO year/week.
+    target.setDate(target.getDate() + 3 - ((target.getDay() + 6) % 7));
+    const firstThursday = new Date(target.getFullYear(), 0, 4);
+    firstThursday.setDate(firstThursday.getDate() + 3 - ((firstThursday.getDay() + 6) % 7));
+    const week = 1 + Math.round((target - firstThursday) / (7 * 86400000));
+    return `${target.getFullYear()}-W${String(week).padStart(2, "0")}`;
+  }
+
+  function statFor(key) {
+    if (key === "cardsMastered") return Object.values(data.srs).filter(c => c.box >= 5).length;
+    return data.stats[key] || 0;
+  }
+
+  function weekly() {
+    const wk = weekKey();
+    if (data.weekly.week !== wk) {
+      const rng = U.seededRandom(U.hash("molequest-week-" + wk));
+      const picked = U.seededShuffle(QUEST_POOL, rng).slice(0, 3).map(q => q.id);
+      const baseline = {};
+      QUEST_POOL.forEach(q => (baseline[q.stat] = statFor(q.stat)));
+      data.weekly = { week: wk, baseline, quests: picked, claimed: [] };
+      save();
+    }
+    return data.weekly;
+  }
+
+  /** [{ quest, done, target, complete, claimed }] for the current week. */
+  function weeklyQuests() {
+    const w = weekly();
+    return w.quests.map(id => {
+      const q = QUEST_POOL.find(x => x.id === id);
+      const base = (w.baseline && w.baseline[q.stat]) || 0;
+      const done = Math.max(0, Math.min(q.target, statFor(q.stat) - base));
+      return { quest: q, done, target: q.target,
+               complete: done >= q.target, claimed: w.claimed.includes(id) };
+    });
+  }
+
+  function claimQuest(id) {
+    const w = weekly();
+    const entry = weeklyQuests().find(e => e.quest.id === id);
+    if (!entry || !entry.complete || entry.claimed) return false;
+    w.claimed.push(id);
+    data.stats.questsDone = (data.stats.questsDone || 0) + 1;
+    addCoins(entry.quest.coins, true);
+    addXP(Math.round(entry.quest.xp * xpMultiplier()));
+    return true;
+  }
+
   function reset() {
     data = DEFAULT();
     try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ }
@@ -346,7 +473,9 @@ CHEM.State = (function () {
   return {
     load, save, flush, onChange, emit,
     get data() { return data; },
-    xpNeeded, levelTitle, addXP, addCoins, spendCoins,
+    xpNeeded, levelTitle, addXP, addCoins, spendCoins, MAX_LEVEL,
+    difficulty, xpMultiplier, canPrestige, doPrestige, masteryTier,
+    weekly, weeklyQuests, claimQuest, weekKey,
     touchStreak, streakBonus,
     recordAnswer, noteStreak, bump, markMode, recordScore,
     mastery, overallAccuracy,

@@ -1,8 +1,8 @@
 # ⚗️ MoleQuest — HSC Chemistry Study Game
 
 A game-based study app for **NSW HSC Chemistry** (Modules 1–8, weighted towards Year 12
-Modules 5–8). Ten game modes, XP and levels, a currency you spend on unlocks, five boss
-fights, spaced-repetition flashcards and a built-in reference sheet.
+Modules 5–8). Eleven game modes, 60 levels with prestige, three difficulty modes, a currency
+you spend on unlocks, five boss fights, spaced-repetition flashcards and a reference sheet.
 
 No build step, no dependencies, no account, no network. **Open `index.html` and play.**
 
@@ -59,6 +59,7 @@ save files. Use Settings → *Export save* / *Import save* to move one across.
 | 🌧️ **Precipitation Panic** | Fill a solubility grid against the clock |
 | 🧪 **Titration Lab** | A simulated titration: find the end point, then do the calculation |
 | 🔗 **Pathway Puzzle** | Build organic synthesis routes by choosing reagents |
+| 💀 **Survival** | One life, tightening clock, escalating difficulty — how deep can you go? |
 | 🩹 **Mistake Rehab** | Only the questions you've previously missed |
 
 ### Exam Bosses
@@ -73,12 +74,26 @@ all four unlock **The Final Paper**.
 ## How the systems work
 
 **XP and levels.** Correct answers pay `10 × difficulty`, multiplied by your streak
-(×1 → ×3 in half steps every 5 correct). Level *n* costs `round(100 × 1.18^(n−1))` XP, so
-levelling stays brisk early and slows down sensibly. Each level up pays out Moles and
-awards one of 20 titles, from *Lab Rat* to *MoleQuest Legend*.
+(×1 → ×3 in half steps every 5 correct). Level *n* costs `round(100 × n^1.35)` XP —
+**60 levels**, from *Lab Rat* to *MoleQuest Legend*, and reaching level 20 alone takes
+~45,700 XP. This is a whole-HSC-year progression, not an afternoon's.
 
-**Moles (🪙).** The currency. Spend them on power-ups (50/50, Skip, Time Freeze, Buffer,
-Catalyst), six lab skins, sixteen avatars, and two tiers of random supply crate.
+**Ascension (prestige).** At level 60 you can ascend: level and XP reset to 1, but every
+unlock, achievement, flashcard box and statistic is kept, and you gain a permanent **+12%
+XP** bonus that stacks with each further ascension, plus 2,500 Moles and 3 Catalysts.
+
+**Difficulty modes.** Standard, Hard (×1.45 XP, 25% less time, bosses hit 40% harder) and
+Nightmare (×2.1 XP, 45% less time, brutal bosses, and 50/50 and Skip are disabled). Set it
+once in Settings; it applies to every mode.
+
+**Moles (🪙).** The currency, and deliberately scarce — game payouts are scaled to 60%.
+Spend them on seven power-ups (50/50, Skip, Time Freeze, Buffer, Catalyst, Insight,
+Adrenaline), **ten lab skins**, **twenty-two avatars**, and three tiers of random supply
+crate. Most of the good items are level-gated as well as priced.
+
+**Weekly quests.** Three rotating objectives per ISO week, drawn from a twelve-quest pool
+by a seeded shuffle. Progress is derived by diffing your cumulative stats against a
+snapshot taken at week rollover, so nothing needs per-event bookkeeping.
 
 **Adaptive question draw.** `Bank.draw` weights each question: ×3.5 if you've missed it
 before, plus a bonus scaled to how weak the module is. Answer options are shuffled at draw
@@ -94,7 +109,7 @@ a box (intervals 1, 2, 4, 8, 16 days); a miss drops it straight back to box 1.
 **Daily challenge.** Derived from the date with a seeded PRNG, so the challenge is stable
 all day and identical for everyone.
 
-**Streaks.** Show up on consecutive days for a bonus that grows to +100 XP per run.
+**Streaks.** Show up on consecutive days for a bonus that grows to +60 XP per run.
 
 ---
 
@@ -102,12 +117,12 @@ all day and identical for everyone.
 
 Everything lives in `js/data/` as plain JS — edit it without touching the engine.
 
-- **162** multiple-choice questions across all 8 modules, each with a worked explanation
+- **284** multiple-choice questions across all 8 modules, each with a worked explanation
 - **36** balancing equations (all verified to balance in lowest terms)
 - **73** flashcards
 - **28** named organic compounds with plausible distractors
 - **10** synthesis pathway puzzles over a 16-edge reaction graph
-- **40** achievements
+- **65** achievements, scaled from *First Steps* to *Answer 5,000 questions*
 - Reference tables: flame tests, hydroxide precipitates, solubility grid, Ka/pKa values,
   indicator ranges, polyatomic ions, and a formula sheet
 - Procedurally generated calculations, so numeric practice never runs out
@@ -137,15 +152,15 @@ index.html            shell, script order
 manifest.webmanifest  PWA metadata: icons, standalone display, shortcuts
 sw.js                 service worker — precaches every file for offline use
 assets/               app icons (SVG source + rendered PNGs)
-css/styles.css        design system + 6 themes as CSS custom properties
+css/styles.css        design system + 10 themes as CSS custom properties
 js/data/*.js          content banks — pure data
 js/core/util.js       DOM helpers, formula→subscript renderer, seeded RNG
-js/core/audio.js      WebAudio synthesised SFX (no audio files)
+js/core/audio.js      67 WebAudio synthesised SFX (no audio files) + master volume
 js/core/fx.js         canvas particles, confetti, floating XP
 js/core/state.js      save file, XP/levels/coins/streaks/SRS/achievements
 js/core/bank.js       question aggregation, filtering, adaptive draw
 js/core/ui.js         hash router, toasts, modals, the reward pipeline
-js/games/*.js         one file per game mode
+js/games/*.js         one file per game mode (11 of them)
 js/screens/*.js       one file per screen
 js/app.js             route registration + bootstrap
 ```
@@ -173,7 +188,7 @@ widely-supported CSS (`color-mix`, custom properties, grid).
 
 ## Testing
 
-`node --check` passes on all 34 JS files. Content is validated separately — every stored
+`node --check` passes on all 36 JS files. Content is validated separately — every stored
 equation is re-balanced from its parsed formulas, every pathway puzzle is BFS-checked
 against its declared step count, every achievement is asserted not to unlock on a fresh
 save, and the service worker's precache list is diffed against the files on disk. A

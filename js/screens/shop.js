@@ -34,19 +34,20 @@ CHEM.Screens.shop = function (view) {
 
   /* ── crates ───────────────────────────────────────────── */
   view.appendChild(U.el("h2", { text: "Supply crates" }));
-  view.appendChild(U.el("div", { class: "grid g2" }, SHOP.crates.map(c =>
-    U.el("div", { class: "shop-item crate" }, [
+  view.appendChild(U.el("div", { class: "grid g3" }, SHOP.crates.map(c => {
+    const levelLocked = c.minLevel && d.level < c.minLevel;
+    return U.el("div", { class: "shop-item crate" }, [
       U.el("div", { class: "crate-box", text: c.icon }),
       U.el("div", { class: "shop-name", text: c.name }),
       U.el("div", { class: "shop-desc", text: c.desc }),
       U.el("button", {
-        class: "btn btn-sm " + (d.coins >= c.cost ? "btn-primary" : ""),
-        text: `${c.cost} 🪙`,
-        disabled: d.coins < c.cost,
+        class: "btn btn-sm " + (!levelLocked && d.coins >= c.cost ? "btn-primary" : ""),
+        text: levelLocked ? `🔒 Lv ${c.minLevel}` : `${c.cost} 🪙`,
+        disabled: levelLocked || d.coins < c.cost,
         on: { click: e => openCrate(c, e.target) }
       })
-    ])
-  )));
+    ]);
+  })));
 
   /* ── themes ───────────────────────────────────────────── */
   view.appendChild(U.el("h2", { text: "Lab skins" }));
@@ -66,11 +67,12 @@ CHEM.Screens.shop = function (view) {
         ? U.el("button", {
             class: "btn btn-sm" + (active ? "" : " btn-primary"),
             text: active ? "In use" : "Equip", disabled: active,
-            on: { click: () => { UI.applyTheme(t.id); CHEM.Sound.click(); UI.handleRoute(); } }
+            on: { click: () => { UI.applyTheme(t.id); CHEM.Sound.equip(); UI.handleRoute(); } }
           })
         : U.el("button", {
-            class: "btn btn-sm " + (d.coins >= t.cost ? "btn-primary" : ""),
-            text: `${t.cost} 🪙`, disabled: d.coins < t.cost,
+            class: "btn btn-sm " + (!(t.minLevel && d.level < t.minLevel) && d.coins >= t.cost ? "btn-primary" : ""),
+            text: (t.minLevel && d.level < t.minLevel) ? `🔒 Lv ${t.minLevel}` : `${t.cost} 🪙`,
+            disabled: (t.minLevel && d.level < t.minLevel) || d.coins < t.cost,
             on: { click: e => buy(t.cost, () => {
               d.owned.themes.push(t.id);
               UI.applyTheme(t.id);
@@ -96,7 +98,7 @@ CHEM.Screens.shop = function (view) {
             on: { click: () => {
               d.profile.avatar = a.emoji;
               S.emit();
-              CHEM.Sound.click();
+              CHEM.Sound.equip();
               UI.handleRoute();
             } }
           })
@@ -115,12 +117,13 @@ CHEM.Screens.shop = function (view) {
   /* ── helpers ──────────────────────────────────────────── */
   function buy(cost, apply, message, node) {
     if (!S.spendCoins(cost)) {
+      CHEM.Sound.denied();
       UI.toast({ icon: "🪙", kind: "bad", text: "Not enough Moles." });
       return;
     }
     apply();
     S.emit();
-    CHEM.Sound.coin();
+    CHEM.Sound.purchase();
     if (node) CHEM.FX.burstAt(node, { count: 24, speed: 5, size: 4 });
     UI.toast({ icon: "✅", kind: "good", text: message });
     S.checkAchievements();
@@ -129,26 +132,32 @@ CHEM.Screens.shop = function (view) {
 
   function openCrate(crate, node) {
     if (!S.spendCoins(crate.cost)) {
+      CHEM.Sound.denied();
       UI.toast({ icon: "🪙", kind: "bad", text: "Not enough Moles." });
       return;
     }
     CHEM.Sound.open();
     if (node) CHEM.FX.burstAt(node, { count: 50, speed: 8, size: 5 });
 
-    const big = crate.id === "crate_l";
+    const tier = { crate_s: 0, crate_l: 1, crate_x: 2 }[crate.id] || 0;
+    const counts = [[1, 2], [3, 5], [6, 9]][tier];
+    const payout = [[80, 340], [260, 900], [900, 2600]][tier];
+    const avatarChance = [0, 0.22, 0.55][tier];
+
     const drops = [];
-    const n = big ? U.randInt(3, 5) : U.randInt(1, 2);
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i < U.randInt(counts[0], counts[1]); i++) {
       const p = U.pick(SHOP.powerups);
       S.grantPowerup(p.id, 1);
       drops.push(`${p.icon} ${p.name}`);
     }
-    const coinDrop = big ? U.randInt(120, 480) : U.randInt(40, 190);
+    const coinDrop = U.randInt(payout[0], payout[1]);
     S.addCoins(coinDrop, true);
     drops.push(`🪙 ${coinDrop} Moles`);
 
-    if (big && Math.random() < 0.25) {
-      const locked = SHOP.avatars.filter(a => !S.ownsAvatar(a.emoji) && !a.minLevel);
+    // Only avatars the player has actually earned the level for can drop.
+    if (Math.random() < avatarChance) {
+      const locked = SHOP.avatars.filter(a =>
+        !S.ownsAvatar(a.emoji) && (!a.minLevel || d.level >= a.minLevel));
       if (locked.length) {
         const a = U.pick(locked);
         d.owned.avatars.push(a.emoji);
@@ -158,6 +167,8 @@ CHEM.Screens.shop = function (view) {
 
     S.emit();
     CHEM.FX.confetti(80);
+    if (drops.some(t => t.includes("avatar"))) CHEM.Sound.rareDrop();
+    else CHEM.Sound.coinPile();
 
     const box = U.el("div", { class: "modal-center" }, [
       U.el("div", { class: "modal-big", text: crate.icon }),

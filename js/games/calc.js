@@ -279,7 +279,7 @@ CHEM.Games.calc = (function () {
       card.appendChild(U.el("div", { style: "margin-top:14px" }, [submit]));
       stage.appendChild(card);
       input.focus();
-      input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+      input.addEventListener("keydown", e => { if (e.key === "Enter") check(); else CHEM.Sound.type(); });
 
       let done = false;
       function check() {
@@ -335,10 +335,10 @@ CHEM.Games.calc = (function () {
       const xp = xpEarned + bonus;
       if (correct === c.count) S.bump("perfectRuns");
       const newBest = S.recordScore("calc", correct);
-      UI.award({ xp, coins });
+      const got = UI.award({ xp, coins });
       UI.results({
         title: "Calculations complete",
-        correct, total: c.count, xp, coins, newBest,
+        correct, total: c.count, xp: got.xp, coins: got.coins, newBest,
         extraStats: [["Best streak", best], ["Daily bonus", "+" + bonus]],
         onAgain: () => UI.handleRoute()
       });

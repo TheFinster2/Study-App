@@ -56,8 +56,10 @@ CHEM.Games.naming = (function () {
       stage.innerHTML = "";
 
       const card = U.el("div", { class: "qcard" }, [
+        // The family (Alcohol, Ester, …) is deliberately NOT shown here — it gives
+        // away the functional group. It's revealed in the feedback instead.
         U.el("div", { class: "qtag" }, [
-          UI.chip("Module 7 · Organic"), UI.chip(item.family), UI.chip("★".repeat(item.diff))
+          UI.chip("Module 7 · Organic"), UI.chip("★".repeat(item.diff))
         ]),
         U.el("div", { class: "qtext", text: round.prompt }),
         round.display
@@ -112,7 +114,9 @@ CHEM.Games.naming = (function () {
         xpChip.textContent = xpEarned + " XP";
 
         const fb = U.el("div", { class: "feedback " + (ok ? "ok" : "no"), html:
-          `<b>${ok ? "Correct." : `Answer: ${U.formula(round.choices[round.answer])}`}</b> ${U.escapeHtml(round.why)}` });
+          `<b>${ok ? "Correct." : `Answer: ${U.formula(round.choices[round.answer])}`}</b> ` +
+          `${U.escapeHtml(round.why)}<br><span class="tiny muted">Functional group: ` +
+          `${U.escapeHtml(item.family)}</span>` });
         const next = U.el("button", {
           class: "btn btn-primary",
           text: idx >= items.length - 1 ? "See results" : "Next →",
@@ -131,10 +135,10 @@ CHEM.Games.naming = (function () {
       const xp = xpEarned + bonus;
       if (correct === items.length) S.bump("perfectRuns");
       const newBest = S.recordScore("naming", correct);
-      UI.award({ xp, coins });
+      const got = UI.award({ xp, coins });
       UI.results({
         title: "Nomenclature run complete",
-        correct, total: items.length, xp, coins, newBest,
+        correct, total: items.length, xp: got.xp, coins: got.coins, newBest,
         extraStats: [["Best streak", best], ["Daily bonus", "+" + bonus]],
         onAgain: () => UI.handleRoute()
       });

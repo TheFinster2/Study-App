@@ -183,7 +183,7 @@ CHEM.Games.balance = (function () {
           coins += 4 + eq.diff * 2;
           S.bump("equationsBalanced");
           S.progressDaily("balance", 1);
-          CHEM.Sound.correct();
+          CHEM.Sound.balanced();
           CHEM.FX.burstAt(stage, { count: 30, speed: 6, size: 4 });
           xpChip.textContent = xpEarned + " XP";
 
@@ -232,10 +232,10 @@ CHEM.Games.balance = (function () {
       const total = xpEarned + bonus;
       const newBest = S.recordScore("balance", solved);
       if (solved === set.length) S.bump("perfectRuns");
-      UI.award({ xp: total, coins });
+      const got = UI.award({ xp: total, coins });
       UI.results({
         title: "Balance Blitz complete",
-        correct: solved, total: set.length, xp: total, coins, newBest,
+        correct: solved, total: set.length, xp: got.xp, coins: got.coins, newBest,
         extraStats: [["Attempts", attempts], ["Daily bonus", "+" + bonus]],
         onAgain: () => UI.handleRoute()
       });

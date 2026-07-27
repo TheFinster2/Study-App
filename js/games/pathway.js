@@ -126,7 +126,7 @@ CHEM.Games.pathway = (function () {
         if (!e) {
           wasted++;
           totalWasted++;
-          CHEM.Sound.wrong();
+          CHEM.Sound.noReaction();
           CHEM.FX.shake();
           feedback.appendChild(U.el("div", { class: "feedback no", html:
             `<b>No reaction.</b> ${U.formula(rg.label)} does not react with ${U.escapeHtml(nodes()[current].label)} to give a new product here.` }));
@@ -136,7 +136,7 @@ CHEM.Games.pathway = (function () {
 
         current = e.to;
         path.push({ node: e.to, via: rg.id });
-        CHEM.Sound.correct();
+        CHEM.Sound.reaction();
         drawTrack();
         stepChip.textContent = `${path.length - 1} steps${wasted ? " · " + wasted + " wasted" : ""}`;
 
@@ -187,10 +187,10 @@ CHEM.Games.pathway = (function () {
       const xp = xpEarned + bonus;
       const newBest = S.recordScore("pathway", solved);
       if (solved === puzzles.length && totalWasted === 0) S.bump("perfectRuns");
-      UI.award({ xp, coins });
+      const got = UI.award({ xp, coins });
       UI.results({
         title: "Synthesis complete",
-        correct: solved, total: puzzles.length, xp, coins, newBest,
+        correct: solved, total: puzzles.length, xp: got.xp, coins: got.coins, newBest,
         extraStats: [["Wasted reagents", totalWasted], ["Daily bonus", "+" + bonus]],
         onAgain: () => UI.handleRoute()
       });

@@ -166,5 +166,113 @@ CHEM.DATA.achievements = [
 
   { id:"redemption", icon:"♻️", name:"Redemption Arc", reward:180,
     desc:"Clear 20 questions from your Mistakes list.",
-    check:s => s.mistakesFixed >= 20, goal:s => [Math.min(s.mistakesFixed,20), 20] }
+    check:s => s.mistakesFixed >= 20, goal:s => [Math.min(s.mistakesFixed,20), 20] },
+
+  /* ── the long game ─────────────────────────────────────────── */
+  { id:"thousand", icon:"🗿", name:"Four Figures", reward:900,
+    desc:"Answer 1,000 questions.",
+    check:s => s.answered >= 1000, goal:s => [Math.min(s.answered,1000), 1000] },
+
+  { id:"five_k", icon:"🏔️", name:"Five Thousand", reward:3000,
+    desc:"Answer 5,000 questions.",
+    check:s => s.answered >= 5000, goal:s => [Math.min(s.answered,5000), 5000] },
+
+  { id:"streak50", icon:"☄️", name:"Chain Reaction Overdrive", reward:800,
+    desc:"Hit a 50-answer streak in a single run.",
+    check:s => s.bestStreak >= 50, goal:s => [Math.min(s.bestStreak,50), 50] },
+
+  { id:"streak100", icon:"🌠", name:"Unbroken", reward:2500,
+    desc:"Hit a 100-answer streak in a single run.",
+    check:s => s.bestStreak >= 100, goal:s => [Math.min(s.bestStreak,100), 100] },
+
+  { id:"perfect25", icon:"🔷", name:"Twenty-Five Nines", reward:1500,
+    desc:"Finish 25 perfect runs.",
+    check:s => s.perfectRuns >= 25, goal:s => [Math.min(s.perfectRuns,25), 25] },
+
+  { id:"daily100", icon:"🗓️", name:"Hundred Day Reflux", reward:5000,
+    desc:"Study 100 days in a row.",
+    check:s => s.longestDayStreak >= 100, goal:s => [Math.min(s.longestDayStreak,100), 100] },
+
+  { id:"lvl30", icon:"🏅", name:"Band 6 Candidate", reward:2000,
+    desc:"Reach level 30.",
+    check:s => s.level >= 30, goal:s => [Math.min(s.level,30), 30] },
+
+  { id:"lvl45", icon:"🎖️", name:"Atom Economist", reward:4000,
+    desc:"Reach level 45.",
+    check:s => s.level >= 45, goal:s => [Math.min(s.level,45), 45] },
+
+  { id:"lvl60", icon:"🔱", name:"Maximum Elevation", reward:10000,
+    desc:"Reach level 60 — the ceiling.",
+    check:s => s.level >= 60, goal:s => [Math.min(s.level,60), 60] },
+
+  /* ── survival ──────────────────────────────────────────────── */
+  { id:"survive10", icon:"💀", name:"Still Standing", reward:250,
+    desc:"Reach question 10 in Survival.",
+    check:s => s.survivalBest >= 10, goal:s => [Math.min(s.survivalBest,10), 10] },
+
+  { id:"survive25", icon:"🕯️", name:"Deep Diver", reward:800,
+    desc:"Reach question 25 in Survival.",
+    check:s => s.survivalBest >= 25, goal:s => [Math.min(s.survivalBest,25), 25] },
+
+  { id:"survive50", icon:"👁️‍🗨️", name:"The Abyss Stares Back", reward:3000,
+    desc:"Reach question 50 in Survival.",
+    check:s => s.survivalBest >= 50, goal:s => [Math.min(s.survivalBest,50), 50] },
+
+  /* ── difficulty ────────────────────────────────────────────── */
+  { id:"hard_boss", icon:"🔥", name:"Trial by Fire", reward:900,
+    desc:"Defeat an Exam Boss on Hard.",
+    check:s => s.hardWins >= 1 },
+
+  { id:"nightmare_boss", icon:"☠️", name:"No Reading Time", reward:3500,
+    desc:"Defeat an Exam Boss on Nightmare.",
+    check:s => s.nightmareWins >= 1 },
+
+  /* ── prestige ──────────────────────────────────────────────── */
+  { id:"ascend1", icon:"🌟", name:"Ascension", reward:5000,
+    desc:"Prestige for the first time.",
+    check:s => s.prestige >= 1 },
+
+  { id:"ascend3", icon:"✴️", name:"Thrice Reborn", reward:15000,
+    desc:"Prestige three times.",
+    check:s => s.prestige >= 3, goal:s => [Math.min(s.prestige,3), 3] },
+
+  /* ── quests & mastery ──────────────────────────────────────── */
+  { id:"quest5", icon:"📜", name:"Questing", reward:500,
+    desc:"Complete 5 weekly quests.",
+    check:s => s.questsDone >= 5, goal:s => [Math.min(s.questsDone,5), 5] },
+
+  { id:"quest25", icon:"📚", name:"Quest Marshal", reward:2500,
+    desc:"Complete 25 weekly quests.",
+    check:s => s.questsDone >= 25, goal:s => [Math.min(s.questsDone,25), 25] },
+
+  { id:"gold_module", icon:"🥇", name:"Gold Standard", reward:900,
+    desc:"Reach Gold mastery (65%) in any module.",
+    check:s => Object.keys(s.modules || {}).some(k => (s.masteryOf ? s.masteryOf(k) : 0) >= 65) },
+
+  { id:"diamond_module", icon:"💎", name:"Flawless Crystal", reward:3000,
+    desc:"Reach Diamond mastery (92%) in any module.",
+    check:s => Object.keys(s.modules || {}).some(k => (s.masteryOf ? s.masteryOf(k) : 0) >= 92) },
+
+  { id:"all_gold", icon:"👑", name:"Full Marks", reward:8000,
+    desc:"Reach Gold mastery in all four Year 12 modules.",
+    check:s => ["M5","M6","M7","M8"].every(k => (s.masteryOf ? s.masteryOf(k) : 0) >= 65),
+    goal:s => [["M5","M6","M7","M8"].filter(k => (s.masteryOf ? s.masteryOf(k) : 0) >= 65).length, 4] },
+
+  { id:"collector", icon:"🖼️", name:"Collector", reward:1200,
+    desc:"Own 10 avatars.",
+    check:s => s.avatarsOwned >= 10, goal:s => [Math.min(s.avatarsOwned,10), 10] },
+
+  { id:"decorator", icon:"🎭", name:"Every Shade", reward:4000,
+    desc:"Unlock all 10 lab skins.",
+    check:s => s.themesOwned >= 10, goal:s => [Math.min(s.themesOwned,10), 10] },
+
+  { id:"loaded", icon:"🏦", name:"Well Capitalised", reward:0,
+    desc:"Hold 25,000 Moles at once.",
+    check:s => s.peakCoins >= 25000, goal:s => [Math.min(s.peakCoins,25000), 25000] },
+
+  { id:"scholar", icon:"🎓", name:"Whole Syllabus", reward:5000,
+    desc:"Answer at least 60 questions in every one of the 8 modules.",
+    check:s => ["M1","M2","M3","M4","M5","M6","M7","M8"].every(k => (s.modules?.[k]?.seen || 0) >= 60),
+    goal:s => [["M1","M2","M3","M4","M5","M6","M7","M8"]
+      .filter(k => (s.modules?.[k]?.seen || 0) >= 60).length, 8] }
 ];

@@ -109,6 +109,36 @@ CHEM.Screens.settings = function (view) {
     }))
   ]));
 
+  /* difficulty */
+  view.appendChild(U.el("h2", {}, [
+    document.createTextNode("Difficulty"),
+    U.el("span", { class: "h2-sub", text: "applies to every mode" })
+  ]));
+  view.appendChild(U.el("div", { class: "grid g3" }, CHEM.DATA.difficulties.map(diff => {
+    const on = (d.settings.difficulty || "standard") === diff.id;
+    const card = U.el("button", {
+      class: "game-card" + (on ? "" : ""),
+      style: `--gc:${diff.id === "nightmare" ? "#ff4d3d" : diff.id === "hard" ? "#ffab3d" : "var(--glow-a)"};` +
+             (on ? "border-color:var(--accent)" : "")
+    }, [
+      U.el("div", { class: "game-ico", text: diff.icon }),
+      U.el("div", { class: "game-name", text: diff.name }),
+      U.el("div", { class: "game-desc", text: diff.desc }),
+      U.el("div", { class: "game-foot" }, [
+        U.el("span", { class: "chip" + (on ? " on" : ""), text: `×${diff.xp} XP` }),
+        on ? U.el("span", { class: "chip on lock-tag", text: "Active" }) : null
+      ])
+    ]);
+    card.addEventListener("click", () => {
+      d.settings.difficulty = diff.id;
+      S.save();
+      CHEM.Sound.rankUp();
+      UI.toast({ icon: diff.icon, kind: "good", text: `<b>${diff.name}</b> mode — ×${diff.xp} XP.` });
+      UI.handleRoute();
+    });
+    return card;
+  })));
+
   /* toggles */
   view.appendChild(U.el("h2", { text: "Preferences" }));
   const card = U.el("div", { class: "card" });
@@ -123,6 +153,30 @@ CHEM.Screens.settings = function (view) {
     CHEM.FX.setReduced(!v);
     S.save();
   }));
+
+  /* volume */
+  const vol = U.el("input", {
+    type: "range", min: "0", max: "100", step: "5",
+    value: String(Math.round((d.settings.volume ?? 0.8) * 100)),
+    style: "width:140px; accent-color:var(--accent)"
+  });
+  const volLabel = U.el("b", { text: Math.round((d.settings.volume ?? 0.8) * 100) + "%" });
+  vol.addEventListener("input", () => {
+    const v = Number(vol.value) / 100;
+    d.settings.volume = v;
+    CHEM.Sound.setVolume(v);
+    volLabel.textContent = vol.value + "%";
+    S.save();
+  });
+  // Preview on release rather than on every drag step.
+  vol.addEventListener("change", () => CHEM.Sound.coin());
+  card.appendChild(U.el("div", { class: "srow" }, [
+    U.el("div", { class: "srow-body" }, [
+      U.el("div", { text: "Volume" }),
+      U.el("div", { class: "tiny muted", text: "Master level for all sound effects." })
+    ]),
+    volLabel, vol
+  ]));
   view.appendChild(card);
 
   function toggleRow(title, desc, value, onChange) {

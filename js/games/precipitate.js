@@ -9,6 +9,8 @@ CHEM.Games.precipitate = (function () {
     const c = Object.assign({ rows: 4, cols: 4, timeLimit: 150 }, cfg);
     S.markMode("precipitate");
     S.touchStreak();
+    c.timeLimit = Math.round(c.timeLimit * S.difficulty().timeScale);
+    CHEM.Sound.gameStart();
 
     const SOL = CHEM.DATA.solubility;
     const cations = U.sample(SOL.cations, c.rows);
@@ -75,7 +77,7 @@ CHEM.Games.precipitate = (function () {
       btn.classList.toggle("ppt", next === "ppt");
       btn.classList.toggle("sol", next === "sol");
       btn.textContent = next === "ppt" ? "PPT" : next === "sol" ? "SOL" : "?";
-      CHEM.Sound.click();
+      if (next === "ppt") CHEM.Sound.precipitate(); else CHEM.Sound.tap();
       updateCount();
     }
 
@@ -117,7 +119,7 @@ CHEM.Games.precipitate = (function () {
 
       const total = c.rows * c.cols;
       const perfect = right === total;
-      if (perfect) { CHEM.Sound.win(); CHEM.FX.confetti(100); S.bump("perfectPrecipitation"); }
+      if (perfect) { CHEM.Sound.perfect(); CHEM.FX.confetti(100); S.bump("perfectPrecipitation"); }
       else { CHEM.Sound.wrong(); CHEM.FX.shake(); }
 
       feedback.innerHTML = "";
@@ -150,10 +152,10 @@ CHEM.Games.precipitate = (function () {
       if (perfect) S.bump("perfectRuns");
       const newBest = S.recordScore("precipitate", right);
 
-      UI.award({ xp, coins });
+      const got = UI.award({ xp, coins });
       setTimeout(() => UI.results({
         title: perfect ? "Flawless solubility board" : "Board checked",
-        correct: right, total, xp, coins, newBest,
+        correct: right, total, xp: got.xp, coins: got.coins, newBest,
         extraStats: [["Time left", U.fmtTime(Math.max(0, timeLeft))], ["Bonus", "+" + Math.round(timeBonus)]],
         onAgain: () => UI.handleRoute()
       }), 900);

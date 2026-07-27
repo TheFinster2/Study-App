@@ -32,6 +32,7 @@ CHEM.UI = (function () {
     currentCleanup = null;
 
     const view = U.$("#view");
+    if (view.childNodes.length) CHEM.Sound.nav();
     view.innerHTML = "";
     const result = fn(view, args);
     if (typeof result === "function") currentCleanup = result;
@@ -152,12 +153,18 @@ CHEM.UI = (function () {
    */
   function award(opts) {
     const o = opts || {};
-    const xp = Math.round(o.xp || 0);
-    const coins = Math.round(o.coins || 0);
+    // Difficulty and prestige bonuses are applied here and nowhere else, so every
+    // mode gets them consistently. Coins are deliberately scarcer than XP.
+    const mult = o.raw ? 1 : S.xpMultiplier();
+    const xp = Math.round((o.xp || 0) * mult);
+    const coins = Math.round((o.coins || 0) * (o.raw ? 1 : 0.6));
 
     if (coins) S.addCoins(coins, true);
     const res = xp ? S.addXP(xp) : { levelsGained: 0 };
     if (!xp && coins) S.emit();
+    res.xp = xp;
+    res.coins = coins;
+    res.multiplier = mult;
 
     if (o.at && xp && !o.silent) {
       const r = o.at.getBoundingClientRect();
@@ -170,8 +177,14 @@ CHEM.UI = (function () {
       CHEM.FX.confetti(110);
       toast({
         icon: "🎉", kind: "xp", ms: 3600,
-        text: `<b>Level ${res.newLevel}!</b> You are now a ${S.levelTitle(res.newLevel)} &middot; +${25 * res.newLevel} 🪙`
+        text: `<b>Level ${res.newLevel}!</b> You are now a ${S.levelTitle(res.newLevel)} &middot; +${30 * res.newLevel} 🪙`
       });
+      if (res.newLevel >= S.MAX_LEVEL) {
+        setTimeout(() => toast({
+          icon: "🔱", kind: "good", ms: 5000,
+          text: "<b>Level 60 reached.</b> You can now Ascend from the Progress screen."
+        }), 1200);
+      }
     }
 
     const unlocked = S.checkAchievements();

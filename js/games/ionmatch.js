@@ -82,7 +82,7 @@ CHEM.Games.ionmatch = (function () {
             matched++;
             pairChip.textContent = `${matched} / ${c.pairs} pairs`;
             S.bump("ionsMatched");
-            CHEM.Sound.correct();
+            CHEM.Sound.match();
             CHEM.FX.burstAt(nodes[a], { count: 16, speed: 4, size: 3, shape: "circle" });
 
             const ion = cards[a].ion;
@@ -99,7 +99,7 @@ CHEM.Games.ionmatch = (function () {
           misses++;
           nodes[a].classList.add("miss");
           nodes[b].classList.add("miss");
-          CHEM.Sound.wrong();
+          CHEM.Sound.mismatch();
           setTimeout(() => {
             [a, b].forEach(k => {
               nodes[k].classList.remove("flip", "miss");
@@ -116,6 +116,7 @@ CHEM.Games.ionmatch = (function () {
       finished = true;
       clearInterval(timerId);
 
+      if (moves === c.pairs) CHEM.Sound.perfect();
       const perfect = moves === c.pairs;
       // Efficiency: perfect play = 1.0, sloppy play tails off.
       const efficiency = U.clamp(c.pairs / moves, 0.25, 1);
@@ -127,10 +128,10 @@ CHEM.Games.ionmatch = (function () {
       if (perfect) S.bump("perfectRuns");
       const newBest = S.recordScore("ionmatch", Math.round(efficiency * 100));
 
-      UI.award({ xp, coins });
+      const got = UI.award({ xp, coins });
       UI.results({
         title: perfect ? "Perfect memory!" : "Board cleared",
-        correct: matched, total: c.pairs, xp, coins, newBest,
+        correct: matched, total: c.pairs, xp: got.xp, coins: got.coins, newBest,
         bonus: perfect ? 10 : 0,
         extraStats: [["Moves", moves], ["Time", U.fmtTime(seconds)], ["Misses", misses]],
         onAgain: () => UI.handleRoute()

@@ -56,20 +56,65 @@ CHEM.Screens.progress = function (view) {
       `${activeDays} active day${activeDays === 1 ? "" : "s"} in the last 16 weeks.` })
   ]));
 
+  /* prestige */
+  const atCap = d.level >= S.MAX_LEVEL;
+  if (atCap || (d.prestige || 0) > 0) {
+    view.appendChild(U.el("h2", { text: "Ascension" }));
+    view.appendChild(U.el("div", { class: "card daily" }, [
+      U.el("div", { class: "daily-ico", text: "🔱" }),
+      U.el("div", { class: "daily-body" }, [
+        U.el("h3", { text: (d.prestige || 0) > 0
+          ? `Ascended ×${d.prestige} · +${Math.round(d.prestige * 12)}% XP forever`
+          : "Ready to ascend" }),
+        U.el("p", { class: "tiny muted", style: "margin:0", text:
+          "Ascending resets your level and XP to 1 but keeps every unlock, achievement and " +
+          "statistic — and grants a permanent +12% XP bonus, 2,500 Moles and 3 Catalysts." })
+      ]),
+      atCap
+        ? U.el("button", {
+            class: "btn btn-primary", text: "Ascend",
+            on: { click: () => UI.confirmDialog(
+              "Ascend to prestige " + ((d.prestige || 0) + 1) + "?",
+              "Your level returns to 1 and your XP resets. You keep all avatars, skins, " +
+              "achievements, flashcard progress and statistics, and gain a permanent " +
+              "<b>+12% XP</b> bonus that stacks with every future ascension.",
+              () => {
+                if (S.doPrestige()) {
+                  CHEM.Sound.prestige();
+                  CHEM.FX.confetti(200);
+                  UI.toast({ icon: "🔱", kind: "good", ms: 5000,
+                    text: `<b>Ascended!</b> Prestige ${d.prestige} — +${Math.round(d.prestige * 12)}% XP forever.` });
+                  S.checkAchievements();
+                  UI.go("/home");
+                }
+              }, "Ascend") }
+          })
+        : U.el("span", { class: "chip", text: `Lv ${d.level} / ${S.MAX_LEVEL}` })
+    ]));
+  }
+
   /* module breakdown */
-  view.appendChild(U.el("h2", { text: "Module breakdown" }));
+  view.appendChild(U.el("h2", {}, [
+    document.createTextNode("Module breakdown"),
+    U.el("span", { class: "h2-sub", text: "mastery tiers" })
+  ]));
   const modCard = U.el("div", { class: "card" });
   CHEM.Bank.statsByModule().forEach(m => {
+    const tier = S.masteryTier(m.mastery);
     modCard.appendChild(U.el("div", { class: "mastery-item" }, [
       U.el("div", { class: "mastery-badge", text: m.id }),
       U.el("div", { class: "mastery-body" }, [
         U.el("div", { class: "mastery-name", text: `${m.short} · ${m.correct}/${m.seen} correct` }),
         U.el("div", { class: "bar" }, [U.el("i", { style: `width:${m.mastery}%` })])
       ]),
-      U.el("div", { class: "mastery-pct", text: m.mastery + "%" })
+      U.el("div", { class: "mastery-pct", style: "color:" + tier.colour,
+        text: tier.icon + " " + m.mastery + "%" })
     ]));
   });
   view.appendChild(modCard);
+  view.appendChild(U.el("div", { class: "row tiny muted", style: "margin-top:8px; gap:10px" },
+    CHEM.DATA.masteryTiers.slice(1).map(t =>
+      U.el("span", { text: `${t.icon} ${t.name} ${t.at}%+` }))));
   view.appendChild(U.el("p", { class: "tiny muted", style: "margin-top:8px", text:
     "Mastery is weighted by how many questions you've attempted — a perfect run over three questions isn't mastery yet." }));
 

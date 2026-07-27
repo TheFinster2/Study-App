@@ -67,9 +67,15 @@ CHEM.Games.titration = (function () {
 
     const sc = U.pick(SCENARIOS);
     const va = 25.00;
-    const ca = parseFloat((0.05 + Math.random() * 0.15).toFixed(4)); // unknown analyte
-    const cb = U.pick([0.1000, 0.1050, 0.0500, 0.2000]);             // standardised titrant
-    const vEq = (ca * va) / cb;                                       // true equivalence volume
+    const cb = U.pick([0.1000, 0.1050, 0.0500, 0.2000]);   // standardised titrant
+
+    /* Pick the TITRE first, then derive the unknown from it. Randomising both
+       concentrations independently could put equivalence at up to 100 mL — past
+       the burette's capacity, so the end point was literally unreachable.
+       A real prac aims for a titre in the middle of the burette. */
+    const targetTitre = 16 + Math.random() * 18;                       // 16–34 mL
+    const ca = parseFloat(((cb * targetTitre) / va).toFixed(4));       // unknown analyte
+    const vEq = (ca * va) / cb;                                        // exact, from the rounded ca
 
     let vb = 0, meterOn = false, ended = false, finished = false;
     let usedMeter = false;
@@ -134,16 +140,27 @@ CHEM.Games.titration = (function () {
     const resultSlot = U.el("div");
     shell.body.appendChild(resultSlot);
 
+    const CAPACITY = 50.00; // matches the drawn burette
+
     function add(ml) {
       if (ended) return;
-      vb = parseFloat((vb + ml).toFixed(2));
-      if (vb > 60) vb = 60;
-      CHEM.Sound.drop();
+      if (vb >= CAPACITY) {
+        UI.toast({ icon: "🚱", kind: "bad", text: "Burette empty — you've overshot badly." });
+        CHEM.Sound.error();
+        return;
+      }
+      vb = Math.min(CAPACITY, parseFloat((vb + ml).toFixed(2)));
+      CHEM.Sound[ml <= 0.05 ? "drip" : "pour"]();
       paint();
     }
 
+    let wasInRange = false;
     function paint() {
       const pH = pHat(sc, ca, va, cb, vb);
+      // Audible cue the moment the indicator starts to turn — the real skill cue.
+      const inRange = pH > sc.lo && pH < sc.hi;
+      if (inRange && !wasInRange) CHEM.Sound.colourChange();
+      wasInRange = inRange;
       volChip.textContent = vb.toFixed(2) + " mL";
       // The burette starts full at 50.00 mL and empties as titrant is delivered.
       buretFill.style.height = U.clamp((1 - vb / 50) * 100, 0, 100) + "%";
@@ -163,7 +180,7 @@ CHEM.Games.titration = (function () {
       const good = error <= 0.15;
       const ok = error <= 0.50;
 
-      if (perfect) { CHEM.Sound.win(); CHEM.FX.bubbles(window.innerWidth / 2, window.innerHeight / 2); }
+      if (perfect) { CHEM.Sound.endpoint(); CHEM.FX.bubbles(window.innerWidth / 2, window.innerHeight / 2); }
       else if (ok) CHEM.Sound.correct();
       else { CHEM.Sound.wrong(); CHEM.FX.shake(); }
 
@@ -238,10 +255,10 @@ CHEM.Games.titration = (function () {
       S.progressDaily("titration", 1);
       const newBest = S.recordScore("titration", Math.round(100 - Math.min(100, error * 100)));
 
-      UI.award({ xp, coins });
+      const got = UI.award({ xp, coins });
       UI.results({
         title: perfect ? "Perfect titration" : ok ? "Titration complete" : "Overshot",
-        correct: (ok ? 1 : 0) + (calcOk ? 1 : 0), total: 2, xp, coins, newBest,
+        correct: (ok ? 1 : 0) + (calcOk ? 1 : 0), total: 2, xp: got.xp, coins: got.coins, newBest,
         extraStats: [
           ["Titre", vb.toFixed(2) + " mL"],
           ["Error", error.toFixed(2) + " mL"],

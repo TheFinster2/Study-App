@@ -158,10 +158,10 @@ CHEM.Screens.study = (function () {
     function finish() {
       const bonus = S.streakBonus();
       const totalXp = xp + bonus;
-      UI.award({ xp: totalXp, coins: got * 2 });
+      const earned = UI.award({ xp: totalXp, coins: got * 2 });
       UI.results({
         title: "Review complete",
-        correct: got, total: deck.length, xp: totalXp, coins: got * 2,
+        correct: got, total: deck.length, xp: earned.xp, coins: earned.coins,
         extraStats: [["Missed", missed], ["Daily bonus", "+" + bonus]],
         onAgain: () => UI.go("/study")
       });

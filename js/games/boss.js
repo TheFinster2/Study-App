@@ -46,6 +46,8 @@ CHEM.Games.boss = (function () {
 
     S.markMode("boss");
     S.touchStreak();
+    const diffMode = S.difficulty();
+    CHEM.Sound.bossIntro();
 
     const ability = boss.ability;
     const obscure = ability === "obscure" || ability === "all";
@@ -101,10 +103,10 @@ CHEM.Games.boss = (function () {
     paintHp();
 
     function questionTime() {
-      if (!drains) return boss.seconds;
+      if (!drains) return Math.max(8, Math.round(boss.seconds * diffMode.timeScale));
       // The Titan speeds up as it gets desperate.
       const frac = bossHp / boss.hp;
-      return Math.max(12, Math.round(boss.seconds * (0.7 + frac * 0.3)));
+      return Math.max(8, Math.round(boss.seconds * diffMode.timeScale * (0.7 + frac * 0.3)));
     }
 
     function renderQuestion() {
@@ -130,7 +132,7 @@ CHEM.Games.boss = (function () {
         timeLeft--;
         timerChip.textContent = String(Math.max(0, timeLeft));
         timerChip.classList.toggle("low", timeLeft <= 5);
-        if (timeLeft <= 3 && timeLeft > 0) CHEM.Sound.tick();
+        if (timeLeft <= 5 && timeLeft > 0) CHEM.Sound.tickUrgent();
         if (timeLeft <= 0) {
           clearInterval(timerId);
           resolve(q, card, -1, false, null, true);
@@ -149,8 +151,9 @@ CHEM.Games.boss = (function () {
         // Faster answers hit harder.
         const speed = U.clamp(timeLeft / questionTime(), 0, 1);
         const dmg = Math.round((9 + (q.diff || 1) * 5) * (1 + speed * 0.6) * (1 + Math.min(streak, 6) * 0.06));
+        const isCrit = speed > 0.75 && streak >= 3;
         bossHp -= dmg;
-        CHEM.Sound.hit();
+        if (isCrit) CHEM.Sound.crit(); else CHEM.Sound.hit();
         const r = bossFace.getBoundingClientRect();
         CHEM.FX.sparks(r.left + r.width / 2, r.top + r.height / 2, Math.PI * 1.5);
         CHEM.FX.floatText(r.right + 6, r.top, "−" + dmg, "var(--bad)");
@@ -158,12 +161,12 @@ CHEM.Games.boss = (function () {
           text: `You deal ${dmg} damage.` }));
       } else {
         streak = 0;
-        let dmg = Math.round(10 + (q.diff || 1) * 4);
+        let dmg = Math.round((10 + (q.diff || 1) * 4) * diffMode.damage);
         if (doubleDmg) dmg *= 2;
         if (timedOut) dmg = Math.round(dmg * 1.2);
         playerHp -= dmg;
         tookDamage = true;
-        CHEM.Sound.explode();
+        CHEM.Sound.playerHurt();
         CHEM.FX.shake();
         fb.appendChild(U.el("div", { class: "tiny", style: "margin-top:8px; color:var(--bad)",
           text: `${timedOut ? "Out of time — " : ""}you take ${dmg} damage.` }));
@@ -171,12 +174,26 @@ CHEM.Games.boss = (function () {
 
       if (heals && asked % 3 === 0 && bossHp > 0) {
         bossHp = Math.min(boss.hp, bossHp + 12);
+        CHEM.Sound.bossHeal();
         UI.toast({ icon: "⚖️", kind: "bad", text: "<b>Equilibrium shifts</b> — the boss recovers 12 HP." });
       }
       paintHp();
 
-      if (bossHp <= 0) return setTimeout(() => end(true), 700);
-      if (playerHp <= 0) return setTimeout(() => end(false), 700);
+      if (bossHp <= 0) { CHEM.Sound.bossDefeat(); return setTimeout(() => end(true), 900); }
+      if (playerHp <= 0) {
+        // Adrenaline is spent automatically rather than lost on defeat.
+        if (S.usePowerup("revive")) {
+          playerHp = Math.round(boss.playerHp * 0.4);
+          paintHp();
+          CHEM.Sound.rankUp();
+          CHEM.FX.confetti(40);
+          UI.toast({ icon: "💉", kind: "good", ms: 3200,
+            text: "<b>Adrenaline!</b> Back on your feet at 40% health." });
+        } else {
+          return setTimeout(() => end(false), 700);
+        }
+      }
+      if (playerHp > 0 && playerHp <= boss.playerHp * 0.2) CHEM.Sound.lowHealth();
 
       const next = U.el("button", {
         class: "btn btn-primary", text: "Continue ⚔️",
@@ -196,6 +213,8 @@ CHEM.Games.boss = (function () {
 
       if (won) {
         S.bump("bossWins");
+        if (diffMode.id === "hard") S.bump("hardWins");
+        if (diffMode.id === "nightmare") S.bump("nightmareWins");
         if (flawless) S.bump("flawlessBoss");
         if (clutch) S.bump("clutchWins");
         if (!S.data.bossesBeaten[boss.id]) {
@@ -208,10 +227,10 @@ CHEM.Games.boss = (function () {
       const coins = won ? Math.round(120 + boss.hp * 0.5 + (flawless ? 100 : 0)) : Math.round(correct * 3);
       const newBest = S.recordScore("boss_" + boss.id, won ? Math.round(playerHp) : 0);
 
-      UI.award({ xp, coins });
+      const got = UI.award({ xp, coins });
       UI.results({
         title: won ? `${boss.name} defeated!` : "Defeated…",
-        correct, total: asked, xp, coins, newBest,
+        correct, total: asked, xp: got.xp, coins: got.coins, newBest,
         bonus: won ? 10 : -20,
         extraStats: [
           ["Your HP", Math.max(0, Math.round(playerHp))],

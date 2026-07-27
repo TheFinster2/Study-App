@@ -60,6 +60,43 @@
   --good:#7dffa6; --bad:#ff7a8a; --warn:#ffe066; --info:#8fe3ff;
 }
 
+[data-theme="plasma"]{
+  --bg-0:#12021c; --bg-1:#1e0630; --bg-2:#2b0a45;
+  --glow-a:#ff3df0; --glow-b:#28e0ff;
+  --ink:#fdeaff; --ink-dim:#d0a6df; --ink-faint:#9a76ab;
+  --card:rgba(255,220,255,.05); --card-2:rgba(255,220,255,.09);
+  --line:rgba(255,180,250,.15);
+  --accent:#ff3df0; --accent-ink:#2a0026;
+  --good:#5cf0b0; --bad:#ff5f7e; --warn:#ffd54a; --info:#28e0ff;
+}
+[data-theme="aurora"]{
+  --bg-0:#050818; --bg-1:#0a1030; --bg-2:#131a4a;
+  --glow-a:#7dffb0; --glow-b:#a86bff;
+  --ink:#eafff4; --ink-dim:#a4c6bb; --ink-faint:#6f8f88;
+  --card:rgba(200,255,230,.05); --card-2:rgba(200,255,230,.09);
+  --line:rgba(150,240,200,.14);
+  --accent:#7dffb0; --accent-ink:#03251a;
+  --good:#7dffb0; --bad:#ff7a95; --warn:#ffe27a; --info:#a86bff;
+}
+[data-theme="obsidian"]{
+  --bg-0:#050506; --bg-1:#0d0e11; --bg-2:#16181d;
+  --glow-a:#8892a4; --glow-b:#4a5162;
+  --ink:#e8ecf2; --ink-dim:#9aa3b2; --ink-faint:#666e7d;
+  --card:rgba(255,255,255,.04); --card-2:rgba(255,255,255,.075);
+  --line:rgba(255,255,255,.11);
+  --accent:#d8dee9; --accent-ink:#0b0c0e;
+  --good:#9fd6a8; --bad:#e08a94; --warn:#ddc98a; --info:#9fb6d6;
+}
+[data-theme="radium"]{
+  --bg-0:#060a02; --bg-1:#0b1405; --bg-2:#13200a;
+  --glow-a:#b6ff2e; --glow-b:#6fdc00;
+  --ink:#f0ffdc; --ink-dim:#a8c98a; --ink-faint:#74905c;
+  --card:rgba(200,255,140,.05); --card-2:rgba(200,255,140,.09);
+  --line:rgba(170,255,90,.15);
+  --accent:#b6ff2e; --accent-ink:#0a1800;
+  --good:#b6ff2e; --bad:#ff6b5e; --warn:#ffe14a; --info:#8ef0b8;
+}
+
 * { box-sizing:border-box; }
 /* Class selectors like .modal-root{display:grid} outrank the UA [hidden] rule, which
    would leave invisible overlays swallowing clicks. Make `hidden` always win. */

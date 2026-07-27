@@ -9,7 +9,7 @@ CHEM.Bank = (function () {
   function all() {
     if (!ALL) {
       const D = CHEM.DATA;
-      ALL = [].concat(D.qY11 || [], D.qM5 || [], D.qM6 || [], D.qM7 || [], D.qM8 || []);
+      ALL = [].concat(D.qY11 || [], D.qM5 || [], D.qM6 || [], D.qM7 || [], D.qM8 || [], D.qExtra || []);
       INDEX = new Map(ALL.map(q => [q.id, q]));
     }
     return ALL;

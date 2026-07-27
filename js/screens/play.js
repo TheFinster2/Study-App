@@ -33,6 +33,9 @@ CHEM.Screens.play = (function () {
     { id: "pathway", icon: "🔗", name: "Pathway Puzzle", colour: "#b8f03a",
       desc: "Build organic synthesis routes by picking the right reagents.",
       tag: "Organic", minLevel: 5 },
+    { id: "survival", icon: "💀", name: "Survival", colour: "#ff4d6d",
+      desc: "One life. The clock tightens and the questions get harder. How deep can you go?",
+      tag: "Endless", minLevel: 6 },
     { id: "mistakes", icon: "🩹", name: "Mistake Rehab", colour: "#ff6b81",
       desc: "Only the questions you've got wrong, until you get them right.",
       tag: "Review", minLevel: 1 }
@@ -147,6 +150,7 @@ CHEM.Screens.play = (function () {
       case "titration":   return CHEM.Games.titration.start(view);
       case "pathway":     return CHEM.Games.pathway.start(view, { rounds: 3 });
       case "precipitate": return CHEM.Games.precipitate.start(view, { rows: 4, cols: 4, timeLimit: 150 });
+      case "survival":    return CHEM.Games.survival.start(view);
       case "boss":        return CHEM.Games.boss.start(view, arg);
       default:            return UI.go("/play");
     }

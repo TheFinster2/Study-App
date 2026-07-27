@@ -102,6 +102,9 @@ CHEM.Games.quiz = (function () {
 
     S.markMode(c.modeId);
     S.touchStreak();
+    const diffMode = S.difficulty();
+    if (c.totalTime) c.totalTime = Math.round(c.totalTime * diffMode.timeScale);
+    CHEM.Sound.gameStart();
 
     let idx = 0, correct = 0, streak = 0, bestStreak = 0;
     let xpEarned = 0, coinsEarned = 0, lives = c.lives, doubled = false;
@@ -128,8 +131,9 @@ CHEM.Games.quiz = (function () {
         timeLeft--;
         timerChip.textContent = U.fmtTime(Math.max(0, timeLeft));
         timerChip.classList.toggle("low", timeLeft <= 10);
-        if (timeLeft <= 5 && timeLeft > 0) CHEM.Sound.tick();
-        if (timeLeft <= 0) finish("Time!");
+        if (timeLeft <= 10 && timeLeft > 5) CHEM.Sound.tick();
+        if (timeLeft <= 5 && timeLeft > 0) CHEM.Sound.tickUrgent();
+        if (timeLeft <= 0) { CHEM.Sound.timeout(); finish("Time!"); }
       }, 1000);
     }
     UI.onLeave(() => { clearInterval(timerId); document.removeEventListener("keydown", onKey); });
@@ -173,7 +177,7 @@ CHEM.Games.quiz = (function () {
         coinsEarned += 2 + (q.diff || 1);
         CHEM.Sound.correct();
         if (streak > 1 && streak % 5 === 0) {
-          CHEM.Sound.combo(streak);
+          CHEM.Sound.multiplier(Math.floor(streak / 5));
           UI.toast({ icon: "⚡", kind: "xp", text: `<b>${streak} streak!</b> ×${multiplier()} XP` });
           streakChip.classList.add("combo-flash");
           setTimeout(() => streakChip.classList.remove("combo-flash"), 420);
@@ -186,8 +190,10 @@ CHEM.Games.quiz = (function () {
         if (S.data.inventory.shield > 0 && streak >= 3) {
           // Buffer absorbs the hit automatically when a streak is at stake.
           S.usePowerup("shield");
+          CHEM.Sound.shieldBlock();
           UI.toast({ icon: "🛡️", text: "<b>Buffer</b> absorbed that — streak saved." });
         } else {
+          if (streak >= 5) CHEM.Sound.comboBreak();
           streak = 0;
           if (lives > 0) {
             lives--;
@@ -222,7 +228,12 @@ CHEM.Games.quiz = (function () {
 
     function buildPowerupBar() {
       const node = U.el("div", { class: "powerups" });
-      const defs = CHEM.DATA.shop.powerups.filter(p => p.id !== "freeze" || c.totalTime);
+      // Nightmare locks out the two power-ups that remove difficulty outright.
+      const banned = diffMode.id === "nightmare" ? ["fifty", "skip"] : [];
+      const defs = CHEM.DATA.shop.powerups
+        .filter(p => p.id !== "freeze" || c.totalTime)
+        .filter(p => p.id !== "revive")
+        .filter(p => !banned.includes(p.id));
       const btns = {};
 
       defs.forEach(p => {
@@ -246,21 +257,31 @@ CHEM.Games.quiz = (function () {
 
       function use(id, btn) {
         if (!S.usePowerup(id)) return;
-        CHEM.Sound.click();
-        if (id === "fifty") { card && card.fiftyFifty(); UI.toast({ icon: "✂️", text: "Two wrong options removed." }); }
+        if (id === "fifty") { CHEM.Sound.puFifty(); card && card.fiftyFifty();
+          UI.toast({ icon: "✂️", text: "Two wrong options removed." }); }
+        if (id === "insight") {
+          CHEM.Sound.unlock();
+          const q = questions[idx];
+          UI.toast({ icon: "🔍", ms: 6000, text: "<b>Insight:</b> " + U.escapeHtml(q.topic) +
+            " — think about " + U.escapeHtml(CHEM.Bank.moduleName(q.mod)) + "." });
+        }
         if (id === "skip") {
+          CHEM.Sound.puSkip();
           UI.toast({ icon: "⏭️", text: "Skipped — streak preserved." });
           idx++;
           if (idx >= questions.length) return finish();
           renderQuestion();
         }
         if (id === "freeze") {
+          CHEM.Sound.puFreeze();
           timeLeft += 20;
           timerChip.textContent = U.fmtTime(timeLeft);
           UI.toast({ icon: "🧊", text: "+20 seconds." });
         }
-        if (id === "shield") UI.toast({ icon: "🛡️", text: "Buffer ready — it will absorb your next slip." });
+        if (id === "shield") { CHEM.Sound.puShield();
+          UI.toast({ icon: "🛡️", text: "Buffer ready — it will absorb your next slip." }); }
         if (id === "double") {
+          CHEM.Sound.puCatalyst();
           doubled = true;
           UI.toast({ icon: "✨", kind: "xp", text: "<b>Catalyst active</b> — double XP for this run." });
         }
@@ -281,17 +302,17 @@ CHEM.Games.quiz = (function () {
       const seen = c.totalTime ? Math.max(1, idx + 1) : Math.min(questions.length, idx + 1);
 
       const perfect = correct === seen && seen >= 5;
-      if (perfect) S.bump("perfectRuns");
+      if (perfect) { S.bump("perfectRuns"); CHEM.Sound.perfect(); }
 
       const streakBonusXp = S.streakBonus();
       const finalXp = xpEarned + streakBonusXp;
       const newBest = S.recordScore(c.modeId, correct);
 
-      UI.award({ xp: finalXp, coins: coinsEarned + (perfect ? 50 : 0) });
+      const got = UI.award({ xp: finalXp, coins: coinsEarned + (perfect ? 30 : 0) });
 
       UI.results({
         title: reason ? reason : "Run complete",
-        correct, total: seen, xp: finalXp, coins: coinsEarned + (perfect ? 50 : 0),
+        correct, total: seen, xp: got.xp, coins: got.coins,
         newBest,
         extraStats: [["Best streak", bestStreak], ["Daily bonus", "+" + streakBonusXp], ["Multiplier", "×" + multiplier()]],
         onAgain: () => UI.handleRoute()

@@ -79,6 +79,44 @@ CHEM.Screens.home = function (view) {
     return mode === "quiz" ? "rapid" : mode;
   }
 
+  /* weekly quests */
+  const quests = S.weeklyQuests();
+  view.appendChild(U.el("h2", {}, [
+    document.createTextNode("Weekly quests"),
+    U.el("span", { class: "h2-sub", text: "resets Monday" })
+  ]));
+  view.appendChild(U.el("div", { class: "grid" }, quests.map(entry => {
+    const q = entry.quest;
+    return U.el("div", { class: "card daily" }, [
+      U.el("div", { class: "daily-ico", text: entry.claimed ? "✅" : q.icon }),
+      U.el("div", { class: "daily-body" }, [
+        U.el("h3", { text: q.name }),
+        U.el("div", { class: "bar", style: "margin:8px 0 6px" }, [
+          U.el("i", { style: `width:${U.clamp((entry.done / entry.target) * 100, 0, 100)}%` })
+        ]),
+        U.el("div", { class: "tiny muted", text:
+          `${q.desc} — ${entry.done} / ${entry.target} · ${q.coins} 🪙 + ${q.xp} XP` })
+      ]),
+      entry.claimed
+        ? U.el("span", { class: "chip on", text: "Claimed" })
+        : entry.complete
+          ? U.el("button", {
+              class: "btn btn-sm btn-primary", text: "Claim",
+              on: { click: e => {
+                if (S.claimQuest(q.id)) {
+                  CHEM.Sound.quest();
+                  CHEM.FX.burstAt(e.target, { count: 40, speed: 7 });
+                  UI.toast({ icon: q.icon, kind: "good",
+                    text: `<b>${U.escapeHtml(q.name)}</b> complete! +${q.coins} 🪙` });
+                  S.checkAchievements();
+                  UI.handleRoute();
+                }
+              } }
+            })
+          : U.el("span", { class: "chip", text: Math.round((entry.done / entry.target) * 100) + "%" })
+    ]);
+  })));
+
   /* stats */
   const acc = S.overallAccuracy();
   const due = S.dueCards().length;
