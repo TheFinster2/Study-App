@@ -6,7 +6,7 @@ CHEM.DATA.qY11 = [
 /* ── Module 1: Properties and Structure of Matter ─────────────── */
 { id:"m1-01", mod:"M1", topic:"Separation techniques", diff:1,
   q:"A mixture of sand, salt and water needs to be fully separated. Which sequence works?",
-  choices:["Filtration, then evaporation of the filtrate","Evaporation, then filtration","Distillation, then chromatography","Decanting, then sublimation"],
+  choices:["Filtration, then evaporation of the filtrate","Evaporation first, then filtration of the dry residue","Distillation, then chromatography of the distillate","Decanting the water, then subliming off the salt"],
   a:0, why:"Filtration removes the insoluble sand; evaporating the filtrate leaves the salt behind and (if condensed) recovers the water. Evaporating first would leave sand and salt mixed together." },
 
 { id:"m1-02", mod:"M1", topic:"Separation techniques", diff:2,
@@ -26,42 +26,42 @@ CHEM.DATA.qY11 = [
 
 { id:"m1-05", mod:"M1", topic:"Emission spectra", diff:2,
   q:"Why does each element produce a unique line emission spectrum?",
-  choices:["Each element has a unique set of quantised electron energy levels","Each element emits light of a single wavelength","Emission depends only on the number of neutrons","Electrons are ejected from the nucleus at fixed speeds"],
+  choices:["Each element has a unique set of quantised electron energy levels","Each element emits light at one characteristic single wavelength","The line pattern is set by the number of neutrons in the nucleus","Electrons are ejected from the nucleus at element-specific speeds"],
   a:0, why:"Electrons falling between quantised levels emit photons of energy ΔE = hf. Because the spacing of levels differs for every element, the pattern of lines acts like a fingerprint." },
 
 { id:"m1-06", mod:"M1", topic:"Periodic trends", diff:2,
   q:"Which correctly describes the trend in first ionisation energy across Period 3 (Na → Ar)?",
-  choices:["Increases overall, with dips at Al and S","Decreases steadily","Increases steadily with no exceptions","Stays constant"],
+  choices:["Increases overall, with dips at Al and S","Decreases steadily from sodium across to argon","Increases steadily with no exceptions","Stays roughly constant across the period"],
   a:0, why:"Nuclear charge rises with roughly constant shielding, so ionisation energy increases. Al dips because its 3p electron is higher in energy than 3s; S dips because of electron–electron repulsion in a doubly-occupied 3p orbital." },
 
 { id:"m1-07", mod:"M1", topic:"Periodic trends", diff:1,
   q:"Atomic radius down a group increases mainly because:",
-  choices:["More occupied electron shells and greater shielding","Nuclear charge decreases","Electrons are added to the same shell","Atoms gain neutrons"],
+  choices:["More occupied electron shells and greater shielding","The nuclear charge decreases steadily down the group","Electrons are added to the same outermost shell","Atoms gain neutrons, which expands the nucleus"],
   a:0, why:"Each successive period adds a shell, and inner electrons shield the outer electrons from the nucleus, so the outermost electrons sit further out despite a larger nuclear charge." },
 
 { id:"m1-08", mod:"M1", topic:"Bonding", diff:2,
   q:"Which property is best explained by delocalised electrons in a metallic lattice?",
-  choices:["Malleability and electrical conductivity","Brittleness","Low melting point","Insolubility in water"],
+  choices:["Malleability and electrical conductivity","Brittleness when a stress is applied","A characteristically low melting point","Insolubility in polar solvents such as water"],
   a:0, why:"Cations sit in a 'sea' of delocalised electrons. Layers can slide without breaking the bonding (malleable), and the mobile electrons carry charge (conductive)." },
 
 { id:"m1-09", mod:"M1", topic:"Bonding", diff:2,
   q:"Ionic compounds conduct electricity when molten or dissolved but not as solids because:",
-  choices:["Ions become mobile only when the lattice breaks down","Electrons are released on melting","The ions become neutral atoms","Covalent bonds form on melting"],
+  choices:["Ions become mobile only when the lattice breaks down","Electrons are released from the lattice when it melts","The ions become neutral atoms once freed","Covalent bonds form between the ions on melting"],
   a:0, why:"Charge carriers must be free to move. In a solid lattice the ions are locked in fixed positions; melting or dissolving frees them." },
 
 { id:"m1-10", mod:"M1", topic:"Intermolecular forces", diff:2,
   q:"Why does water have a much higher boiling point than hydrogen sulfide?",
-  choices:["Water molecules form hydrogen bonds","H₂S is ionic","Water has a larger molar mass","H₂S is non-polar overall"],
+  choices:["Water molecules form hydrogen bonds","H₂S is ionic, so it forms a giant lattice","Water has the larger molar mass","H₂S molecules are non-polar overall"],
   a:0, why:"O is small and highly electronegative, so H₂O forms strong hydrogen bonds. S is larger and less electronegative, so H₂S only has weaker dipole–dipole and dispersion forces despite its greater molar mass." },
 
 { id:"m1-11", mod:"M1", topic:"Intermolecular forces", diff:3,
   q:"Which best explains why the boiling points of the noble gases increase down the group?",
-  choices:["Larger electron clouds are more polarisable, giving stronger dispersion forces","Hydrogen bonding increases","Dipole–dipole forces increase","Covalent bonds form between atoms"],
+  choices:["More polarisable electron clouds give stronger dispersion forces","Weak covalent bonds begin to form between adjacent noble gas atoms","Permanent dipole–dipole attractions increase down the group","Hydrogen bonding between the atoms becomes much stronger"],
   a:0, why:"Noble gases are non-polar, so dispersion forces are the only intermolecular force. More electrons = a more polarisable cloud = larger instantaneous dipoles = stronger attraction." },
 
 { id:"m1-12", mod:"M1", topic:"Allotropes", diff:2,
   q:"Graphite conducts electricity but diamond does not because:",
-  choices:["Graphite has delocalised electrons between its layers","Graphite contains metal atoms","Diamond has ionic bonding","Graphite molecules are smaller"],
+  choices:["Graphite has delocalised electrons between its layers","Graphite contains metallic impurities that carry charge","Diamond is held together by ionic bonding","Graphite is made of much smaller molecules"],
   a:0, why:"Each carbon in graphite bonds to three others, leaving one electron per atom delocalised across the layer. In diamond every valence electron is committed to a σ bond in the tetrahedral network." },
 
 /* ── Module 2: Introduction to Quantitative Chemistry ─────────── */
@@ -118,12 +118,12 @@ CHEM.DATA.qY11 = [
 /* ── Module 3: Reactive Chemistry ─────────────────────────────── */
 { id:"m3-01", mod:"M3", topic:"Reaction types", diff:1,
   q:"2Mg(s) + O₂(g) → 2MgO(s) is best classified as:",
-  choices:["Synthesis (combination) and redox","Decomposition","Double displacement","Neutralisation"],
+  choices:["Synthesis (combination) and redox","Decomposition of a binary compound","Double displacement of two ions","Neutralisation of an acid by a base"],
   a:0, why:"Two reactants combine into one product (synthesis), and magnesium is oxidised 0 → +2 while oxygen is reduced 0 → −2, so it is also redox." },
 
 { id:"m3-02", mod:"M3", topic:"Metal reactivity", diff:2,
   q:"Zinc placed in copper(II) sulfate solution produces a red-brown coating because:",
-  choices:["Zn is a stronger reductant than Cu, so it reduces Cu²⁺","Cu²⁺ oxidises the sulfate ion","Zinc dissolves without any electron transfer","Copper is more reactive than zinc"],
+  choices:["Zn is a stronger reductant than Cu, so it reduces Cu²⁺","Cu²⁺ oxidises the sulfate ion to sulfur trioxide","Zinc dissolves without any electron transfer at all","Copper is more reactive and displaces the zinc"],
   a:0, why:"Zn is above Cu in the activity series, so Zn(s) → Zn²⁺ + 2e⁻ and Cu²⁺ + 2e⁻ → Cu(s). Copper metal deposits on the zinc." },
 
 { id:"m3-03", mod:"M3", topic:"Redox", diff:2,
@@ -138,23 +138,23 @@ CHEM.DATA.qY11 = [
 
 { id:"m3-05", mod:"M3", topic:"Galvanic cells", diff:2,
   q:"The purpose of the salt bridge in a galvanic cell is to:",
-  choices:["Maintain electrical neutrality by allowing ion migration","Conduct electrons between electrodes","Prevent any ion movement","Supply reactants to the cathode"],
+  choices:["Maintain electrical neutrality by allowing ion migration","Carry the electrons directly between the two electrodes","Prevent any movement of ions between half-cells","Supply fresh reactant solution to the cathode"],
   a:0, why:"Without it, the anode half-cell builds positive charge and the cathode half-cell negative charge, stopping the reaction. Anions migrate to the anode and cations to the cathode." },
 
 { id:"m3-06", mod:"M3", topic:"Rates of reaction", diff:2,
   q:"Increasing temperature speeds up a reaction mainly because:",
-  choices:["A greater proportion of collisions exceed the activation energy","Activation energy is lowered","Particles become larger","Collision frequency alone doubles the rate"],
+  choices:["A greater proportion of collisions exceed the activation energy","The activation energy of the reaction is lowered by heating","Particles expand and present a larger collision target","Collision frequency alone accounts for the whole increase"],
   a:0, why:"The Maxwell–Boltzmann distribution shifts, so many more particles have E ≥ Ea. Increased collision frequency contributes, but the energy effect dominates." },
 
 { id:"m3-07", mod:"M3", topic:"Catalysts", diff:2,
   q:"A catalyst increases reaction rate by:",
-  choices:["Providing an alternative pathway with lower activation energy","Increasing the enthalpy change","Shifting the equilibrium position right","Raising the temperature of the mixture"],
+  choices:["Providing an alternative pathway with lower activation energy","Increasing the enthalpy change released by the reaction","Shifting the position of equilibrium towards the products","Raising the average temperature of the reacting mixture"],
   a:0, why:"Catalysts lower Ea for both forward and reverse reactions equally. ΔH and the equilibrium position are unchanged — only the time taken to reach equilibrium falls." },
 
 /* ── Module 4: Drivers of Reactions ───────────────────────────── */
 { id:"m4-01", mod:"M4", topic:"Enthalpy", diff:1,
   q:"For an exothermic reaction:",
-  choices:["ΔH is negative and the products are lower in energy","ΔH is positive and heat is absorbed","ΔH is zero","Bond breaking releases more energy than bond making"],
+  choices:["ΔH is negative and the products are lower in energy","Bond breaking releases more energy than bond making does","ΔH is positive and heat is absorbed from the surroundings","ΔH is zero because energy is always conserved"],
   a:0, why:"Energy released when new bonds form exceeds the energy absorbed breaking old bonds, so the system loses enthalpy: ΔH < 0 and the surroundings warm up." },
 
 { id:"m4-02", mod:"M4", topic:"Calorimetry", diff:3,
@@ -169,7 +169,7 @@ CHEM.DATA.qY11 = [
 
 { id:"m4-04", mod:"M4", topic:"Entropy", diff:2,
   q:"Which process has the largest positive entropy change?",
-  choices:["Sublimation of dry ice: CO₂(s) → CO₂(g)","Freezing of water","2NO₂(g) → N₂O₄(g)","Dissolving a gas in water"],
+  choices:["Sublimation of dry ice: CO₂(s) → CO₂(g)","Freezing of liquid water: H₂O(l) → H₂O(s)","Dimerisation: 2NO₂(g) → N₂O₄(g)","Dissolving a gas in water: O₂(g) → O₂(aq)"],
   a:0, why:"Going from a highly ordered solid to a gas creates by far the greatest increase in positional disorder. The other three all reduce the number of gas particles or increase order." },
 
 { id:"m4-05", mod:"M4", topic:"Gibbs free energy", diff:3,
@@ -184,6 +184,6 @@ CHEM.DATA.qY11 = [
 
 { id:"m4-07", mod:"M4", topic:"Enthalpy", diff:2,
   q:"Dissolving ammonium nitrate in water makes the beaker feel cold. This means:",
-  choices:["The dissolution is endothermic and is driven by an entropy increase","The dissolution is exothermic","ΔS is negative","ΔG is positive"],
+  choices:["The dissolution is endothermic, driven by rising entropy","The dissolution is exothermic and releases heat to the beaker","The entropy change on dissolving is strongly negative","ΔG is positive, so the salt cannot actually dissolve"],
   a:0, why:"Heat is absorbed from the surroundings (ΔH > 0), yet it still happens spontaneously because the large positive ΔS of dispersing ions makes TΔS outweigh ΔH." }
 ];

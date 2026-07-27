@@ -12,12 +12,12 @@ CHEM.DATA.qExtra = [
 
 { id:"xm1-02", mod:"M1", topic:"Elements and compounds", diff:1,
   q:"Which of the following is a pure substance?",
-  choices:["Distilled water","Air","Brass","Seawater"],
+  choices:["Distilled water","Filtered air","Brass","Seawater"],
   a:0, why:"A pure substance has fixed composition and a sharp melting/boiling point. Air, brass and seawater are all mixtures with variable composition." },
 
 { id:"xm1-03", mod:"M1", topic:"Atomic structure", diff:2,
   q:"Which statement about isotopes is correct?",
-  choices:["They have the same number of protons but different numbers of neutrons","They have different numbers of protons","They have different chemical properties","They always have the same mass number"],
+  choices:["Same number of protons, different numbers of neutrons","Different numbers of protons but the same neutrons","Noticeably different chemical properties from each other","Always the same mass number as one another"],
   a:0, why:"Isotopes differ only in neutron count, so mass differs but nuclear charge and electron configuration — and therefore chemistry — are essentially identical." },
 
 { id:"xm1-04", mod:"M1", topic:"Electron configuration", diff:2,
@@ -32,7 +32,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm1-06", mod:"M1", topic:"Periodic trends", diff:2,
   q:"Electronegativity generally increases:",
-  choices:["Left to right across a period and up a group","Right to left across a period","Down a group","Only in the transition metals"],
+  choices:["Left to right across a period and up a group","Right to left across a period and down a group","Down a group but not across a period","Only among the transition metal elements"],
   a:0, why:"Increasing nuclear charge with similar shielding pulls bonding electrons harder across a period; going up a group the bonding electrons sit closer to the nucleus. Fluorine is the most electronegative element." },
 
 { id:"xm1-07", mod:"M1", topic:"Bonding", diff:2,
@@ -42,7 +42,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm1-08", mod:"M1", topic:"Bonding", diff:3,
   q:"Silicon dioxide has a much higher melting point than carbon dioxide because:",
-  choices:["SiO₂ is a covalent network solid whereas CO₂ is covalent molecular","SiO₂ is ionic","CO₂ has hydrogen bonding","SiO₂ has a smaller molar mass"],
+  choices:["SiO₂ is a covalent network solid; CO₂ is covalent molecular","SiO₂ is an ionic lattice whereas CO₂ is covalent","CO₂ molecules are held together by hydrogen bonds","Silicon dioxide has the smaller molar mass of the two oxides"],
   a:0, why:"Melting SiO₂ requires breaking strong covalent bonds throughout a 3D lattice. Melting CO₂ only overcomes weak dispersion forces between discrete molecules." },
 
 { id:"xm1-09", mod:"M1", topic:"Polarity", diff:3,
@@ -52,7 +52,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm1-10", mod:"M1", topic:"Intermolecular forces", diff:3,
   q:"Ethanol and dimethyl ether are both C₂H₆O, yet ethanol boils about 100 °C higher. Why?",
-  choices:["Ethanol has an O-H group and can hydrogen bond with itself","Dimethyl ether is ionic","Ethanol has a larger molar mass","Dimethyl ether is a network solid"],
+  choices:["Ethanol has an O-H group and hydrogen bonds with itself","Dimethyl ether forms a rigid ionic lattice when liquid","Ethanol has the considerably larger molar mass","Dimethyl ether is a covalent network solid"],
   a:0, why:"Hydrogen bonding requires H bonded directly to N, O or F. The ether's oxygen has no attached hydrogen, so its molecules only attract by dipole–dipole and dispersion forces." },
 
 /* ── Module 2: Introduction to Quantitative Chemistry ─────────── */
@@ -93,7 +93,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm2-08", mod:"M2", topic:"Concentration", diff:2,
   q:"How many moles of HCl are in 25.0 mL of 0.200 mol L⁻¹ solution?",
-  choices:["5.00 × 10⁻³ mol","0.200 mol","8.00 mol","5.00 mol"],
+  choices:["5.00 × 10⁻³ mol","2.00 × 10⁻³ mol","8.00 mol","5.00 mol"],
   a:0, why:"n = cV = 0.200 × 0.0250 L = 5.00 × 10⁻³ mol. Volume must be in litres." },
 
 { id:"xm2-09", mod:"M2", topic:"Stoichiometry", diff:3,
@@ -119,7 +119,7 @@ CHEM.DATA.qExtra = [
 /* ── Module 3: Reactive Chemistry ─────────────────────────────── */
 { id:"xm3-01", mod:"M3", topic:"Reaction types", diff:2,
   q:"AgNO₃(aq) + NaCl(aq) → AgCl(s) + NaNO₃(aq) is best classified as:",
-  choices:["Precipitation (double displacement)","Synthesis","Redox","Decomposition"],
+  choices:["Precipitation (double displacement)","Synthesis (combination)","Redox with electron transfer throughout","Decomposition"],
   a:0, why:"The ions swap partners and an insoluble product drops out. No oxidation numbers change, so it is not redox." },
 
 { id:"xm3-02", mod:"M3", topic:"Metal reactivity", diff:2,
@@ -144,17 +144,17 @@ CHEM.DATA.qExtra = [
 
 { id:"xm3-06", mod:"M3", topic:"Corrosion", diff:2,
   q:"Galvanising protects steel from rusting mainly because zinc:",
-  choices:["Is more easily oxidised than iron, so it corrodes sacrificially","Is harder than iron","Prevents oxygen dissolving in water","Reacts with iron to form an alloy"],
+  choices:["It is more easily oxidised than iron, so corrodes sacrificially","It is considerably harder than the steel it coats","It stops oxygen from dissolving into the surface water film","It reacts with the iron to form a protective alloy"],
   a:0, why:"Zinc has the more negative reduction potential, so it oxidises preferentially. Protection continues even if the coating is scratched — unlike simple paint." },
 
 { id:"xm3-07", mod:"M3", topic:"Rates of reaction", diff:2,
   q:"Powdering a solid reactant increases the reaction rate because it:",
-  choices:["Increases the surface area available for collisions","Increases the activation energy","Raises the temperature","Increases the concentration of the solid"],
+  choices:["Increases the surface area available for collisions","Increases the activation energy of the reaction","Raises the temperature of the reacting mixture","Increases the effective concentration of the solid"],
   a:0, why:"More exposed particles means more frequent successful collisions per second. The activation energy is unchanged." },
 
 { id:"xm3-08", mod:"M3", topic:"Rates of reaction", diff:3,
   q:"On a Maxwell–Boltzmann distribution, adding a catalyst is shown by:",
-  choices:["Moving the activation energy line to the left","Shifting the whole curve right","Raising the peak of the curve","Flattening the curve"],
+  choices:["Moving the activation energy line to the left","Shifting the whole distribution curve to the right","Raising the peak height of the distribution","Flattening and broadening the whole curve"],
   a:0, why:"A catalyst lowers Ea, so the line moves left and a greater fraction of the same distribution lies beyond it. Only a temperature change alters the curve's shape." },
 
 { id:"xm3-09", mod:"M3", topic:"Combustion", diff:2,
@@ -180,17 +180,17 @@ CHEM.DATA.qExtra = [
 
 { id:"xm4-03", mod:"M4", topic:"Calorimetry", diff:3,
   q:"Why is the experimental molar heat of combustion from a spirit burner usually much lower in magnitude than the accepted value?",
-  choices:["Heat is lost to the surroundings and combustion may be incomplete","The fuel has too high a molar mass","Water has the wrong specific heat capacity","The thermometer reads too high"],
+  choices:["Heat is lost to the surroundings and combustion may be incomplete","The molar mass of the fuel used is far too high to measure","Water has a specific heat capacity that varies with temperature","The thermometer consistently reads several degrees too high"],
   a:0, why:"Only some of the released energy reaches the water; the rest heats the air, the container and the stand. Soot on the base is direct evidence of incomplete combustion." },
 
 { id:"xm4-04", mod:"M4", topic:"Entropy", diff:2,
   q:"Which change corresponds to a decrease in entropy?",
-  choices:["A gas condensing to a liquid","Ice melting","A solid dissolving","A gas expanding"],
+  choices:["A gas condensing to a liquid","Ice melting to liquid water","A solid dissolving in water","A gas expanding into a vacuum"],
   a:0, why:"Condensation reduces the number of accessible positions and orientations, so disorder — and entropy — falls." },
 
 { id:"xm4-05", mod:"M4", topic:"Entropy", diff:3,
   q:"For the reaction 2H₂(g) + O₂(g) → 2H₂O(l), the sign of ΔS is:",
-  choices:["Negative, because 3 mol of gas become a liquid","Positive, because water forms","Zero","Positive, because the reaction is exothermic"],
+  choices:["Negative, because 3 mol of gas become a liquid","Positive, because water molecules are being formed","Zero, because the number of atoms is conserved","Positive, because the reaction is strongly exothermic"],
   a:0, why:"Three moles of gas collapse into a condensed liquid phase, a large decrease in positional disorder. The reaction is still spontaneous because ΔH is strongly negative." },
 
 { id:"xm4-06", mod:"M4", topic:"Gibbs free energy", diff:3,
@@ -205,33 +205,33 @@ CHEM.DATA.qExtra = [
 
 { id:"xm4-08", mod:"M4", topic:"Spontaneity", diff:2,
   q:"A spontaneous reaction is one that:",
-  choices:["Occurs without continuous external energy input","Occurs rapidly","Is always exothermic","Always increases entropy"],
+  choices:["Occurs without continuous external energy input","Occurs rapidly once the reactants are mixed","Is always exothermic under standard conditions","Always increases the entropy of the system"],
   a:0, why:"Spontaneity is a thermodynamic statement about direction, not speed. Diamond converting to graphite is spontaneous but immeasurably slow." },
 
 { id:"xm4-09", mod:"M4", topic:"Enthalpy diagrams", diff:2,
   q:"On an energy profile diagram, the activation energy is the difference between:",
-  choices:["The reactants and the transition state peak","The reactants and products","The products and the peak","The peak and the x-axis"],
+  choices:["The reactants and the transition state peak","The reactants and the final products","The products and the transition state peak","The transition state peak and the axis"],
   a:0, why:"Ea is the energy barrier from reactants up to the activated complex. The reactant-to-product difference is ΔH." },
 
 { id:"xm4-10", mod:"M4", topic:"Hess's law", diff:3,
   q:"Why can Hess's law be applied to any reaction pathway?",
-  choices:["Enthalpy is a state function, so ΔH depends only on the initial and final states","Enthalpy is always conserved as heat","All reactions are reversible","Activation energies cancel out"],
+  choices:["Enthalpy is a state function, so ΔH depends only on start and end","Enthalpy is always conserved and released entirely as heat","Every chemical reaction is reversible under the right conditions","The activation energies of each step cancel one another out"],
   a:0, why:"Because H is a state function, the route taken is irrelevant. This lets us calculate ΔH for reactions that cannot be measured directly." },
 
 /* ── Module 5: Equilibrium and Acid Reactions ─────────────────── */
 { id:"xm5-01", mod:"M5", topic:"Dynamic equilibrium", diff:2,
   q:"A sealed bottle of soft drink shows equilibrium between CO₂(g) and CO₂(aq). Opening the bottle causes fizzing because:",
-  choices:["Pressure above the liquid drops, shifting equilibrium towards gaseous CO₂","The temperature rises sharply","CO₂ becomes more soluble","The reaction becomes irreversible"],
+  choices:["Pressure above the liquid drops, shifting equilibrium to CO₂(g)","The temperature of the drink rises sharply on opening","Carbon dioxide becomes far more soluble at the lower pressure","The dissolution reaction becomes irreversible once opened"],
   a:0, why:"Releasing the pressure lowers the partial pressure of CO₂ above the liquid, so dissolved CO₂ escapes to restore equilibrium — an application of Le Chatelier and Henry's law." },
 
 { id:"xm5-02", mod:"M5", topic:"Le Chatelier", diff:2,
   q:"For CO(g) + 2H₂(g) ⇌ CH₃OH(g), increasing the pressure will:",
-  choices:["Shift the equilibrium towards methanol","Shift the equilibrium towards reactants","Have no effect","Decrease K"],
+  choices:["Shift the equilibrium towards methanol","Shift the equilibrium back towards CO and H₂","Have no effect on the equilibrium position","Decrease the value of the equilibrium constant"],
   a:0, why:"Three moles of gas become one, so compression favours the side with fewer gas particles — the product." },
 
 { id:"xm5-03", mod:"M5", topic:"Le Chatelier", diff:3,
   q:"For an endothermic reaction, raising the temperature will:",
-  choices:["Shift the equilibrium right and increase K","Shift the equilibrium left and decrease K","Shift right but leave K unchanged","Have no effect on K"],
+  choices:["Shift the equilibrium right and increase K","Shift the equilibrium left and decrease K","Shift it right but leave K unchanged","Have no effect on the position or on K"],
   a:0, why:"Heat behaves as a reactant for an endothermic reaction, so adding it drives the system forward. Because temperature is the only variable that alters K, K rises." },
 
 { id:"xm5-04", mod:"M5", topic:"Equilibrium constant", diff:3,
@@ -241,7 +241,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm5-05", mod:"M5", topic:"Equilibrium constant", diff:2,
   q:"Units are usually omitted from K values in the HSC course because:",
-  choices:["K is defined using activities, which are dimensionless ratios","K has no physical meaning","Concentrations always cancel","The units are always mol L⁻¹"],
+  choices:["K is defined using activities, which are dimensionless ratios","The equilibrium constant carries no real physical meaning","The concentration units always cancel out exactly","The units of K are always simply mol per litre"],
   a:0, why:"Strictly, each concentration is divided by a standard state, making every term unitless. The units would otherwise vary with the stoichiometry." },
 
 { id:"xm5-06", mod:"M5", topic:"ICE tables", diff:3,
@@ -251,7 +251,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm5-07", mod:"M5", topic:"Reaction quotient", diff:3,
   q:"A mixture has Q = K. This means:",
-  choices:["The system is already at equilibrium and no net change occurs","The forward reaction will dominate","The reverse reaction will dominate","The reaction has stopped completely"],
+  choices:["The system is at equilibrium and no net change occurs","The forward reaction will dominate until Q rises","The reverse reaction will dominate until Q falls","The reaction has stopped completely at the particle level"],
   a:0, why:"Q = K defines equilibrium. Both reactions continue at equal rates, so there is no net change in concentration." },
 
 { id:"xm5-08", mod:"M5", topic:"Solubility equilibria", diff:3,
@@ -261,7 +261,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm5-09", mod:"M5", topic:"Solubility equilibria", diff:2,
   q:"Increasing the temperature usually increases the solubility of an ionic solid because:",
-  choices:["Dissolution is usually endothermic, so heat shifts the equilibrium right","Ksp is independent of temperature","The lattice energy decreases","Water becomes more polar"],
+  choices:["Dissolution is usually endothermic, so heat shifts it right","The solubility product Ksp is independent of temperature","The lattice energy of the solid decreases on heating","Water molecules become significantly more polar"],
   a:0, why:"For most salts ΔH_soln is positive, so adding heat drives dissolution forward and raises Ksp. Some salts, such as Ce₂(SO₄)₃, behave oppositely." },
 
 { id:"xm5-10", mod:"M5", topic:"Common ion effect", diff:3,
@@ -271,22 +271,22 @@ CHEM.DATA.qExtra = [
 
 { id:"xm5-11", mod:"M5", topic:"Industrial equilibrium", diff:3,
   q:"In the Haber process, unreacted N₂ and H₂ are recycled because:",
-  choices:["Single-pass conversion is low, so recycling raises the overall yield","The catalyst requires excess gas","It lowers the temperature needed","Ammonia decomposes otherwise"],
+  choices:["Single-pass conversion is low, so recycling raises overall yield","The iron catalyst requires a large excess of gas to stay active","Recycling lowers the temperature the reactor needs to run at","Ammonia would otherwise decompose back to its elements"],
   a:0, why:"Only about 15% converts per pass under the compromise conditions. Condensing out the ammonia and recycling the rest makes the process economic." },
 
 { id:"xm5-12", mod:"M5", topic:"Catalysts", diff:2,
   q:"Iron is used in the Haber process and vanadium(V) oxide in the Contact process. Both:",
-  choices:["Lower the activation energy without shifting the equilibrium","Increase the equilibrium yield","Are consumed during the reaction","Raise the value of K"],
+  choices:["Lower the activation energy without shifting the equilibrium","Increase the equilibrium yield of the desired product substantially","Are consumed steadily as the reaction proceeds","Raise the value of the equilibrium constant K"],
   a:0, why:"A heterogeneous catalyst provides a surface for an alternative lower-energy pathway. It is regenerated unchanged and cannot alter the equilibrium position." },
 
 { id:"xm5-13", mod:"M5", topic:"Le Chatelier", diff:3,
   q:"For Fe³⁺(aq) + SCN⁻(aq) ⇌ [FeSCN]²⁺(aq) (blood red), adding solid NaOH causes the colour to fade because:",
-  choices:["OH⁻ precipitates Fe³⁺ as Fe(OH)₃, removing a reactant","OH⁻ reacts with the complex directly to form a colourless ion","The temperature drops","SCN⁻ is oxidised"],
+  choices:["OH⁻ precipitates Fe³⁺ as Fe(OH)₃, removing a reactant","OH⁻ attacks the complex directly to give a colourless ion","The temperature drops as the solid sodium hydroxide dissolves","The thiocyanate ion is oxidised by the hydroxide added"],
   a:0, why:"Removing Fe³⁺ from solution shifts the equilibrium left to replace it, decomposing the red complex." },
 
 { id:"xm5-14", mod:"M5", topic:"Equilibrium graphs", diff:3,
   q:"After a system reaches equilibrium, a catalyst is added. On a rate–time graph this appears as:",
-  choices:["Both forward and reverse rates jumping equally and staying equal","The forward rate rising above the reverse rate","The reverse rate falling","No change at all"],
+  choices:["Both rates jump equally and remain equal to each other","The forward rate rises above the reverse rate","The reverse rate falls while the forward rate holds","No change at all in either of the two rates"],
   a:0, why:"A catalyst accelerates both directions by the same factor. The rates stay equal, so concentrations never change." },
 
 { id:"xm5-15", mod:"M5", topic:"Ocean acidification", diff:3,
@@ -296,33 +296,33 @@ CHEM.DATA.qExtra = [
 
 { id:"xm5-16", mod:"M5", topic:"Equilibrium constant", diff:3,
   q:"Reaction A has K = 1 × 10⁵ and reaction B has K = 1 × 10⁻⁵ at the same temperature. Which is true?",
-  choices:["A favours products; B favours reactants","A is faster than B","B favours products","Both are at equilibrium when concentrations are equal"],
+  choices:["A favours products; B favours reactants","A reaches equilibrium faster than B does","B favours products; A favours reactants","Both sit at equilibrium when concentrations are equal"],
   a:0, why:"A large K means the numerator (products) dominates at equilibrium. K carries no information about rate." },
 
 { id:"xm5-17", mod:"M5", topic:"Le Chatelier", diff:2,
   q:"Diluting an aqueous equilibrium with water shifts it towards:",
-  choices:["The side with more dissolved particles","The side with fewer dissolved particles","No shift ever occurs","The solid phase"],
+  choices:["The side with more dissolved particles","The side with fewer dissolved particles","Neither side — dilution never causes a shift","The side containing any solid phase present"],
   a:0, why:"Dilution lowers all concentrations, and the system opposes this by shifting to produce more dissolved species — the aqueous analogue of decreasing pressure." },
 
 { id:"xm5-18", mod:"M5", topic:"Enthalpy of solution", diff:3,
   q:"A salt dissolves and the solution becomes warm. This tells you:",
-  choices:["Hydration energy released exceeds the lattice energy absorbed","Lattice energy exceeds hydration energy","The process is endothermic","ΔS is negative"],
+  choices:["Hydration energy released exceeds lattice energy absorbed","Lattice energy absorbed exceeds hydration energy released","The dissolution process is strongly endothermic overall","The entropy change on dissolving must be negative"],
   a:0, why:"An exothermic dissolution means the energy released as ions are hydrated outweighs the energy needed to break the lattice apart." },
 
 { id:"xm5-19", mod:"M5", topic:"Precipitation prediction", diff:3,
   q:"For a precipitate to form when two solutions are mixed:",
-  choices:["The ionic product Q must exceed Ksp","Q must be less than Ksp","Q must equal Ksp","Both solutions must be saturated"],
+  choices:["The ionic product Q must exceed Ksp","The ionic product Q must be less than Ksp","The ionic product Q must be exactly equal to Ksp","Both solutions must already be fully saturated"],
   a:0, why:"Q > Ksp means the solution is supersaturated with respect to that salt, so solid forms until Q falls back to Ksp." },
 
 { id:"xm5-20", mod:"M5", topic:"Equilibrium", diff:3,
   q:"Which change would increase the equilibrium yield of SO₃ in 2SO₂(g) + O₂(g) ⇌ 2SO₃(g), ΔH < 0?",
-  choices:["Lowering the temperature and raising the pressure","Raising the temperature and lowering the pressure","Adding a catalyst","Adding an inert gas at constant volume"],
+  choices:["Lowering the temperature and raising the pressure","Raising the temperature and lowering the pressure","Adding a catalyst to the reaction vessel","Adding an inert gas at constant volume"],
   a:0, why:"Exothermic favours low temperature; 3 mol → 2 mol favours high pressure. A catalyst changes only the rate, and inert gas at constant volume changes nothing." },
 
 /* ── Module 6: Acid/Base Reactions ────────────────────────────── */
 { id:"xm6-01", mod:"M6", topic:"Acid–base theories", diff:2,
   q:"In the reaction NH₃ + H₂O ⇌ NH₄⁺ + OH⁻, water acts as:",
-  choices:["An acid, donating a proton","A base, accepting a proton","A catalyst","A spectator"],
+  choices:["An acid, donating a proton to ammonia","A base, accepting a proton from ammonia","A catalyst, speeding the reaction up","A spectator, taking no chemical part"],
   a:0, why:"Water donates H⁺ to ammonia here, so it is the Brønsted–Lowry acid. With HCl, water instead accepts a proton — it is amphiprotic." },
 
 { id:"xm6-02", mod:"M6", topic:"Conjugate pairs", diff:2,
@@ -332,7 +332,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm6-03", mod:"M6", topic:"Historical development", diff:2,
   q:"Lavoisier's early definition of acids was later shown to be wrong because:",
-  choices:["He claimed all acids contain oxygen, but HCl does not","He said acids must be liquids","He confused acids with bases","He ignored the role of hydrogen ions"],
+  choices:["He claimed all acids contain oxygen, but HCl does not","He insisted that every acid must be a liquid at 25 °C","He consistently confused acidic and basic behaviour","He ignored the role played by the hydrogen ion"],
   a:0, why:"Davy demonstrated that hydrochloric acid contains only hydrogen and chlorine, disproving oxygen as the essential acidic element and pointing to hydrogen instead." },
 
 { id:"xm6-04", mod:"M6", topic:"pH calculations", diff:2,
@@ -347,7 +347,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm6-06", mod:"M6", topic:"Strong vs weak", diff:3,
   q:"Equal volumes of 0.10 mol L⁻¹ HCl and 0.10 mol L⁻¹ CH₃COOH are each fully neutralised by NaOH. Which requires more NaOH?",
-  choices:["Neither — they require the same amount","HCl","CH₃COOH","It depends on the indicator"],
+  choices:["Neither — both require exactly the same amount","The hydrochloric acid, since it is fully ionised","The ethanoic acid, since it must keep ionising","It depends on which indicator is chosen"],
   a:0, why:"Neutralisation depends on total moles of acid, not on the degree of ionisation. As the weak acid is consumed it ionises further until all of it has reacted." },
 
 { id:"xm6-07", mod:"M6", topic:"Ka", diff:3,
@@ -362,12 +362,12 @@ CHEM.DATA.qExtra = [
 
 { id:"xm6-09", mod:"M6", topic:"Polyprotic acids", diff:3,
   q:"Sulfuric acid is described as a strong diprotic acid, but its second ionisation is weak. This means:",
-  choices:["The first proton ionises completely; the second only partially","Both protons ionise completely","Neither proton ionises completely","It behaves as a monoprotic acid in all cases"],
+  choices:["The first proton ionises completely; the second only partially","Both of the available protons ionise completely in water","Neither proton ionises completely at normal concentrations","It behaves as a simple monoprotic acid in every case"],
   a:0, why:"H₂SO₄ → H⁺ + HSO₄⁻ is complete, but HSO₄⁻ ⇌ H⁺ + SO₄²⁻ has Ka ≈ 1.2 × 10⁻². Removing a proton from an already negative ion is much harder." },
 
 { id:"xm6-10", mod:"M6", topic:"Titration curves", diff:3,
   q:"On a strong acid–strong base titration curve, the steep vertical section corresponds to:",
-  choices:["A large pH change from a very small added volume near equivalence","The buffer region","The point of maximum buffering","The start of the titration"],
+  choices:["A large pH change from a very small added volume","The buffer region of the titration curve","The point of maximum buffering capacity","The very start of the titration, before any base"],
   a:0, why:"Near equivalence almost no excess acid remains, so each drop of base causes a dramatic pH jump. This is why indicator choice matters less for strong–strong titrations." },
 
 { id:"xm6-11", mod:"M6", topic:"Titration curves", diff:3,
@@ -377,7 +377,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm6-12", mod:"M6", topic:"Indicators", diff:2,
   q:"An indicator is itself a:",
-  choices:["Weak acid or base whose conjugate forms have different colours","Strong acid","Neutral salt","Buffer"],
+  choices:["Weak acid or base whose conjugate forms differ in colour","Strong acid that fully ionises at the end point","Neutral salt that changes colour with dilution","Buffer solution that holds the pH steady near the equivalence point"],
   a:0, why:"HIn ⇌ H⁺ + In⁻ with the two forms differently coloured. The colour flips when pH passes roughly the indicator's pKa." },
 
 { id:"xm6-13", mod:"M6", topic:"Buffers", diff:3,
@@ -387,12 +387,12 @@ CHEM.DATA.qExtra = [
 
 { id:"xm6-14", mod:"M6", topic:"Buffers", diff:3,
   q:"A buffer loses its effectiveness when:",
-  choices:["Added acid or base exceeds the buffer capacity of one component","Its pH equals the pKa","It is warmed slightly","It is made from a weak acid"],
+  choices:["Added acid or base exceeds the capacity of one component","Its pH happens to be exactly equal to the acid's pKa","It is warmed slightly above normal room temperature","It has been made from a weak acid rather than a strong one"],
   a:0, why:"Once one component is essentially consumed there is nothing left to neutralise further additions, and the pH then changes sharply. Buffers work best when pH is within about 1 unit of pKa." },
 
 { id:"xm6-15", mod:"M6", topic:"Titration technique", diff:2,
   q:"Why should the burette tip be filled with solution before the initial reading is taken?",
-  choices:["An air bubble would be displaced during titration, making the titre read too high","It removes contamination","It warms the solution","It prevents evaporation"],
+  choices:["An unfilled tip empties during the titration, raising the titre","It removes any contamination left from the previous titration","It brings the titrant up to the temperature of the room","It stops the titrant evaporating from the burette tip"],
   a:0, why:"If an air gap is expelled mid-titration, the volume recorded includes the bubble's volume even though that solution never reached the flask." },
 
 { id:"xm6-16", mod:"M6", topic:"Titration calculations", diff:3,
@@ -412,12 +412,12 @@ CHEM.DATA.qExtra = [
 
 { id:"xm6-19", mod:"M6", topic:"Acid rain", diff:2,
   q:"Sulfur dioxide from burning coal contributes to acid rain by:",
-  choices:["Oxidising to SO₃, which dissolves to form sulfuric acid","Reacting with nitrogen","Depleting the ozone layer","Forming carbonic acid"],
+  choices:["Oxidising to SO₃, which dissolves to form sulfuric acid","Reacting with atmospheric nitrogen to form nitric acid","Depleting stratospheric ozone and admitting more UV","Dissolving directly in rain to give carbonic acid"],
   a:0, why:"SO₂ oxidises in the atmosphere to SO₃, which reacts with water to give H₂SO₄. Nitrogen oxides similarly give nitric acid." },
 
 { id:"xm6-20", mod:"M6", topic:"Kw", diff:3,
   q:"If the pH of a neutral solution is 6.80 at some temperature, then at that temperature Kw is:",
-  choices:["Greater than 1.0 × 10⁻¹⁴","Less than 1.0 × 10⁻¹⁴","Exactly 1.0 × 10⁻¹⁴","Zero"],
+  choices:["Greater than 1.0 × 10⁻¹⁴","Less than 1.0 × 10⁻¹⁴","Exactly 1.0 × 10⁻¹⁴","Effectively zero"],
   a:0, why:"Neutral means [H⁺] = [OH⁻] = 10⁻⁶·⁸, so Kw = (10⁻⁶·⁸)² = 10⁻¹³·⁶, which is larger than 10⁻¹⁴. The temperature must be above 25 °C." },
 
 /* ── Module 7: Organic Chemistry ──────────────────────────────── */
@@ -433,7 +433,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm7-03", mod:"M7", topic:"Homologous series", diff:2,
   q:"Members of a homologous series always:",
-  choices:["Differ by a CH₂ unit and share a general formula","Have identical boiling points","Have the same molar mass","Have different functional groups"],
+  choices:["Differ by a CH₂ unit and share a general formula","Have essentially identical boiling points to one another","Have the same molar mass as one another","Contain a different functional group each"],
   a:0, why:"Each successive member adds CH₂, so physical properties change gradually and predictably while chemical behaviour stays similar." },
 
 { id:"xm7-04", mod:"M7", topic:"Isomers", diff:3,
@@ -443,7 +443,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm7-05", mod:"M7", topic:"Reactions of alkanes", diff:2,
   q:"Why do alkanes react only slowly with most reagents?",
-  choices:["C-C and C-H bonds are strong and essentially non-polar","They are ionic","They have double bonds","They are highly polar"],
+  choices:["C-C and C-H bonds are strong and essentially non-polar","They are ionic compounds and so react only with other ions","They contain double bonds that resist attack","They are highly polar and repel most reagents"],
   a:0, why:"With no significant dipole and no π electrons, there is nothing for nucleophiles or electrophiles to attack. Radical substitution needs UV initiation." },
 
 { id:"xm7-06", mod:"M7", topic:"Reactions of alkenes", diff:3,
@@ -453,7 +453,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm7-07", mod:"M7", topic:"Reactions of alkenes", diff:2,
   q:"Hydrogenation of an alkene with H₂ and a nickel catalyst produces:",
-  choices:["An alkane","An alcohol","A haloalkane","A carboxylic acid"],
+  choices:["An alkane","A primary alcohol","A haloalkane","A carboxylic acid"],
   a:0, why:"H₂ adds across the C=C, saturating it. This is the reaction used to harden vegetable oils into margarine." },
 
 { id:"xm7-08", mod:"M7", topic:"Haloalkanes", diff:3,
@@ -478,17 +478,17 @@ CHEM.DATA.qExtra = [
 
 { id:"xm7-12", mod:"M7", topic:"Carboxylic acids", diff:2,
   q:"Carboxylic acids are classified as weak acids because they:",
-  choices:["Only partially ionise in water","Do not contain hydrogen","React with metals","Have low molar mass"],
+  choices:["They only partially ionise in aqueous solution","They contain no ionisable hydrogen at all","They react with metals to release hydrogen","They have relatively low molar masses"],
   a:0, why:"The equilibrium RCOOH ⇌ RCOO⁻ + H⁺ lies well to the left; ethanoic acid has Ka ≈ 1.8 × 10⁻⁵, so only about 1% ionises at 0.1 mol L⁻¹." },
 
 { id:"xm7-13", mod:"M7", topic:"Esterification", diff:3,
   q:"Esterification typically gives yields well below 100% because it:",
-  choices:["Is a reversible equilibrium reaction","Produces an insoluble product","Requires no catalyst","Is highly exothermic"],
+  choices:["It is a reversible equilibrium reaction","It produces an insoluble solid product","It proceeds without any catalyst present","It is strongly exothermic and self-limiting"],
   a:0, why:"The reverse reaction — acid hydrolysis of the ester — competes. Removing water or using an excess of one reactant shifts the equilibrium towards the ester." },
 
 { id:"xm7-14", mod:"M7", topic:"Esters", diff:2,
   q:"Esters are commonly used in flavourings and perfumes because they:",
-  choices:["Are volatile and have pleasant, fruity odours","Are strong acids","Are ionic and water soluble","Have very high boiling points"],
+  choices:["They are volatile and have pleasant, fruity odours","They are strong acids with a sharp, sour taste","They are ionic and therefore very water soluble","They have very high boiling points and persist"],
   a:0, why:"Esters cannot hydrogen bond with themselves, so they are relatively volatile — the vapour reaches your nose readily." },
 
 { id:"xm7-15", mod:"M7", topic:"Esters", diff:3,
@@ -503,22 +503,22 @@ CHEM.DATA.qExtra = [
 
 { id:"xm7-17", mod:"M7", topic:"Polymers", diff:3,
   q:"Why is polytetrafluoroethene (Teflon) so chemically inert and non-stick?",
-  choices:["Very strong C-F bonds and weak intermolecular attraction to other substances","It is ionic","It contains hydrogen bonds","It has a low molar mass"],
+  choices:["Very strong C-F bonds and weak attraction to other substances","It is an ionic polymer with a rigid charged lattice","Extensive hydrogen bonding holds the polymer chains together","It has an unusually low molar mass for a polymer"],
   a:0, why:"C-F is one of the strongest single bonds in organic chemistry, and the fluorinated surface has very low polarisability, so little sticks to it." },
 
 { id:"xm7-18", mod:"M7", topic:"Biofuels", diff:3,
   q:"A disadvantage of large-scale ethanol biofuel production is that it:",
-  choices:["Competes with food crops for arable land and water","Produces no carbon dioxide","Cannot be blended with petrol","Has no combustion products"],
+  choices:["It competes with food crops for arable land and water","Its combustion produces no carbon dioxide at all","It cannot be blended with petrol in any proportion","It burns without producing any combustion products"],
   a:0, why:"Diverting sugarcane or corn to fuel raises food prices and can drive land clearing. Ethanol also has a lower energy density than petrol." },
 
 { id:"xm7-19", mod:"M7", topic:"Alcohols", diff:2,
   q:"Ethanol is widely used as a solvent because it:",
-  choices:["Has both a polar -OH group and a non-polar ethyl group","Is completely non-polar","Is ionic","Has a very high boiling point"],
+  choices:["It has both a polar -OH group and a non-polar ethyl group","It is completely non-polar right across the whole molecule","It is ionic and dissociates fully in most solvents","It has a very high boiling point and low volatility"],
   a:0, why:"The dual character lets it dissolve polar substances via hydrogen bonding and non-polar substances via dispersion forces around the alkyl chain." },
 
 { id:"xm7-20", mod:"M7", topic:"Reactions summary", diff:3,
   q:"Which sequence converts ethene into ethanoic acid?",
-  choices:["Hydration, then oxidation under reflux","Oxidation, then hydration","Hydrogenation, then esterification","Polymerisation, then hydrolysis"],
+  choices:["Hydration, then oxidation under reflux","Oxidation, then hydration with steam","Hydrogenation, then esterification","Polymerisation, then acid hydrolysis"],
   a:0, why:"Ethene + steam with an acid catalyst gives ethanol; refluxing with acidified dichromate then oxidises it fully through ethanal to ethanoic acid." },
 
 /* ── Module 8: Applying Chemical Ideas ────────────────────────── */
@@ -529,7 +529,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm8-02", mod:"M8", topic:"Flame tests", diff:2,
   q:"Why is a nichrome or platinum wire cleaned with concentrated HCl between flame tests?",
-  choices:["To remove residues that would contaminate the next result","To make the flame hotter","To add chloride to the sample","To cool the wire"],
+  choices:["To remove residues that would contaminate the next result","To make the Bunsen flame burn hotter and more cleanly","To add chloride ions, which intensify the flame colour","To cool the wire down before the next sample is taken"],
   a:0, why:"Traces of sodium in particular produce an intense yellow that masks other colours. Acid converts residues to volatile chlorides that burn off." },
 
 { id:"xm8-03", mod:"M8", topic:"Anion tests", diff:3,
@@ -544,12 +544,12 @@ CHEM.DATA.qExtra = [
 
 { id:"xm8-05", mod:"M8", topic:"Gravimetric analysis", diff:3,
   q:"In gravimetric analysis, why is the precipitate washed with distilled water before drying?",
-  choices:["To remove soluble ions that would add to the measured mass","To dissolve some of the precipitate","To cool the sample","To change the crystal form"],
+  choices:["To remove soluble ions that would add to the measured mass","To dissolve a small, known portion of the precipitate","To cool the sample rapidly before it enters the oven","To convert the precipitate into a denser and purer crystal form"],
   a:0, why:"Adsorbed spectator ions would be weighed along with the precipitate, inflating the calculated result. Washing removes them without dissolving the product." },
 
 { id:"xm8-06", mod:"M8", topic:"AAS", diff:3,
   q:"Why does AAS use a hollow cathode lamp made of the element being analysed?",
-  choices:["It emits exactly the wavelengths that element absorbs, giving high selectivity","It is cheaper than other lamps","It produces white light","It heats the sample"],
+  choices:["It emits exactly the wavelengths that element absorbs","It is considerably cheaper than a broadband lamp","It produces intense white light across the spectrum","It supplies the heat needed to atomise the sample"],
   a:0, why:"Emission and absorption lines of an element coincide, so a lamp of that element gives a very narrow, perfectly matched source that other elements will not absorb." },
 
 { id:"xm8-07", mod:"M8", topic:"AAS", diff:3,
@@ -559,17 +559,17 @@ CHEM.DATA.qExtra = [
 
 { id:"xm8-08", mod:"M8", topic:"Colorimetry", diff:3,
   q:"Which wavelength should be selected for a colorimetric analysis?",
-  choices:["The wavelength of maximum absorbance for the coloured species","The wavelength the solution transmits most","Any visible wavelength","Always 500 nm"],
+  choices:["The wavelength of maximum absorbance for the species","The wavelength the solution transmits most strongly","Any convenient wavelength in the visible region","Always 500 nm, the middle of the visible range"],
   a:0, why:"Working at λmax gives the largest signal change per unit concentration, maximising sensitivity and minimising error." },
 
 { id:"xm8-09", mod:"M8", topic:"Mass spectrometry", diff:3,
   q:"A compound of molar mass 46 shows fragment peaks at m/z 31 and 15. This is consistent with:",
-  choices:["Ethanol, losing CH₃ to give CH₂OH⁺","Ethanoic acid","Propane","Methanol"],
+  choices:["Ethanol, losing CH₃ to give CH₂OH⁺","Ethanoic acid, losing OH to give CH₃CO⁺","Propane, losing CH₃ to give C₂H₅⁺","Methanol, losing H to give CH₂OH⁺"],
   a:0, why:"M = 46 matches C₂H₆O. Loss of a methyl radical (15) leaves CH₂OH⁺ at m/z 31 — the classic ethanol fragmentation." },
 
 { id:"xm8-10", mod:"M8", topic:"Infrared spectroscopy", diff:3,
   q:"An IR spectrum shows a strong peak at 1740 cm⁻¹ and no broad band above 3000 cm⁻¹. The compound is most likely:",
-  choices:["An ester or ketone","A carboxylic acid","An alcohol","An amine"],
+  choices:["An ester or a ketone","A carboxylic acid","A primary alcohol","A primary amine"],
   a:0, why:"A carbonyl is present but there is no O-H or N-H stretch, ruling out acids, alcohols and amines." },
 
 { id:"xm8-11", mod:"M8", topic:"¹H NMR", diff:3,
@@ -579,7 +579,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm8-12", mod:"M8", topic:"¹H NMR", diff:3,
   q:"In ¹H NMR, the area under a signal (its integration) is proportional to:",
-  choices:["The number of hydrogens in that environment","The number of neighbouring hydrogens","The chemical shift","The molar mass"],
+  choices:["The number of hydrogens in that environment","The number of hydrogens on adjacent carbons","The chemical shift of the signal in ppm","The molar mass of the whole compound"],
   a:0, why:"Integration gives the relative count of protons per environment. Splitting — not integration — reveals the neighbours via the n+1 rule." },
 
 { id:"xm8-13", mod:"M8", topic:"¹³C NMR", diff:3,
@@ -594,31 +594,31 @@ CHEM.DATA.qExtra = [
 
 { id:"xm8-15", mod:"M8", topic:"Chromatography", diff:2,
   q:"Why must the starting spots in paper chromatography sit above the solvent level?",
-  choices:["Otherwise the sample dissolves into the solvent reservoir instead of travelling up","The paper would tear","The solvent would evaporate","The spots would move too fast"],
+  choices:["The sample would dissolve into the reservoir instead of rising","The wet paper would tear under its own weight","The solvent would evaporate before it could rise","The separated spots would travel up the paper far too quickly"],
   a:0, why:"Submerging the origin line washes the sample straight off the paper, so no separation occurs." },
 
 { id:"xm8-16", mod:"M8", topic:"Water quality", diff:3,
   q:"Biochemical oxygen demand (BOD) measures:",
-  choices:["The oxygen consumed by microorganisms decomposing organic matter","The total dissolved solids","The pH of the water","The hardness of the water"],
+  choices:["Oxygen consumed by microorganisms decomposing organic matter","The total mass of dissolved solids suspended in the water","The pH of the water sample at the time of collection","The concentration of calcium and magnesium ions present"],
   a:0, why:"A high BOD indicates heavy organic pollution — sewage or runoff — which depletes dissolved oxygen and threatens aquatic life." },
 
 { id:"xm8-17", mod:"M8", topic:"Water quality", diff:2,
   q:"Why is turbidity monitored in drinking water?",
-  choices:["Suspended particles can shield pathogens from disinfection","It changes the water's pH","It indicates dissolved oxygen","It measures hardness"],
+  choices:["Suspended particles can shield pathogens from disinfection","Suspended particles change the pH of the treated water","Turbidity is a direct measure of the dissolved oxygen","Turbidity indicates the total hardness of the supply"],
   a:0, why:"Particulates can physically shelter microorganisms from chlorine or UV treatment, so low turbidity is required before disinfection is considered reliable." },
 
 { id:"xm8-18", mod:"M8", topic:"Atmospheric monitoring", diff:3,
   q:"Ozone in the stratosphere is beneficial, but ozone at ground level is a pollutant because it:",
-  choices:["Is a powerful oxidant that irritates lungs and damages vegetation","Depletes the ozone layer","Traps no heat","Reacts with nitrogen to form ammonia"],
+  choices:["It is a powerful oxidant that irritates lungs and damages plants","It rises and depletes the protective stratospheric ozone layer","It traps no heat at all, so it cools the lower atmosphere","It reacts with atmospheric nitrogen to produce ammonia"],
   a:0, why:"Tropospheric ozone forms photochemically from NOx and volatile organics and is a major component of photochemical smog." },
 
 { id:"xm8-19", mod:"M8", topic:"Chemical synthesis", diff:3,
   q:"A reaction has 100% yield but poor atom economy. This means:",
-  choices:["All the limiting reagent converted, but much of the reactant mass ends up in by-products","The reaction produced no product","Some reactant was left unreacted","The reaction was too slow"],
+  choices:["All the limiting reagent converted, but much mass is by-product","The reaction produced essentially none of the useful product at all","Some of the limiting reagent was left over unreacted","The reaction was far too slow to be run industrially"],
   a:0, why:"Yield measures conversion efficiency; atom economy measures how much of the reactant mass is in the desired product. Addition reactions have inherently high atom economy." },
 
 { id:"xm8-20", mod:"M8", topic:"Organic analysis", diff:3,
   q:"An unknown liquid does not react with sodium carbonate, gives no silver mirror with Tollens', but does decolourise bromine water. It is most likely:",
-  choices:["An alkene","A carboxylic acid","An aldehyde","An alkane"],
+  choices:["An alkene","A carboxylic acid","A simple aldehyde","An alkane"],
   a:0, why:"No effervescence rules out an acid, no silver mirror rules out an aldehyde, and decolourising bromine water indicates a C=C double bond." }
 ];

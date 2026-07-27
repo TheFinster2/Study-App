@@ -74,9 +74,15 @@ all four unlock **The Final Paper**.
 ## How the systems work
 
 **XP and levels.** Correct answers pay `10 × difficulty`, multiplied by your streak
-(×1 → ×3 in half steps every 5 correct). Level *n* costs `round(100 × n^1.35)` XP —
-**60 levels**, from *Lab Rat* to *MoleQuest Legend*, and reaching level 20 alone takes
-~45,700 XP. This is a whole-HSC-year progression, not an afternoon's.
+(×1 → ×3 in half steps every 5 correct). Level *n* costs `round(130 × n^1.5)` XP —
+**60 levels**, from *Lab Rat* to *MoleQuest Legend*. Reaching level 20 takes ~87,000 XP
+and level 60 about 1.42 million. This is a whole-HSC-year progression, not an afternoon's.
+
+**No length tells.** Options are deliberately length-matched. Question banks are written
+with mini-explanation keys by default, which makes the correct answer the longest option
+and lets a student score ~64% by always picking it. Every option was rewritten until the
+key is strictly longest in 24% of questions — *below* the 25% you'd get by chance — and the
+validator fails the build if that ever climbs past 32%.
 
 **Ascension (prestige).** At level 60 you can ascend: level and XP reset to 1, but every
 unlock, achievement, flashcard box and statistic is kept, and you gain a permanent **+12%
@@ -117,7 +123,7 @@ all day and identical for everyone.
 
 Everything lives in `js/data/` as plain JS — edit it without touching the engine.
 
-- **284** multiple-choice questions across all 8 modules, each with a worked explanation
+- **374** multiple-choice questions across all 8 modules, each with a worked explanation
 - **36** balancing equations (all verified to balance in lowest terms)
 - **73** flashcards
 - **28** named organic compounds with plausible distractors
@@ -139,6 +145,11 @@ Everything lives in `js/data/` as plain JS — edit it without touching the engi
 
 Write the correct answer at index `0` and set `a:0` — the app shuffles options at runtime.
 `diff` is 1–3 and drives both XP and boss damage.
+
+**Keep the options a similar length.** The natural instinct is to write a thorough correct
+answer and three throwaway distractors, which makes the answer guessable from its length
+alone. Put the reasoning in `why`, keep the key terse, and make each distractor a specific,
+plausible misconception of comparable length. The validator enforces this.
 
 ---
 
@@ -188,10 +199,11 @@ widely-supported CSS (`color-mix`, custom properties, grid).
 
 ## Testing
 
-`node --check` passes on all 36 JS files. Content is validated separately — every stored
+`node --check` passes on all 37 JS files. Content is validated separately — every stored
 equation is re-balanced from its parsed formulas, every pathway puzzle is BFS-checked
 against its declared step count, every achievement is asserted not to unlock on a fresh
-save, and the service worker's precache list is diffed against the files on disk. A
+save, the service worker's precache list is diffed against the files on disk, and the
+answer-length distribution is checked so the correct option never becomes guessable. A
 Playwright script drives all ten modes, a boss fight, a shop purchase, a crate opening, a
 theme switch and a reload-persistence check, plus horizontal-overflow checks across 17
 screens at 390 px and 360 px. A second script serves the app from a subpath, confirms the

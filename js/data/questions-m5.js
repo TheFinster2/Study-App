@@ -5,17 +5,17 @@ CHEM.DATA = CHEM.DATA || {};
 CHEM.DATA.qM5 = [
 { id:"m5-01", mod:"M5", topic:"Dynamic equilibrium", diff:1,
   q:"At dynamic equilibrium in a closed system:",
-  choices:["Forward and reverse rates are equal and concentrations are constant","All reaction has stopped","Concentrations of reactants and products are equal","Only the forward reaction occurs"],
+  choices:["Forward and reverse rates are equal and concentrations are constant","All reaction has stopped once the concentrations settle","The concentrations of the reactants and of the products become equal","Only the forward reaction continues to occur"],
   a:0, why:"Both reactions continue at the molecular level, but at equal rates, so macroscopic properties (concentration, colour, pressure) stay constant. Equal rates does not mean equal concentrations." },
 
 { id:"m5-02", mod:"M5", topic:"Dynamic equilibrium", diff:2,
   q:"Which observation is the best evidence that an equilibrium is dynamic rather than static?",
-  choices:["Radioactive tracer added as reactant later appears in the product","The colour stops changing","The pressure is constant","The temperature stays constant"],
+  choices:["Radioactive tracer added as reactant later appears in the product","The colour of the reaction mixture eventually stops changing altogether","The total pressure in the vessel remains constant","The temperature of the mixture stays constant"],
   a:0, why:"Isotopic labelling shows atoms are still moving between reactant and product species even though the bulk concentrations do not change — the defining feature of a dynamic equilibrium." },
 
 { id:"m5-03", mod:"M5", topic:"Open vs closed", diff:2,
   q:"Why can equilibrium never be established when limestone is heated in an open crucible? CaCO₃(s) ⇌ CaO(s) + CO₂(g)",
-  choices:["CO₂ escapes, so the reverse reaction cannot occur","CaCO₃ is insoluble","The reaction is irreversible by nature","The reaction is exothermic"],
+  choices:["CO₂ escapes, so the reverse reaction cannot occur","CaCO₃ is insoluble and cannot take part in equilibrium","The decomposition is irreversible by its very nature","The reaction is exothermic and self-sustaining"],
   a:0, why:"Equilibrium requires a closed system. Because CO₂ diffuses away, its concentration never builds up and the system is continually driven forward until all CaCO₃ decomposes." },
 
 { id:"m5-04", mod:"M5", topic:"Le Chatelier", diff:2,
@@ -30,12 +30,12 @@ CHEM.DATA.qM5 = [
 
 { id:"m5-06", mod:"M5", topic:"Le Chatelier", diff:3,
   q:"Adding argon to a rigid vessel containing N₂/H₂/NH₃ at equilibrium will:",
-  choices:["Cause no shift — partial pressures of reacting gases are unchanged","Shift towards ammonia","Shift away from ammonia","Increase K"],
+  choices:["Cause no shift — the partial pressures of the reacting gases are unchanged","Shift the system towards ammonia, since the total pressure has clearly risen","Shift the system away from ammonia, as argon dilutes the mixture","Increase K, because more gas particles are now present"],
   a:0, why:"Total pressure rises, but argon is inert and the volume is fixed, so the partial pressures (and concentrations) of N₂, H₂ and NH₃ are unaltered. Q still equals K." },
 
 { id:"m5-07", mod:"M5", topic:"Le Chatelier", diff:2,
   q:"Adding a catalyst to a system at equilibrium:",
-  choices:["Has no effect on the position of equilibrium or K","Shifts the equilibrium right","Increases the yield of product","Increases K"],
+  choices:["Has no effect on the position of equilibrium or on K","Shifts the equilibrium towards the product side","Increases the equilibrium yield of the product","Increases the value of the equilibrium constant at that temperature"],
   a:0, why:"A catalyst lowers the activation energy of the forward and reverse reactions by the same amount, so both rates increase equally. Equilibrium is reached faster but at the same position." },
 
 { id:"m5-08", mod:"M5", topic:"Equilibrium constant", diff:2,
@@ -45,7 +45,7 @@ CHEM.DATA.qM5 = [
 
 { id:"m5-09", mod:"M5", topic:"Equilibrium constant", diff:2,
   q:"Which species is omitted from an equilibrium expression?",
-  choices:["Pure solids and pure liquids","Gases","Aqueous ions","Weak acids"],
+  choices:["Pure solids and pure liquids","Gases at low partial pressure","Aqueous ions of any charge","Weak acids and weak bases"],
   a:0, why:"The 'concentration' of a pure solid or liquid is fixed by its density, so it is folded into the value of K. Only gases and aqueous species appear." },
 
 { id:"m5-10", mod:"M5", topic:"Equilibrium constant", diff:3,
@@ -60,7 +60,7 @@ CHEM.DATA.qM5 = [
 
 { id:"m5-12", mod:"M5", topic:"Equilibrium constant", diff:2,
   q:"A reaction has K = 1.2 × 10⁻⁸ at 25 °C. This indicates:",
-  choices:["Equilibrium lies far to the left; very little product forms","Products dominate strongly","The reaction is very fast","Reactants and products are about equal"],
+  choices:["Equilibrium lies far to the left; very little product forms","Equilibrium lies far to the right; products strongly dominate","The reaction proceeds extremely quickly to completion","Reactants and products are present in roughly equal amounts"],
   a:0, why:"A very small K means the denominator (reactants) dominates. Note that K says nothing about rate — a reaction can have a large K and still be extremely slow." },
 
 { id:"m5-13", mod:"M5", topic:"ICE tables", diff:3,
@@ -75,17 +75,17 @@ CHEM.DATA.qM5 = [
 
 { id:"m5-15", mod:"M5", topic:"Haber process", diff:3,
   q:"Industrial ammonia synthesis uses ~400–500 °C even though the reaction is exothermic. Why?",
-  choices:["A compromise: lower temperatures give higher yield but unacceptably slow rates","Higher temperature increases equilibrium yield","The catalyst only works above 400 °C to shift equilibrium","Ammonia decomposes below 400 °C"],
+  choices:["A compromise: lower temperatures give higher yield but slow rates","Higher temperatures increase the equilibrium yield of ammonia","The iron catalyst only becomes active above about 400 °C","Ammonia decomposes rapidly at temperatures below 400 °C"],
   a:0, why:"Le Chatelier favours low temperature for yield, but the rate would be uneconomically slow. The chosen temperature balances yield against rate — the classic 'compromise conditions' answer." },
 
 { id:"m5-16", mod:"M5", topic:"Haber process", diff:2,
   q:"High pressure (~200–400 atm) is used in the Haber process because:",
-  choices:["4 mol of gas become 2 mol, so high pressure shifts equilibrium right","It lowers the activation energy","It increases K","It prevents the catalyst poisoning"],
+  choices:["4 mol of gas become 2 mol, so pressure shifts equilibrium right","High pressure lowers the activation energy of the forward reaction step","Compressing the gases raises the equilibrium constant K","Pressure prevents sulfur compounds poisoning the catalyst"],
   a:0, why:"N₂ + 3H₂ ⇌ 2NH₃ goes from 4 mol to 2 mol of gas. Compressing shifts the system towards fewer gas particles, raising the ammonia yield." },
 
 { id:"m5-17", mod:"M5", topic:"Contact process", diff:2,
   q:"In the Contact process, SO₃ is absorbed into concentrated H₂SO₄ rather than water because:",
-  choices:["Direct reaction with water forms a dense, uncontrollable acid mist","SO₃ does not react with water","Water would decompose the SO₃","Oleum is a waste product"],
+  choices:["Direct reaction with water forms a dense, uncontrollable acid mist","Sulfur trioxide does not react with water to any measurable extent","Water at these temperatures would decompose the SO₃ back to SO₂","Oleum is an unwanted waste product of the absorption step"],
   a:0, why:"SO₃ + H₂O is violently exothermic and produces a fine sulfuric acid aerosol that is hard to condense. Absorbing into H₂SO₄ gives oleum (H₂S₂O₇), which is then safely diluted." },
 
 { id:"m5-18", mod:"M5", topic:"Solubility equilibria", diff:2,
@@ -100,42 +100,42 @@ CHEM.DATA.qM5 = [
 
 { id:"m5-20", mod:"M5", topic:"Solubility equilibria", diff:3,
   q:"For PbI₂, Ksp = 4s³ rather than s². Why?",
-  choices:["Each formula unit releases 1 Pb²⁺ and 2 I⁻, so Ksp = (s)(2s)²","Lead has a charge of 2+","PbI₂ is a strong electrolyte","Iodide ions dimerise"],
+  choices:["Each unit releases 1 Pb²⁺ and 2 I⁻, so Ksp = (s)(2s)²","Lead carries a 2+ charge, which squares the whole expression","PbI₂ is a strong electrolyte and ionises twice over","Iodide ions dimerise in solution to form I₂ molecules"],
   a:0, why:"PbI₂ → Pb²⁺ + 2I⁻ gives [Pb²⁺] = s and [I⁻] = 2s. Ksp = s × (2s)² = 4s³." },
 
 { id:"m5-21", mod:"M5", topic:"Common ion effect", diff:3,
   q:"Adding NaCl to a saturated AgCl solution causes:",
-  choices:["More AgCl to precipitate, as the equilibrium shifts left","More AgCl to dissolve","No change, since NaCl is a spectator","Ksp of AgCl to decrease"],
+  choices:["More AgCl precipitates as the equilibrium shifts to the left","More AgCl dissolves because ionic strength has increased","Nothing changes, since NaCl only adds spectator ions","The Ksp of silver chloride decreases with added chloride"],
   a:0, why:"Extra Cl⁻ makes Q > Ksp, so the system shifts left, precipitating AgCl and reducing its solubility. Ksp itself is temperature-dependent only." },
 
 { id:"m5-22", mod:"M5", topic:"Precipitation prediction", diff:3,
   q:"Equal volumes of 2.0 × 10⁻⁴ mol L⁻¹ AgNO₃ and 2.0 × 10⁻⁴ mol L⁻¹ NaCl are mixed. Given Ksp(AgCl) = 1.8 × 10⁻¹⁰, what happens?",
-  choices:["A precipitate forms because Q = 1.0 × 10⁻⁸ > Ksp","No precipitate; Q < Ksp","The solution is exactly saturated","AgCl dissolves completely and Q = Ksp"],
+  choices:["A precipitate forms because Q = 1.0 × 10⁻⁸ exceeds Ksp","No precipitate forms, because Q works out smaller than Ksp","The mixture ends up exactly saturated, with Q equal to Ksp","Any AgCl formed redissolves until Q falls well below Ksp"],
   a:0, why:"Mixing equal volumes halves each concentration to 1.0 × 10⁻⁴. Q = (1.0 × 10⁻⁴)² = 1.0 × 10⁻⁸, which exceeds Ksp, so AgCl precipitates." },
 
 { id:"m5-23", mod:"M5", topic:"Enthalpy of solution", diff:2,
   q:"The enthalpy of solution is determined by:",
-  choices:["The balance between lattice energy absorbed and hydration energy released","Lattice energy only","Hydration energy only","The entropy change of the water"],
+  choices:["The balance of lattice energy absorbed and hydration energy released","The lattice energy of the solid on its own, since that is rate limiting","The hydration energy of the separated ions on its own","The entropy change of the surrounding water molecules"],
   a:0, why:"ΔH_soln = ΔH_lattice (endothermic, breaking the ionic lattice) + ΔH_hydration (exothermic, ions attracting water). Whichever dominates sets the sign." },
 
 { id:"m5-24", mod:"M5", topic:"Ocean acidification", diff:3,
   q:"Increasing atmospheric CO₂ affects the oceans because:",
-  choices:["CO₂ dissolves and forms H₂CO₃, lowering pH and dissolving carbonate shells","CO₂ raises ocean pH","CO₂ is insoluble in seawater","Carbonate concentration increases"],
+  choices:["CO₂ dissolves to form H₂CO₃, lowering pH and dissolving shells","Dissolved CO₂ raises ocean pH by consuming hydrogen ions","CO₂ is essentially insoluble in seawater at these pressures","The carbonate ion concentration increases as CO₂ dissolves"],
   a:0, why:"CO₂(g) ⇌ CO₂(aq); CO₂ + H₂O ⇌ H₂CO₃ ⇌ H⁺ + HCO₃⁻. Extra H⁺ lowers pH and consumes CO₃²⁻, shifting CaCO₃(s) ⇌ Ca²⁺ + CO₃²⁻ right and eroding shells." },
 
 { id:"m5-25", mod:"M5", topic:"Cobalt equilibrium", diff:3,
   q:"For [Co(H₂O)₆]²⁺(pink) + 4Cl⁻ ⇌ [CoCl₄]²⁻(blue) + 6H₂O, adding concentrated HCl turns the solution blue because:",
-  choices:["Increased [Cl⁻] shifts the equilibrium right","HCl raises the temperature","H⁺ is a reactant","Water is removed by H⁺"],
+  choices:["Increased [Cl⁻] shifts the equilibrium to the right","Adding acid raises the temperature and shifts it right","The H⁺ ion acts as a reactant in the complex formation","Water is removed from the system by the added H⁺"],
   a:0, why:"Adding a reactant (Cl⁻) drives the system right to consume it, favouring the blue tetrachlorocobaltate complex. Diluting with water reverses it to pink." },
 
 { id:"m5-26", mod:"M5", topic:"Le Chatelier", diff:3,
   q:"For 2CrO₄²⁻(yellow) + 2H⁺ ⇌ Cr₂O₇²⁻(orange) + H₂O, adding NaOH will:",
-  choices:["Turn the solution yellow by removing H⁺","Turn the solution orange","Cause no change","Increase K"],
+  choices:["Turn the solution yellow, because OH⁻ removes H⁺","Turn the solution orange, as more dichromate forms","Cause no visible change, since OH⁻ is a spectator","Increase K, shifting the system towards dichromate"],
   a:0, why:"OH⁻ neutralises H⁺, lowering its concentration. The system shifts left to replace it, converting dichromate back to the yellow chromate ion." },
 
 { id:"m5-27", mod:"M5", topic:"Equilibrium graphs", diff:3,
   q:"On a concentration–time graph, a sudden vertical jump in one species followed by curves settling to new constant values indicates:",
-  choices:["A concentration change was imposed on the system","A temperature change","A catalyst was added","The system reached equilibrium for the first time"],
+  choices:["A concentration change was imposed on the system","A temperature change was applied to the vessel","A catalyst was introduced into the mixture","The system reached equilibrium for the first time"],
   a:0, why:"Only a concentration change produces an instantaneous discontinuity for a single species. Temperature changes cause all species to curve gradually; a catalyst causes no shift at all." },
 
 { id:"m5-28", mod:"M5", topic:"Equilibrium constant", diff:3,
@@ -150,6 +150,6 @@ CHEM.DATA.qM5 = [
 
 { id:"m5-30", mod:"M5", topic:"Equilibrium", diff:2,
   q:"Removing product from an equilibrium mixture as it forms will:",
-  choices:["Shift the equilibrium right and increase overall conversion","Increase K","Decrease the rate of the forward reaction permanently","Have no effect"],
+  choices:["The equilibrium shifts right, increasing overall conversion","The equilibrium constant K increases a little with each such removal","The forward reaction rate falls permanently to zero","Nothing changes, as K is fixed at that temperature"],
   a:0, why:"Removing a product makes Q < K, so the forward reaction dominates until equilibrium is restored. Industrially this is why ammonia is condensed out and recycled." }
 ];
