@@ -242,20 +242,21 @@ CHEM.Games.titration = (function () {
       if (finished) return;
       finished = true;
 
-      let xp = 0;
-      if (perfect) xp = 220; else if (good) xp = 160; else if (ok) xp = 100; else xp = 40;
+      // Missing the end point by more than half a millilitre earns nothing at all —
+      // otherwise declaring immediately was a four-second XP faucet.
+      let xp = perfect ? 220 : good ? 160 : ok ? 100 : 0;
       if (calcOk) xp += 90;
       if (usedMeter) xp = Math.round(xp * 0.7);
-      xp += S.streakBonus();
 
-      const coins = (perfect ? 90 : good ? 60 : ok ? 35 : 10) + (calcOk ? 30 : 0);
+      const coins = (perfect ? 90 : good ? 60 : ok ? 35 : 0) + (calcOk ? 30 : 0);
+      const accuracy = ((ok ? 1 : 0) + (calcOk ? 1 : 0)) / 2;
 
       if (ok) S.bump("titrations");
       if (perfect) S.bump("perfectTitrations");
       S.progressDaily("titration", 1);
       const newBest = S.recordScore("titration", Math.round(100 - Math.min(100, error * 100)));
 
-      const got = UI.award({ xp, coins });
+      const got = UI.award({ xp, coins, bonus: S.streakBonus(), accuracy });
       UI.results({
         title: perfect ? "Perfect titration" : ok ? "Titration complete" : "Overshot",
         correct: (ok ? 1 : 0) + (calcOk ? 1 : 0), total: 2, xp: got.xp, coins: got.coins, newBest,

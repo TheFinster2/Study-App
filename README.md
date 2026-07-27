@@ -78,6 +78,15 @@ all four unlock **The Final Paper**.
 **60 levels**, from *Lab Rat* to *MoleQuest Legend*. Reaching level 20 takes ~87,000 XP
 and level 60 about 1.42 million. This is a whole-HSC-year progression, not an afternoon's.
 
+**Nothing is paid for guessing.** XP is earned per *correct* answer; every wrong answer
+subtracts XP from the run's pool (floored at zero), and the end-of-run completion bonus is
+withheld entirely below 50% accuracy. Answers given faster than 1.2 s — quicker than the
+question can be read — earn nothing. Precipitation Panic scores net (right − wrong) with a
+speed bonus scaled by accuracy, since a two-state grid is ~50% right by chance. A titration
+end point more than 0.5 mL out pays nothing. Flashcards are self-graded, so a card pays
+only once per day, only if it was genuinely due, and only if it stayed on screen long
+enough to read. A bot spamming every mode earns **0 XP**; it used to earn 35,000 XP/hour.
+
 **No length tells.** Options are deliberately length-matched. Question banks are written
 with mini-explanation keys by default, which makes the correct answer the longest option
 and lets a student score ~64% by always picking it. Every option was rewritten until the
@@ -208,4 +217,7 @@ Playwright script drives all ten modes, a boss fight, a shop purchase, a crate o
 theme switch and a reload-persistence check, plus horizontal-overflow checks across 17
 screens at 390 px and 360 px. A second script serves the app from a subpath, confirms the
 service worker registers and precaches, then cuts the network and verifies every screen
-still renders and that progress saved while offline survives a reload.
+still renders and that progress saved while offline survives a reload. A third drives a
+zero-knowledge bot through every mode — always picking option A, spamming "Got it",
+declaring a titration end point at 0 mL — and fails if any mode pays more than 25 XP, if
+the sustained rate exceeds 2,000 XP/hour, or if pure guessing reaches level 2.

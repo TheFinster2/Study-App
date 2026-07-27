@@ -145,18 +145,31 @@ CHEM.Games.precipitate = (function () {
     function finish(right, total, perfect) {
       if (finished) return;
       finished = true;
-      const timeBonus = Math.max(0, timeLeft) * 1.2;
-      const xp = Math.round(right * 18 + timeBonus + (perfect ? 80 : 0)) + S.streakBonus();
-      const coins = Math.round(right * 3) + (perfect ? 70 : 0);
+
+      /* Score the NET result: every wrong cell cancels a right one. Guessing a
+         two-state grid gets ~50% by chance, so raw `right` would pay out for
+         random clicking. The speed bonus is also scaled by accuracy, otherwise
+         filling the board blindly in four seconds is the optimal strategy. */
+      const wrong = total - right;
+      const accuracy = total ? right / total : 0;
+      const net = Math.max(0, right - wrong);
+      const timeBonus = accuracy >= 0.75 ? Math.max(0, timeLeft) * 1.2 * accuracy : 0;
+      const xp = Math.round(net * 22 + timeBonus + (perfect ? 80 : 0));
+      const coins = Math.round(net * 4) + (perfect ? 70 : 0);
+
       S.progressDaily("precipitate", 1);
       if (perfect) S.bump("perfectRuns");
-      const newBest = S.recordScore("precipitate", right);
+      const newBest = S.recordScore("precipitate", net);
 
-      const got = UI.award({ xp, coins });
+      const got = UI.award({ xp, coins, bonus: S.streakBonus(), accuracy });
       setTimeout(() => UI.results({
         title: perfect ? "Flawless solubility board" : "Board checked",
         correct: right, total, xp: got.xp, coins: got.coins, newBest,
-        extraStats: [["Time left", U.fmtTime(Math.max(0, timeLeft))], ["Bonus", "+" + Math.round(timeBonus)]],
+        extraStats: [
+          ["Net score", `${right} − ${total - right}`],
+          ["Time left", U.fmtTime(Math.max(0, timeLeft))],
+          ["Speed bonus", "+" + Math.round(timeBonus)]
+        ],
         onAgain: () => UI.handleRoute()
       }), 900);
     }

@@ -8,6 +8,11 @@ CHEM.UI = (function () {
   const routes = {};
   let currentCleanup = null;
 
+  /** Runs below this accuracy earn no completion bonus at all. */
+  const MIN_BONUS_ACCURACY = 0.5;
+  /** Answers faster than this can't have involved reading the question, so they pay no XP. */
+  const MIN_READ_MS = 1200;
+
   /* ── routing ─────────────────────────────────────────────── */
   function route(name, fn) { routes[name] = fn; }
 
@@ -153,10 +158,22 @@ CHEM.UI = (function () {
    */
   function award(opts) {
     const o = opts || {};
+
+    /* Completion bonuses are gated on accuracy, so a run of pure guessing pays
+       nothing. Without this you could spam any answer, finish the run and still
+       collect the daily-streak bonus — worth ~35,000 XP/hour of mindless clicking.
+       `xp` itself is already earned per correct answer, minus wrong-answer
+       penalties, so it needs no further scaling. */
+    let bonus = Math.max(0, o.bonus || 0);
+    if (o.accuracy !== undefined) {
+      const acc = U.clamp(o.accuracy, 0, 1);
+      bonus = acc < MIN_BONUS_ACCURACY ? 0 : Math.round(bonus * acc);
+    }
+
     // Difficulty and prestige bonuses are applied here and nowhere else, so every
     // mode gets them consistently. Coins are deliberately scarcer than XP.
     const mult = o.raw ? 1 : S.xpMultiplier();
-    const xp = Math.round((o.xp || 0) * mult);
+    const xp = Math.round((Math.max(0, o.xp || 0) + bonus) * mult);
     const coins = Math.round((o.coins || 0) * (o.raw ? 1 : 0.6));
 
     if (coins) S.addCoins(coins, true);
@@ -298,5 +315,6 @@ CHEM.UI = (function () {
   }
 
   return { route, go, init, handleRoute, syncHeader, applyTheme, toast, modal, closeModal,
-           confirmDialog, award, gameShell, results, rank, chip, onLeave, pulse };
+           confirmDialog, award, gameShell, results, rank, chip, onLeave, pulse,
+           MIN_BONUS_ACCURACY, MIN_READ_MS };
 })();

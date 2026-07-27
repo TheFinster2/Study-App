@@ -37,6 +37,7 @@ CHEM.Games.naming = (function () {
     const all = CHEM.DATA.naming;
     const items = U.sample(all, c.count);
     let idx = 0, correct = 0, streak = 0, best = 0, xpEarned = 0, coins = 0, finished = false;
+    let penalty = 0, shownAt = 0;
 
     const shell = UI.gameShell("Name That Compound", { confirmExit: true });
     root.appendChild(shell.root);
@@ -83,6 +84,7 @@ CHEM.Games.naming = (function () {
       });
       card.appendChild(wrap);
       stage.appendChild(card);
+      shownAt = performance.now();
 
       function answer(chosen, btn) {
         btns.forEach((b, i) => {
@@ -94,24 +96,26 @@ CHEM.Games.naming = (function () {
         // No question id: these rounds are generated, so they can't be replayed from the bank.
         S.recordAnswer("M7", ok, null);
 
+        const tooFast = performance.now() - shownAt < UI.MIN_READ_MS;
         if (ok) {
           correct++; streak++; best = Math.max(best, streak);
           S.noteStreak(best);
           S.bump("namingCorrect");
           S.progressDaily("naming", 1);
-          const gain = Math.round(12 * item.diff * Math.min(2.5, 1 + streak * 0.1));
+          const gain = tooFast ? 0 : Math.round(12 * item.diff * Math.min(2.5, 1 + streak * 0.1));
           xpEarned += gain; coins += 3;
           CHEM.Sound.correct();
           const r = btn.getBoundingClientRect();
           CHEM.FX.pop(r.right - 24, r.top + r.height / 2);
-          CHEM.FX.floatText(r.right - 60, r.top - 4, "+" + gain);
+          if (gain) CHEM.FX.floatText(r.right - 60, r.top - 4, "+" + gain);
         } else {
           streak = 0;
+          penalty += 8 * item.diff;
           CHEM.Sound.wrong();
           CHEM.FX.shake();
         }
         streakChip.textContent = "Streak " + streak;
-        xpChip.textContent = xpEarned + " XP";
+        xpChip.textContent = Math.max(0, xpEarned - penalty) + " XP";
 
         const fb = U.el("div", { class: "feedback " + (ok ? "ok" : "no"), html:
           `<b>${ok ? "Correct." : `Answer: ${U.formula(round.choices[round.answer])}`}</b> ` +
@@ -131,15 +135,16 @@ CHEM.Games.naming = (function () {
     function finish() {
       if (finished) return;
       finished = true;
-      const bonus = S.streakBonus();
-      const xp = xpEarned + bonus;
       if (correct === items.length) S.bump("perfectRuns");
       const newBest = S.recordScore("naming", correct);
-      const got = UI.award({ xp, coins });
+      const got = UI.award({
+        xp: Math.max(0, xpEarned - penalty), bonus: S.streakBonus(),
+        accuracy: correct / items.length, coins
+      });
       UI.results({
         title: "Nomenclature run complete",
         correct, total: items.length, xp: got.xp, coins: got.coins, newBest,
-        extraStats: [["Best streak", best], ["Daily bonus", "+" + bonus]],
+        extraStats: [["Best streak", best], ["Wrong", `−${penalty} XP`]],
         onAgain: () => UI.handleRoute()
       });
     }

@@ -246,6 +246,7 @@ CHEM.Games.calc = (function () {
     S.touchStreak();
 
     let idx = 0, correct = 0, streak = 0, best = 0, xpEarned = 0, coins = 0, finished = false;
+    let penalty = 0;
 
     const shell = UI.gameShell("Calculation Crunch", { confirmExit: true });
     root.appendChild(shell.root);
@@ -305,11 +306,12 @@ CHEM.Games.calc = (function () {
           CHEM.FX.floatText(rect.right - 70, rect.top - 6, "+" + gain);
         } else {
           streak = 0;
+          penalty += 10 * prob.diff;
           CHEM.Sound.wrong();
           CHEM.FX.shake();
         }
         streakChip.textContent = "Streak " + streak;
-        xpChip.textContent = xpEarned + " XP";
+        xpChip.textContent = Math.max(0, xpEarned - penalty) + " XP";
 
         const shown = Math.abs(prob.answer) < 0.001 || Math.abs(prob.answer) > 1e5
           ? prob.answer.toExponential(3)
@@ -331,15 +333,16 @@ CHEM.Games.calc = (function () {
     function finish() {
       if (finished) return;
       finished = true;
-      const bonus = S.streakBonus();
-      const xp = xpEarned + bonus;
       if (correct === c.count) S.bump("perfectRuns");
       const newBest = S.recordScore("calc", correct);
-      const got = UI.award({ xp, coins });
+      const got = UI.award({
+        xp: Math.max(0, xpEarned - penalty), bonus: S.streakBonus(),
+        accuracy: correct / c.count, coins
+      });
       UI.results({
         title: "Calculations complete",
         correct, total: c.count, xp: got.xp, coins: got.coins, newBest,
-        extraStats: [["Best streak", best], ["Daily bonus", "+" + bonus]],
+        extraStats: [["Best streak", best], ["Wrong", `−${penalty} XP`]],
         onAgain: () => UI.handleRoute()
       });
     }

@@ -283,6 +283,19 @@ CHEM.State = (function () {
     return data.srs[id] || (data.srs[id] = { box: 1, due: U.dayKey(), reps: 0, lapses: 0 });
   }
 
+  /* Flashcards are self-graded, so nothing stops someone clicking "Got it" on
+     every card forever. XP is therefore payable only once per card per day, which
+     caps the honest maximum at roughly the number of cards actually due. */
+  function cardXpEligible(id) {
+    const c = data.srs[id];
+    return !c || c.xpDay !== U.dayKey();
+  }
+  function markCardXp(id) {
+    const c = cardState(id);
+    c.xpDay = U.dayKey();
+    save();
+  }
+
   function reviewCard(id, gotIt) {
     const c = cardState(id);
     c.reps++;
@@ -481,7 +494,7 @@ CHEM.State = (function () {
     recordAnswer, noteStreak, bump, markMode, recordScore,
     mastery, overallAccuracy,
     usePowerup, grantPowerup, ownsTheme, ownsAvatar,
-    cardState, reviewCard, dueCards,
+    cardState, reviewCard, dueCards, cardXpEligible, markCardXp,
     checkAchievements, achievementStats,
     daily, dailySpec, progressDaily, claimDaily,
     reset

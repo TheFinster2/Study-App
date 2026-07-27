@@ -227,7 +227,7 @@ CHEM.Games.boss = (function () {
       const coins = won ? Math.round(120 + boss.hp * 0.5 + (flawless ? 100 : 0)) : Math.round(correct * 3);
       const newBest = S.recordScore("boss_" + boss.id, won ? Math.round(playerHp) : 0);
 
-      const got = UI.award({ xp, coins });
+      const got = UI.award({ xp, coins, accuracy: asked ? correct / asked : 0 });
       UI.results({
         title: won ? `${boss.name} defeated!` : "Defeated…",
         correct, total: asked, xp: got.xp, coins: got.coins, newBest,

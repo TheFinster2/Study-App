@@ -121,14 +121,14 @@ CHEM.Games.ionmatch = (function () {
       // Efficiency: perfect play = 1.0, sloppy play tails off.
       const efficiency = U.clamp(c.pairs / moves, 0.25, 1);
       const timeBonus = Math.max(0, 120 - seconds);
-      const xp = Math.round(c.pairs * 22 * efficiency + timeBonus * 0.6) + S.streakBonus();
+      const xp = Math.round(c.pairs * 22 * efficiency + timeBonus * 0.6 * efficiency);
       const coins = Math.round(c.pairs * 4 * efficiency) + (perfect ? 60 : 0);
 
       S.progressDaily("ionmatch", 1);
       if (perfect) S.bump("perfectRuns");
       const newBest = S.recordScore("ionmatch", Math.round(efficiency * 100));
 
-      const got = UI.award({ xp, coins });
+      const got = UI.award({ xp, coins, bonus: S.streakBonus(), accuracy: efficiency });
       UI.results({
         title: perfect ? "Perfect memory!" : "Board cleared",
         correct: matched, total: c.pairs, xp: got.xp, coins: got.coins, newBest,

@@ -108,6 +108,7 @@ CHEM.Games.quiz = (function () {
 
     let idx = 0, correct = 0, streak = 0, bestStreak = 0;
     let xpEarned = 0, coinsEarned = 0, lives = c.lives, doubled = false;
+    let penalty = 0, shownAt = 0, rushed = 0;
     let timeLeft = c.totalTime, timerId = null, finished = false;
 
     const shell = UI.gameShell(c.title, { confirmExit: true });
@@ -159,6 +160,7 @@ CHEM.Games.quiz = (function () {
         onAnswer: (chosen, isCorrect, btn) => answer(q, chosen, isCorrect, btn)
       });
       stage.appendChild(card.node);
+      shownAt = performance.now();
       puBar.refresh();
     }
 
@@ -166,16 +168,21 @@ CHEM.Games.quiz = (function () {
       const fb = card.reveal(chosen);
       S.recordAnswer(q.mod, isCorrect, q.id);
 
+      // Answering faster than a human could read the question earns nothing.
+      const tooFast = performance.now() - shownAt < UI.MIN_READ_MS;
+
       if (isCorrect) {
         correct++;
         streak++;
         bestStreak = Math.max(bestStreak, streak);
         S.noteStreak(bestStreak);
         const base = 10 * (q.diff || 1);
-        const gain = Math.round(base * multiplier() * (doubled ? 2 : 1));
+        const gain = tooFast ? 0 : Math.round(base * multiplier() * (doubled ? 2 : 1));
+        if (tooFast) rushed++;
         xpEarned += gain;
-        coinsEarned += 2 + (q.diff || 1);
+        coinsEarned += tooFast ? 0 : 2 + (q.diff || 1);
         CHEM.Sound.correct();
+        if (tooFast) UI.toast({ icon: "⏱️", kind: "bad", text: "Too fast to have read that — no XP awarded." });
         if (streak > 1 && streak % 5 === 0) {
           CHEM.Sound.multiplier(Math.floor(streak / 5));
           UI.toast({ icon: "⚡", kind: "xp", text: `<b>${streak} streak!</b> ×${multiplier()} XP` });
@@ -184,7 +191,7 @@ CHEM.Games.quiz = (function () {
         }
         const r = btn.getBoundingClientRect();
         CHEM.FX.pop(r.right - 24, r.top + r.height / 2);
-        CHEM.FX.floatText(r.right - 60, r.top - 4, "+" + gain);
+        if (gain) CHEM.FX.floatText(r.right - 60, r.top - 4, "+" + gain);
         if (c.dailyMode) S.progressDaily(c.dailyMode, 1);
       } else {
         if (S.data.inventory.shield > 0 && streak >= 3) {
@@ -195,6 +202,8 @@ CHEM.Games.quiz = (function () {
         } else {
           if (streak >= 5) CHEM.Sound.comboBreak();
           streak = 0;
+          // A wrong answer costs XP, so guessing through a run nets nothing.
+          penalty += 6 * (q.diff || 1);
           if (lives > 0) {
             lives--;
             livesChip.textContent = "❤️".repeat(lives) || "💀";
@@ -204,7 +213,7 @@ CHEM.Games.quiz = (function () {
         CHEM.FX.shake();
       }
 
-      scoreChip.textContent = xpEarned + " XP";
+      scoreChip.textContent = Math.max(0, xpEarned - penalty) + " XP";
       streakChip.textContent = "Streak " + streak;
 
       const isLast = !c.totalTime && idx >= questions.length - 1;
@@ -304,17 +313,24 @@ CHEM.Games.quiz = (function () {
       const perfect = correct === seen && seen >= 5;
       if (perfect) { S.bump("perfectRuns"); CHEM.Sound.perfect(); }
 
-      const streakBonusXp = S.streakBonus();
-      const finalXp = xpEarned + streakBonusXp;
+      const accuracy = seen ? correct / seen : 0;
+      const netXp = Math.max(0, xpEarned - penalty);
       const newBest = S.recordScore(c.modeId, correct);
 
-      const got = UI.award({ xp: finalXp, coins: coinsEarned + (perfect ? 30 : 0) });
+      const got = UI.award({
+        xp: netXp, bonus: S.streakBonus(), accuracy,
+        coins: coinsEarned + (perfect ? 30 : 0)
+      });
 
       UI.results({
         title: reason ? reason : "Run complete",
         correct, total: seen, xp: got.xp, coins: got.coins,
         newBest,
-        extraStats: [["Best streak", bestStreak], ["Daily bonus", "+" + streakBonusXp], ["Multiplier", "×" + multiplier()]],
+        extraStats: [
+          ["Best streak", bestStreak],
+          ["Wrong", `−${penalty} XP`],
+          rushed ? ["Rushed", rushed] : ["Multiplier", "×" + multiplier()]
+        ],
         onAgain: () => UI.handleRoute()
       });
     }

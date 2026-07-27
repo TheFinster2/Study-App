@@ -183,15 +183,14 @@ CHEM.Games.pathway = (function () {
     function finish() {
       if (finished) return;
       finished = true;
-      const bonus = S.streakBonus();
-      const xp = xpEarned + bonus;
       const newBest = S.recordScore("pathway", solved);
       if (solved === puzzles.length && totalWasted === 0) S.bump("perfectRuns");
-      const got = UI.award({ xp, coins });
+      const got = UI.award({ xp: xpEarned, coins, bonus: S.streakBonus(),
+                             accuracy: solved / puzzles.length });
       UI.results({
         title: "Synthesis complete",
         correct: solved, total: puzzles.length, xp: got.xp, coins: got.coins, newBest,
-        extraStats: [["Wasted reagents", totalWasted], ["Daily bonus", "+" + bonus]],
+        extraStats: [["Wasted reagents", totalWasted], ["Routes solved", `${solved}/${puzzles.length}`]],
         onAgain: () => UI.handleRoute()
       });
     }

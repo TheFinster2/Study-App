@@ -96,7 +96,7 @@ CHEM.Screens.study = (function () {
     S.markMode("flashcards");
     S.touchStreak();
 
-    let i = 0, got = 0, missed = 0, xp = 0;
+    let i = 0, got = 0, missed = 0, xp = 0, paid = 0;
     view.innerHTML = "";
 
     const shell = UI.gameShell("Flashcards", { backTo: "/study" });
@@ -137,6 +137,7 @@ CHEM.Screens.study = (function () {
       stage.appendChild(rate);
 
       let revealed = false;
+      const shownAt = performance.now();
       flipper.addEventListener("click", () => {
         revealed = !revealed;
         flipper.classList.toggle("flip", revealed);
@@ -145,9 +146,22 @@ CHEM.Screens.study = (function () {
       });
 
       function grade(ok) {
-        if (!freeReview) S.reviewCard(card.id, ok);
-        if (ok) { got++; xp += 12; CHEM.Sound.correct(); CHEM.FX.burstAt(flipper, { count: 18, speed: 4, size: 3, shape: "circle" }); }
-        else { missed++; xp += 4; CHEM.Sound.wrong(); }
+        /* Only pay for a card that was genuinely due, hasn't already paid today,
+           and was actually on screen long enough to read. Self-grading can't be
+           verified, so these three limits are what stop "Got it" spam. */
+        const readLongEnough = performance.now() - shownAt >= UI.MIN_READ_MS;
+        const payable = !freeReview && readLongEnough && S.cardXpEligible(card.id);
+        if (!freeReview) { S.reviewCard(card.id, ok); if (payable) S.markCardXp(card.id); }
+        if (ok) {
+          got++;
+          if (payable) { xp += 12; paid++; }
+          CHEM.Sound.correct();
+          CHEM.FX.burstAt(flipper, { count: 18, speed: 4, size: 3, shape: "circle" });
+        } else {
+          // Nothing for a miss — a self-reported failure shouldn't pay out.
+          missed++;
+          CHEM.Sound.wrong();
+        }
 
         i++;
         if (i >= deck.length) return finish();
@@ -156,13 +170,16 @@ CHEM.Screens.study = (function () {
     }
 
     function finish() {
-      const bonus = S.streakBonus();
-      const totalXp = xp + bonus;
-      const earned = UI.award({ xp: totalXp, coins: got * 2 });
+      const earned = UI.award({
+        xp, coins: paid * 2, bonus: S.streakBonus(),
+        // Self-reported "Got it" is always 100%, so gate the bonus on cards that
+        // actually qualified for payment instead.
+        accuracy: deck.length ? paid / deck.length : 0
+      });
       UI.results({
         title: "Review complete",
         correct: got, total: deck.length, xp: earned.xp, coins: earned.coins,
-        extraStats: [["Missed", missed], ["Daily bonus", "+" + bonus]],
+        extraStats: [["Missed", missed], ["Cards paid", paid]],
         onAgain: () => UI.go("/study")
       });
     }

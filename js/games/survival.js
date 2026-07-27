@@ -126,7 +126,9 @@ CHEM.Games.survival = (function () {
       S.recordScore("survival", survived);
       if (survived >= 20) S.bump("perfectRuns");
 
-      const got = UI.award({ xp: xpEarned + S.streakBonus(), coins });
+      // Survival ends on the first wrong answer, so accuracy is depth/(depth+1).
+      const got = UI.award({ xp: xpEarned, coins, bonus: S.streakBonus(),
+                             accuracy: depth ? survived / depth : 0 });
       UI.results({
         title: isBest ? "New survival record!" : "Run over",
         correct: survived, total: depth, xp: got.xp, coins: got.coins, newBest: isBest,
