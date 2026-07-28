@@ -76,9 +76,9 @@ Three arcade games you **rent by the minute** with Moles — 5, 15 or 30 minutes
 
 | Game | | Cheapest ticket |
 |---|---|---|
-| 💠 **Ion Crush** | 8×8 match-3 on six polyatomic ions, with cascades and chain multipliers | 250 🪙 / 5 min |
-| 🏃 **Mole Runner** | Endless side-scroller: jump the hazards (hold to jump higher), duck the fume clouds, it speeds up as you go | 200 🪙 / 5 min |
-| 🔬 **Isotope 2048** | Slide-and-merge, but the ladder is the periodic table — two Hydrogens make Helium, all the way to Argon | 220 🪙 / 5 min |
+| 💠 **Ion Crush** | 8×8 match-3 on six polyatomic ions. Runs of 4+ forge power tiles — ⚡ Charged clears a row and column, ☢ Unstable a 3×3, ✳ Catalyst every ion of one type — and blasts set each other off in chains | 250 🪙 / 5 min |
+| 🏃 **Mole Runner** | Endless side-scroller: jump the hazards, duck the fume clouds, grab 🛡 Buffers and ⚡ Catalysts, and take near-misses for bonus points | 200 🪙 / 5 min |
+| 🔬 **Isotope 2048** | Slide-and-merge up the periodic table — two Hydrogens make Helium, all the way to Argon. Three undos per run | 220 🪙 / 5 min |
 
 **They pay nothing.** No XP, no Moles, no achievements — only a high score. That's
 deliberate: an endless runner that paid XP would be a better farm than studying, which is

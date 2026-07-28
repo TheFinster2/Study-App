@@ -11,6 +11,11 @@ CHEM.ArcadeGames.merge = (function () {
     const LADDER = CHEM.DATA.mergeLadder;
     let cells = [];             // flat array of level index, or -1 for empty
     let score = 0, destroyed = false, best = 0;
+    /* One rewind per run, because a 2048 board is usually lost to a single
+       mis-swipe rather than to bad play, and losing 400 points of progress to a
+       stray arrow key is the least interesting way for a run to end. */
+    const UNDOS = 3;
+    let undosLeft = UNDOS, history = null;
 
     const board = U.el("div", { class: "merge-board" });
     const note = U.el("div", { class: "row tiny muted", style: "justify-content:center" }, [
@@ -27,30 +32,54 @@ CHEM.ArcadeGames.merge = (function () {
       return out;
     }
 
+    /** Drop a new nucleus into a random empty cell; returns where it landed. */
     function spawn() {
       const free = emptyCells();
-      if (!free.length) return false;
+      if (!free.length) return -1;
       // 90% hydrogen, 10% helium — the usual 2048 weighting.
-      cells[free[Math.floor(Math.random() * free.length)]] = Math.random() < 0.9 ? 0 : 1;
-      return true;
+      const at = free[Math.floor(Math.random() * free.length)];
+      cells[at] = Math.random() < 0.9 ? 0 : 1;
+      return at;
     }
 
     function reset() {
       cells = new Array(N * N).fill(-1);
-      score = 0;
+      score = 0; best = 0;
+      undosLeft = UNDOS; history = null;
       spawn(); spawn();
       session.setScore(0);
       paint();
+      syncUndo();
     }
 
-    /** Slide+merge one line (array of level indices). Returns {line, gained, moved}. */
+    /** Rewind the last slide. Costs one of a small, fixed allowance. */
+    function undo() {
+      if (!history || undosLeft <= 0 || destroyed || session.isOver()) {
+        CHEM.Sound.denied();
+        return;
+      }
+      cells = history.cells.slice();
+      score = history.score;
+      best = history.best;
+      history = null;
+      undosLeft--;
+      session.setScore(score);
+      paint();
+      syncUndo();
+      CHEM.Sound.nav();
+      U.$(".js-note", note).textContent = `Rewound. ${undosLeft} undo${undosLeft === 1 ? "" : "s"} left.`;
+    }
+
+    /** Slide+merge one line. Returns {line, gained, moved, merges:[positions]}. */
     function slideLine(line) {
       const kept = line.filter(v => v >= 0);
       const out = [];
+      const merges = [];
       let gained = 0;
       for (let i = 0; i < kept.length; i++) {
         if (i + 1 < kept.length && kept[i] === kept[i + 1] && kept[i] < LADDER.length - 1) {
           const merged = kept[i] + 1;
+          merges.push(out.length);
           out.push(merged);
           // Score grows steeply with how far up the ladder the merge is.
           gained += Math.round(Math.pow(2, merged + 1));
@@ -61,12 +90,22 @@ CHEM.ArcadeGames.merge = (function () {
       }
       while (out.length < N) out.push(-1);
       const moved = out.some((v, i) => v !== line[i]);
-      return { line: out, gained, moved };
+      return { line: out, gained, moved, merges };
+    }
+
+    /** Where a line position lands in the flat grid, for a given direction. */
+    function mapBack(dir, i, j) {
+      if (dir === "left")  return idx(i, j);
+      if (dir === "right") return idx(i, N - 1 - j);
+      if (dir === "up")    return idx(j, i);
+      return idx(N - 1 - j, i);
     }
 
     function move(dir) {
       if (destroyed || session.isOver()) return;
+      const before = { cells: cells.slice(), score, best };
       let moved = false, gained = 0;
+      const mergedAt = new Set();
 
       for (let i = 0; i < N; i++) {
         // Read the row or column in the direction of travel.
@@ -80,6 +119,7 @@ CHEM.ArcadeGames.merge = (function () {
         const res = slideLine(line);
         gained += res.gained;
         if (res.moved) moved = true;
+        res.merges.forEach(j => mergedAt.add(mapBack(dir, i, j)));
         for (let j = 0; j < N; j++) {
           if (dir === "left")  cells[idx(i, j)] = res.line[j];
           if (dir === "right") cells[idx(i, N - 1 - j)] = res.line[j];
@@ -90,6 +130,7 @@ CHEM.ArcadeGames.merge = (function () {
 
       if (!moved) { CHEM.Sound.mismatch(); return; }
 
+      history = before;          // only the most recent move can be rewound
       score += gained;
       session.setScore(score);
       if (gained) {
@@ -100,13 +141,15 @@ CHEM.ArcadeGames.merge = (function () {
           U.$(".js-note", note).textContent =
             `New element reached: ${LADDER[top].name} (${LADDER[top].sym})`;
           CHEM.Sound.unlock();
+          CHEM.FX.confetti(Math.min(20 + top * 6, 90));
         }
       } else {
         CHEM.Sound.tap();
       }
 
-      spawn();
-      paint();
+      const spawnedAt = spawn();
+      paint(mergedAt, spawnedAt);
+      syncUndo();
       if (!canMove()) {
         setTimeout(() => {
           if (!destroyed) session.gameOver(`Board full. Best element: ${LADDER[Math.max(...cells)].name}.`);
@@ -126,11 +169,14 @@ CHEM.ArcadeGames.merge = (function () {
       return false;
     }
 
-    function paint() {
+    function paint(mergedAt, spawnedAt) {
       board.innerHTML = "";
-      cells.forEach(v => {
+      cells.forEach((v, i) => {
         const el = LADDER[v];
-        const tile = U.el("div", { class: "merge-tile" + (v < 0 ? " empty" : "") });
+        let cls = "merge-tile" + (v < 0 ? " empty" : "");
+        if (mergedAt && mergedAt.has(i)) cls += " merged";
+        else if (spawnedAt === i) cls += " fresh";
+        const tile = U.el("div", { class: cls });
         if (el) {
           tile.style.background = el.colour;
           tile.appendChild(U.el("div", { class: "merge-sym", text: el.sym }));
@@ -146,6 +192,7 @@ CHEM.ArcadeGames.merge = (function () {
       KeyA: "left", KeyD: "right", KeyW: "up", KeyS: "down"
     };
     function onKey(e) {
+      if (e.code === "KeyZ" || e.code === "Backspace") { e.preventDefault(); undo(); return; }
       const dir = KEYS[e.code];
       if (!dir) return;
       e.preventDefault();
@@ -163,6 +210,15 @@ CHEM.ArcadeGames.merge = (function () {
     }
     board.addEventListener("touchstart", onTouchStart, { passive: true });
     board.addEventListener("touchend", onTouchEnd);
+
+    const undoBtn = U.el("button", {
+      class: "btn btn-sm", text: "↶ Undo", on: { click: undo }
+    });
+    stage.appendChild(U.el("div", { class: "row", style: "justify-content:center; margin-top:8px" }, [undoBtn]));
+    function syncUndo() {
+      undoBtn.textContent = `↶ Undo (${undosLeft})`;
+      undoBtn.disabled = !history || undosLeft <= 0;
+    }
 
     /* On-screen arrows, so it's playable without a keyboard. */
     const pad = U.el("div", { class: "merge-pad" }, [
