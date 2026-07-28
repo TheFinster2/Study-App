@@ -30,7 +30,7 @@ CHEM.DATA.qM8 = [
 
 { id:"m8-06", mod:"M8", topic:"Gravimetric analysis", diff:3,
   q:"In a gravimetric analysis the precipitate must be washed, dried to constant mass and weighed. Drying to constant mass ensures:",
-  choices:["All water has been driven off, so the mass is precipitate alone","The precipitation reaction has now gone fully to completion","None of the solid product was lost during the filtration","The correct mole ratio has been used in the calculation"],
+  choices:["All water is driven off, so the mass is precipitate alone","The precipitation reaction has now gone fully to completion","None of the solid product was lost during the filtration","The correct mole ratio has been used in the calculation"],
   a:0, why:"Repeated heating and weighing until two consecutive masses agree confirms residual moisture is gone — otherwise the calculated percentage would be too high." },
 
 { id:"m8-07", mod:"M8", topic:"Gravimetric analysis", diff:3,
@@ -130,7 +130,7 @@ CHEM.DATA.qM8 = [
 
 { id:"m8-26", mod:"M8", topic:"Organic analysis", diff:3,
   q:"An unknown liquid turns blue litmus red, fizzes with sodium carbonate and has a broad IR band from 2500–3300 cm⁻¹ with a strong peak at 1710 cm⁻¹. It is:",
-  choices:["A carboxylic acid","An alcohol","An ester","An aldehyde"],
+  choices:["A carboxylic acid","A primary alcohol","An ester","An aldehyde"],
   a:0, why:"Acidity plus effervescence with carbonate rules out alcohols and esters, and the very broad O-H combined with a carbonyl peak is the carboxylic acid fingerprint." },
 
 { id:"m8-27", mod:"M8", topic:"Organic analysis", diff:3,

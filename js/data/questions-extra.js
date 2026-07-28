@@ -529,7 +529,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm8-02", mod:"M8", topic:"Flame tests", diff:2,
   q:"Why is a nichrome or platinum wire cleaned with concentrated HCl between flame tests?",
-  choices:["To remove residues that would contaminate the next result","To make the Bunsen flame burn hotter and more cleanly","To add chloride ions, which intensify the flame colour","To cool the wire down before the next sample is taken"],
+  choices:["To remove residues that would spoil the next result","To make the Bunsen flame burn hotter and more cleanly","To add chloride ions, which intensify the flame colour","To cool the wire down before the next sample is taken"],
   a:0, why:"Traces of sodium in particular produce an intense yellow that masks other colours. Acid converts residues to volatile chlorides that burn off." },
 
 { id:"xm8-03", mod:"M8", topic:"Anion tests", diff:3,
@@ -549,7 +549,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm8-06", mod:"M8", topic:"AAS", diff:3,
   q:"Why does AAS use a hollow cathode lamp made of the element being analysed?",
-  choices:["It emits exactly the wavelengths that element absorbs","It is considerably cheaper than a broadband lamp","It produces intense white light across the spectrum","It supplies the heat needed to atomise the sample"],
+  choices:["It emits exactly the wavelengths the element absorbs","It is considerably cheaper than a broadband lamp","It produces intense white light across the spectrum","It supplies the heat needed to atomise the sample"],
   a:0, why:"Emission and absorption lines of an element coincide, so a lamp of that element gives a very narrow, perfectly matched source that other elements will not absorb." },
 
 { id:"xm8-07", mod:"M8", topic:"AAS", diff:3,
@@ -569,7 +569,7 @@ CHEM.DATA.qExtra = [
 
 { id:"xm8-10", mod:"M8", topic:"Infrared spectroscopy", diff:3,
   q:"An IR spectrum shows a strong peak at 1740 cm⁻¹ and no broad band above 3000 cm⁻¹. The compound is most likely:",
-  choices:["An ester or a ketone","A carboxylic acid","A primary alcohol","A primary amine"],
+  choices:["An ester or else a ketone","A carboxylic acid","A primary alcohol","A primary amine"],
   a:0, why:"A carbonyl is present but there is no O-H or N-H stretch, ruling out acids, alcohols and amines." },
 
 { id:"xm8-11", mod:"M8", topic:"¹H NMR", diff:3,
@@ -599,17 +599,17 @@ CHEM.DATA.qExtra = [
 
 { id:"xm8-16", mod:"M8", topic:"Water quality", diff:3,
   q:"Biochemical oxygen demand (BOD) measures:",
-  choices:["Oxygen consumed by microorganisms decomposing organic matter","The total mass of dissolved solids suspended in the water","The pH of the water sample at the time of collection","The concentration of calcium and magnesium ions present"],
+  choices:["Oxygen used by microorganisms decomposing organic matter","The total mass of dissolved solids suspended in the water","The pH of the water sample at the time of collection","The concentration of calcium and magnesium ions present"],
   a:0, why:"A high BOD indicates heavy organic pollution — sewage or runoff — which depletes dissolved oxygen and threatens aquatic life." },
 
 { id:"xm8-17", mod:"M8", topic:"Water quality", diff:2,
   q:"Why is turbidity monitored in drinking water?",
-  choices:["Suspended particles can shield pathogens from disinfection","Suspended particles change the pH of the treated water","Turbidity is a direct measure of the dissolved oxygen","Turbidity indicates the total hardness of the supply"],
+  choices:["Suspended particles shield pathogens from disinfection","Suspended particles change the pH of the treated water","Turbidity is a direct measure of the dissolved oxygen","Turbidity indicates the total hardness of the supply"],
   a:0, why:"Particulates can physically shelter microorganisms from chlorine or UV treatment, so low turbidity is required before disinfection is considered reliable." },
 
 { id:"xm8-18", mod:"M8", topic:"Atmospheric monitoring", diff:3,
   q:"Ozone in the stratosphere is beneficial, but ozone at ground level is a pollutant because it:",
-  choices:["It is a powerful oxidant that irritates lungs and damages plants","It rises and depletes the protective stratospheric ozone layer","It traps no heat at all, so it cools the lower atmosphere","It reacts with atmospheric nitrogen to produce ammonia"],
+  choices:["It is an oxidant that irritates lungs and damages plants","It rises and depletes the protective stratospheric ozone layer","It traps no heat at all, so it cools the lower atmosphere","It reacts with atmospheric nitrogen to produce ammonia"],
   a:0, why:"Tropospheric ozone forms photochemically from NOx and volatile organics and is a major component of photochemical smog." },
 
 { id:"xm8-19", mod:"M8", topic:"Chemical synthesis", diff:3,

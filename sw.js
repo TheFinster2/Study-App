@@ -3,7 +3,7 @@
    on activate. Keep PRECACHE in sync with the files on disk (the content
    validator asserts this, so a missing entry fails the build check). */
 
-const CACHE = "molequest-v4";
+const CACHE = "molequest-v5";
 
 const PRECACHE = [
   "./",
@@ -22,6 +22,7 @@ const PRECACHE = [
   "js/data/questions-m8.js",
   "js/data/questions-extra.js",
   "js/data/questions-extra2.js",
+  "js/data/questions-m1a.js",
   "js/data/equations.js",
   "js/data/organic.js",
   "js/data/flashcards.js",

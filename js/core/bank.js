@@ -6,10 +6,17 @@ CHEM.Bank = (function () {
   let ALL = null;
   let INDEX = null;
 
+  /* Every CHEM.DATA key named like a question bank (qM1A, qY11, qExtra…) is picked up
+     automatically. Discovered rather than listed: the bank is spread over dozens of files
+     and an explicit list is one forgotten line away from silently dropping a few hundred
+     questions. The content validator uses the same rule. */
   function all() {
     if (!ALL) {
       const D = CHEM.DATA;
-      ALL = [].concat(D.qY11 || [], D.qM5 || [], D.qM6 || [], D.qM7 || [], D.qM8 || [], D.qExtra || [], D.qExtra2 || []);
+      ALL = Object.keys(D)
+        .filter(k => /^q[A-Z0-9]/.test(k) && Array.isArray(D[k]) && D[k].length && D[k][0].choices)
+        .sort()
+        .reduce((acc, k) => acc.concat(D[k]), []);
       INDEX = new Map(ALL.map(q => [q.id, q]));
     }
     return ALL;
