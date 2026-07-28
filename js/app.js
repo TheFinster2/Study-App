@@ -87,6 +87,19 @@
       const hadController = !!navigator.serviceWorker.controller;
 
       navigator.serviceWorker.register("sw.js").then(reg => {
+        swReg = reg;
+
+        /* A new worker may already be installed and waiting from a previous visit.
+           `updatefound` fires once, when installation *starts* — it will never fire
+           again for a worker that is already sitting in `waiting`, so without this
+           check the update is silently never applied and the app stays on the old
+           version indefinitely. Applying it right at boot is safe: the session has
+           only just started, so there is nothing in progress to interrupt. */
+        if (reg.waiting && navigator.serviceWorker.controller) {
+          reg.waiting.postMessage("SKIP_WAITING");
+          return;
+        }
+
         reg.addEventListener("updatefound", () => {
           const incoming = reg.installing;
           if (!incoming) return;
@@ -98,7 +111,16 @@
             }
           });
         });
+
+        // Don't wait for the browser's own schedule. It only checks on a real
+        // navigation, and reopening an installed PWA usually just resumes the page.
+        checkForUpdate(true);
       }).catch(err => console.warn("Offline support unavailable:", err));
+
+      // Coming back to the app is the natural moment to look for a new version.
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") checkForUpdate();
+      });
 
       let reloading = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -109,8 +131,26 @@
     });
   }
 
+  /* Kept module-wide so Settings can trigger a check by hand. */
+  let swReg = null;
+  let lastCheck = 0;
+  let updateBar = null;
+
+  /** Ask the server whether sw.js has changed. Throttled, since it is a network hit. */
+  function checkForUpdate(force) {
+    if (!swReg) return Promise.resolve("unsupported");
+    const t = Date.now();
+    if (!force && t - lastCheck < 60000) return Promise.resolve("throttled");
+    lastCheck = t;
+    return swReg.update()
+      .then(() => (swReg.installing || swReg.waiting) ? "found" : "current")
+      .catch(() => "offline");
+  }
+  CHEM.checkForUpdate = checkForUpdate;
+
   function offerUpdate(worker) {
-    const bar = U.el("div", { class: "toast xp", style: "pointer-events:auto" }, [
+    if (updateBar) return;                 // never stack two prompts
+    updateBar = U.el("div", { class: "toast xp", style: "pointer-events:auto" }, [
       U.el("span", { class: "toast-ico", text: "⬆️" }),
       U.el("span", { text: "New version ready" }),
       U.el("button", {
@@ -119,7 +159,7 @@
         on: { click: () => worker.postMessage("SKIP_WAITING") }
       })
     ]);
-    U.$("#toasts").appendChild(bar);
+    U.$("#toasts").appendChild(updateBar);
   }
 
   /* reveal the app */

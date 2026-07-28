@@ -197,6 +197,30 @@ CHEM.Screens.settings = function (view) {
     ]);
   }
 
+  /* app version */
+  view.appendChild(U.el("h2", { text: "App version" }));
+  const verNote = U.el("p", { class: "tiny muted", text:
+    "The app updates itself in the background and applies the new version next time you open it. " +
+    "Check here if you want it sooner." });
+  const verBtn = U.el("button", { class: "btn btn-sm", text: "⟳ Check for updates" });
+  verBtn.addEventListener("click", () => {
+    if (!CHEM.checkForUpdate) {
+      verNote.textContent = "Updates only apply when the app is served over the web, not opened as a local file.";
+      return;
+    }
+    verBtn.disabled = true;
+    verNote.textContent = "Checking…";
+    CHEM.checkForUpdate(true).then(res => {
+      verBtn.disabled = false;
+      verNote.textContent =
+        res === "found"   ? "A new version is downloading — you'll get a Reload prompt in a moment." :
+        res === "current" ? "You're on the latest version." :
+        res === "offline" ? "No connection, so there's nothing to check against right now." :
+                            "Updates only apply when the app is served over the web, not opened as a local file.";
+    });
+  });
+  view.appendChild(U.el("div", { class: "card" }, [verNote, U.el("div", { class: "row" }, [verBtn])]));
+
   /* data */
   view.appendChild(U.el("h2", { text: "Save data" }));
   view.appendChild(U.el("div", { class: "card" }, [

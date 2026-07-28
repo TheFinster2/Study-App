@@ -228,6 +228,16 @@ If you add or rename a file, add it to `PRECACHE` in `sw.js` and bump `CACHE` to
 `molequest-v2` (etc.), or offline users will keep serving the old version. The content
 validator diffs `PRECACHE` against the files on disk and fails if they drift.
 
+**How updates reach an installed app.** On launch the app asks the server whether `sw.js`
+has changed, and again whenever it comes back to the foreground — the browser only checks
+on a real navigation, and reopening an installed PWA usually just resumes the page. A new
+version found mid-session offers a Reload; one found at launch is applied straight away,
+since nothing is in progress to interrupt. Crucially it also checks `registration.waiting`
+at boot: `updatefound` fires only when installation *starts*, so a worker that finished
+installing during a previous session would otherwise never be applied while any client of
+the old worker survives — a backgrounded PWA or a second tab is enough. Settings →
+*Check for updates* forces the check by hand.
+
 ---
 
 ## Accessibility & compatibility
