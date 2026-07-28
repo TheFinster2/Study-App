@@ -140,8 +140,10 @@ time, so the correct answer is never in a predictable slot.
 (`accuracy × min(1, seen/25)`), so a perfect run over three questions doesn't read as
 mastered.
 
-**Spaced repetition.** A 5-box Leitner system on the flashcard deck. Recall moves a card up
-a box (intervals 1, 2, 4, 8, 16 days); a miss drops it straight back to box 1.
+**Spaced repetition.** A 5-box Leitner system over a **263-card deck**. Recall moves a card
+up a box (intervals 1, 2, 4, 8, 16 days); a miss drops it straight back to box 1. Card fronts
+are phrased as a task — *"Explain why…"*, *"State the three…"* — so recall is active rather
+than recognition, and each back carries the reasoning rather than just the fact.
 
 **Daily challenge.** Derived from the date with a seeded PRNG, so the challenge is stable
 all day and identical for everyone.
@@ -157,7 +159,8 @@ Everything lives in `js/data/` as plain JS — edit it without touching the engi
 - **944** multiple-choice questions across all 8 modules, each with a worked explanation
   (M1 110 · M2 112 · M3 85 · M4 75 · M5 139 · M6 141 · M7 141 · M8 141)
 - **36** balancing equations (all verified to balance in lowest terms)
-- **73** flashcards
+- **263** flashcards across all 8 modules
+  (M1 34 · M2 24 · M3 22 · M4 18 · M5 32 · M6 42 · M7 43 · M8 48)
 - **28** named organic compounds with plausible distractors
 - **10** synthesis pathway puzzles over a 16-edge reaction graph
 - **65** achievements, scaled from *First Steps* to *Answer 5,000 questions*
@@ -234,7 +237,7 @@ widely-supported CSS (`color-mix`, custom properties, grid).
 
 ## Testing
 
-`node --check` passes on all 50 JS files. Content is validated separately — every stored
+`node --check` passes on all 52 JS files. Content is validated separately — every stored
 equation is re-balanced from its parsed formulas, every pathway puzzle is BFS-checked
 against its declared step count, every achievement is asserted not to unlock on a fresh
 save, the service worker's precache list is diffed against the files on disk, and the

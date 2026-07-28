@@ -24,6 +24,22 @@ CHEM.Bank = (function () {
 
   const byId = id => { all(); return INDEX.get(id); };
 
+  /* The flashcard deck, gathered the same way and for the same reason: every
+     CHEM.DATA key named `flashcards…` is folded into one deck. Discovery rather than
+     concatenation keeps it independent of script order — appending inside a data file
+     silently loses cards whenever the files load in a different sequence. */
+  let CARDS = null;
+  function cards() {
+    if (!CARDS) {
+      const D = CHEM.DATA;
+      CARDS = Object.keys(D)
+        .filter(k => /^flashcards/.test(k) && Array.isArray(D[k]) && D[k].length && D[k][0].front)
+        .sort()
+        .reduce((acc, k) => acc.concat(D[k]), []);
+    }
+    return CARDS;
+  }
+
   const MODULES = [
     { id: "M1", name: "Properties & Structure of Matter", year: 11, short: "Structure of Matter" },
     { id: "M2", name: "Introduction to Quantitative Chemistry", year: 11, short: "Quantitative Chem" },
@@ -118,5 +134,5 @@ CHEM.Bank = (function () {
     });
   }
 
-  return { all, byId, MODULES, moduleName, filter, draw, shuffleChoices, mistakeQuestions, statsByModule };
+  return { all, byId, cards, MODULES, moduleName, filter, draw, shuffleChoices, mistakeQuestions, statsByModule };
 })();

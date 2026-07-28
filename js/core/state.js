@@ -331,7 +331,7 @@ CHEM.State = (function () {
 
   function dueCards() {
     const today = U.dayKey();
-    return CHEM.DATA.flashcards.filter(card => {
+    return CHEM.Bank.cards().filter(card => {
       const c = data.srs[card.id];
       return !c || U.daysBetween(c.due, today) >= 0;
     });

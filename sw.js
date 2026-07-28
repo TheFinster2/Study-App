@@ -33,6 +33,8 @@ const PRECACHE = [
   "js/data/equations.js",
   "js/data/organic.js",
   "js/data/flashcards.js",
+  "js/data/flashcards-y11.js",
+  "js/data/flashcards-y12.js",
   "js/data/shop.js",
   "js/data/achievements.js",
   "js/data/arcade.js",
