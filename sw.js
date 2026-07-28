@@ -24,6 +24,7 @@ const PRECACHE = [
   "js/data/questions-extra2.js",
   "js/data/questions-m1a.js",
   "js/data/questions-m2a.js",
+  "js/data/questions-m3a.js",
   "js/data/equations.js",
   "js/data/organic.js",
   "js/data/flashcards.js",
