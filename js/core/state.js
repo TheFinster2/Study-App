@@ -68,9 +68,28 @@ CHEM.State = (function () {
     return override === undefined ? base : override;
   }
 
+  /* Set once a save has been imported: every later write must be suppressed until the
+     page reloads. Reloading fires `pagehide`, which flushes the in-memory `data` — and
+     that would land on top of the file the user just imported, silently discarding it. */
+  let frozen = false;
+
   function write() {
+    if (frozen) return;
     try { localStorage.setItem(KEY, JSON.stringify(data)); }
     catch (e) { console.warn("Could not save progress.", e); }
+  }
+
+  /** Replace the whole save with an imported one. Returns false if it could not be stored.
+      The caller is expected to reload immediately; writes are frozen until it does. */
+  function replaceSave(parsed) {
+    const merged = deepMerge(DEFAULT(), parsed);
+    try { localStorage.setItem(KEY, JSON.stringify(merged)); }
+    catch (e) { console.warn("Could not write imported save.", e); return false; }
+    data = merged;
+    clearTimeout(saveTimer);
+    saveTimer = null;
+    frozen = true;
+    return true;
   }
 
   function save() {
@@ -486,7 +505,7 @@ CHEM.State = (function () {
   }
 
   return {
-    load, save, flush, onChange, emit,
+    load, save, flush, replaceSave, onChange, emit,
     get data() { return data; },
     xpNeeded, levelTitle, addXP, addCoins, spendCoins, MAX_LEVEL,
     difficulty, xpMultiplier, canPrestige, doPrestige, masteryTier,

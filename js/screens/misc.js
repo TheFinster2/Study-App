@@ -238,7 +238,9 @@ CHEM.Screens.settings = function (view) {
         try {
           const parsed = JSON.parse(reader.result);
           if (!parsed || typeof parsed !== "object" || !parsed.profile) throw new Error("bad file");
-          localStorage.setItem("molequest.save.v1", JSON.stringify(parsed));
+          // Must go through State: writing localStorage directly leaves the old save still
+          // live in memory, and the reload's `pagehide` flush then overwrites the import.
+          if (!S.replaceSave(parsed)) throw new Error("could not store save");
           UI.toast({ icon: "⬆", kind: "good", text: "Save imported — reloading." });
           setTimeout(() => location.reload(), 700);
         } catch (e) {
