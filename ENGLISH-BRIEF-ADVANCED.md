@@ -18,50 +18,93 @@ step, so it reads end to end in one sitting.
 
 ## 0. The marking decision — READ THIS FIRST, IT SHAPES EVERYTHING
 
-The user was asked how written responses should be marked and chose:
+The student must be able to **type real answers in their own words and have them marked**,
+without exact wording and **without calling out to any AI service**. Three approaches were
+weighed. The chosen answer is a **three-layer marking stack**, built in this order:
 
-> **Structural marking. The app never grades free prose.**
-> No AI, no API key, no keyword matching against model answers.
+| Layer | What it marks | How | Verdict |
+|---|---|---|---|
+| **A. Structural** | Choices, orderings, matches, recall | `===` on a determinate answer | **The backbone.** Most of the app. |
+| **B. Fuzzy string** | *Short closed* answers — a cloze word, a technique name, a character | Normalise + Levenshtein / Jaccard | **Yes, but narrowly scoped.** See §0.2. |
+| **C. Sentence embeddings** | *Short analytical* free text — a thesis, a topic sentence, an effect statement | Bundled MiniLM model, cosine similarity, all in-browser | **The headline feature.** See §6.5. |
 
-This is a deliberate, considered choice and you must build to it. **Do not add an LLM call,
-a "similarity score", or a bag-of-words comparison against an exemplar answer.** All three
-were considered and rejected. Keyword matching in particular was rejected explicitly,
-because it forces near-word-for-word answers — the exact thing the user said they didn't
-want — and because in English two completely different sentences can both be excellent,
-which makes the technique not merely limited but actively misleading.
+**No LLM API calls. No API key. No network request at any point after the app loads.**
+Layer C is a small neural model that ships *with* the app and runs locally — that is the
+whole reason it's acceptable here.
 
-### What this means in practice
+### 0.1 Why not fuzzy matching for prose — read this before scoping Layer B
 
-**The app games the *components* of English rather than the essay.** Everything the student
-does resolves to a choice, an ordering, a match, or a recall — all of which mark exactly:
+Fuzzy string matching was proposed for full analytical answers with this worked example:
 
-- Identify the technique operating in a highlighted span of a quote
-- Match technique → effect → module concept
-- Attribute a quote to text, character, or moment
-- Recall a quote from a cloze deletion
-- Order a thesis, or assemble a paragraph from shuffled TEEL cards
-- Choose the stronger of two topic sentences (and then the reason it's stronger)
-- **Read someone else's paragraph and assign it a band against the rubric**
-- Deconstruct an essay question: what is the rubric verb actually asking for?
+> Student: *"Hotspur values martial honour above all else"*
+> Model: *"Hotspur prioritises chivalric duty over pragmatism"*
+> → strip punctuation, tokenise, Levenshtein or Jaccard, pass at ≥ 0.65
 
-Every one of those has a determinate right answer that a `===` can check, and every one of
-them is a real skill the HSC examines.
+**Run the numbers: that pair shares exactly one token — "Hotspur".** Jaccard ≈ 0.09.
+Character-level Levenshtein is worse still. The example given as a *passing* case scores
+around 0.1 and would be marked "rewrite". It fails its own threshold.
 
-### Be honest in-app about the boundary
+That isn't a tuning problem, it's the technique: Levenshtein and Jaccard measure **surface
+form**, so they can only reward answers that reuse the model answer's words. That is exactly
+the word-for-word marking the student said they didn't want, and in English it is actively
+harmful — two sentences sharing no vocabulary can both be excellent, and a paraphrase-heavy
+model answer punishes the strongest students hardest.
 
-Structural marking trains analysis, structure, technique fluency and quote recall extremely
-well. **It cannot tell the student whether the essay they wrote last night is any good.**
-Say so, once, plainly, on the home screen or in an onboarding card — something like *"This
-trains the moves. Your teacher marks the essay."* A study app that quietly implies it can
-mark an HSC essay is worse than one that admits it can't.
+**So Layer B is kept, but only where surface form genuinely is the thing being marked:**
 
-### The one concession: an ungraded Draft Desk
+- cloze recall of a memorised quote (one word, with an authored alternates list)
+- technique names — accept *"anaphora"* for *"anafora"*, *"epistrophe"*/*"epiphora"*
+- character, composer and text names — accept spelling slips
+- British/American spellings and inflections everywhere
 
-Include a plain writing space with a word count, a timer, and export-to-file. It gives **no
-XP, no currency and no feedback** — it exists because a student mid-session will want to
-draft a paragraph and shouldn't have to leave the app. Because all rewards flow through
-`UI.award()` (§3), you enforce "earns nothing" structurally by never calling it. This is the
-same pattern as the arcade in §5.
+Use a normalised Levenshtein ratio with a **0.85** threshold on single words or short names,
+never on sentences. This is spellcheck, not marking, and framing it that way keeps it useful.
+
+### 0.2 What Layer C can and cannot do
+
+Sentence embeddings genuinely solve the Hotspur pair — those two sentences land close in
+vector space despite sharing no vocabulary. That is the capability you're buying. But be
+precise about its limits, because two of them will bite:
+
+- ✅ **Short analytical claims.** One or two sentences: a thesis, a topic sentence, "what is
+  the effect of this technique here". This is where the technology works, and happily it's
+  also most of what English practice actually consists of.
+- ❌ **Whole essays.** Cosine similarity to a model essay is meaningless — length dominates,
+  structure is invisible, and a *better* answer than the exemplar can score lower. Do not
+  offer whole-essay marking. Mark the moves, at the length the moves happen.
+- ❌ **Quality.** Similarity says *"this means roughly what a good answer means"*, never
+  *"this is well written"*. Never render a cosine score as a band or a mark out of 20.
+- ⚠️ **Negation and direction** — the serious one. *"Hotspur values honour above pragmatism"*
+  and *"Hotspur values pragmatism above honour"* embed almost identically (cosine ~0.95) and
+  are opposite claims. §6.5.4 gives the fix, and it is not optional.
+
+### 0.3 How the layers combine
+
+- **XP and levelling ride on Layers A and B**, which are deterministic. This keeps the
+  economy and the anti-farm work in §9.5 sound.
+- **Layer C pays a smaller, capped reward** and is rate-limited per question per day (§9.8),
+  because a similarity threshold is inherently softer than an equality check.
+- **Layer C always reveals the model answers afterwards** so the student can self-compare.
+  The score routes them; the exemplars teach them.
+- **Every free-text question carries 3–5 model answers, not one** (§6.5.3). Take the best
+  cosine across all of them. This single decision does more for accuracy than any threshold
+  tuning.
+
+### 0.4 Be honest in-app about the boundary
+
+The stack trains analysis, structure, technique fluency, quote recall and the ability to
+state a claim precisely. **It still cannot tell the student whether the essay they wrote last
+night is any good.** Say so once, plainly, in onboarding — *"This trains the moves and marks
+your sentences. Your teacher marks the essay."* A study app that implies it can mark an HSC
+essay is worse than one that admits it can't.
+
+### 0.5 The Draft Desk
+
+Include a plain writing space with word count, timer and export-to-file. It gives **no XP,
+no currency and no marking** — it exists because a student mid-session will want to draft a
+paragraph and shouldn't have to leave the app. Because all rewards flow through `UI.award()`
+(§3), you enforce "earns nothing" structurally by never calling it. Same pattern as the
+arcade in §5.
 
 ---
 
@@ -97,7 +140,7 @@ These come from the reference app and exist for good reasons. Do not "modernise"
 
 | Constraint | Why |
 |---|---|
-| **No dependencies. No npm, no bundler, no framework.** | The user clones and opens `index.html`. Anything else is a barrier. |
+| **No npm, no bundler, no build step, no framework.** | The user clones and opens `index.html`. Anything else is a barrier. **One narrow exception:** the embedding runtime and model of Layer C are *vendored* into the repo as plain files (§6.5.1) — checked in, never fetched, never installed. |
 | **Classic `<script>` tags in dependency order** — no ES modules | ES modules are blocked by CORS on `file://`. Script tags mean double-clicking `index.html` works. |
 | **One global: `window.EN`** (mirrors `window.CHEM`) | Namespacing without a module system. Every file starts `window.EN = window.EN \|\| {}`. |
 | **Hash routing** (`#/play`, `#/game/technique/common`) | Works from `file://` and from a GitHub Pages subpath with no server config. |
@@ -105,7 +148,8 @@ These come from the reference app and exist for good reasons. Do not "modernise"
 | **`localStorage` save, debounced write + explicit flush** | See §9.4 — there is a mobile data-loss bug here you must copy the fix for. |
 | **PWA: `manifest.webmanifest` + `sw.js` precache** | Offline is the point. Relative `start_url`/`scope` so it works from a subpath. |
 | **Everything renders at 390 px with zero horizontal overflow** | It's a phone app first. Tested at 390 px *and* 360 px. |
-| **No network calls, ever** | Reinforced by §0: no AI endpoint. The service worker precaches everything and the app never fetches. |
+| **No network calls after load, ever** | Reinforced by §0: no AI endpoint, no telemetry, no CDN. Everything — including the embedding model — is served from the app's own origin and cached. `offline.js` asserts zero outbound requests (§8). |
+| **Layer C degrades, never blocks** | WASM and workers won't load from `file://` (§6.5.2), so embedding marking is unavailable when the app is opened as a local file. Every other mode must still work perfectly there. Detect and explain; never show a broken screen. |
 
 **Copyright note.** Quotes for study and criticism are fine; a full text is not. Ship
 *extracts* — a line, a sentence, a short passage with attribution — never a whole poem or
@@ -127,6 +171,9 @@ js/data/techniques.js   technique glossary — name, definition, effect, example
 js/data/rubric.js       band descriptors + rubric verbs, per module
 js/data/paragraphs.js   band-tagged sample paragraphs for the Marking Desk (§5)
 js/data/*.js            other content banks — pure data, no logic
+vendor/transformers/    VENDORED embedding runtime + ONNX WASM — checked in, never fetched
+models/minilm/          VENDORED model weights (~23 MB int8) + tokenizer
+js/core/mark.js         THE MARKING STACK — layers A/B/C behind one API (§6.5)
 js/core/util.js         DOM helpers, seeded RNG, text helpers
 js/core/audio.js        WebAudio synthesised SFX — no audio files at all
 js/core/fx.js           canvas particles, confetti, floating XP
@@ -176,6 +223,9 @@ UI     // ui.js
 Bank   // bank.js
   all, byId, MODULES, moduleName, activeTexts, filter, draw, shuffleChoices,
   mistakeQuestions, statsByModule, statsByText
+
+Mark   // mark.js — every typed answer in the app goes through this (§6.5)
+  check, fuzzy, embed, cosine, ready, available, downloadModel, downloadProgress
 ```
 
 Note `U.cloze` and `UI.readTimeFor` — both are English-specific additions explained in §6.4
@@ -280,6 +330,10 @@ The chemistry app shipped comparable numbers; match or beat them.
   highest-cost content in the app. See §6.2 for how to author them cheaply and well.
 - **≥ 12 essay-assembly puzzles** for the Essay Architect
 - **≥ 40 topic-sentence A/B pairs**
+- **≥ 60 free-text prompts** for Layer C, each with **3–5 exemplar answers** and **2–3
+  near-misses** (§6.5.3). Budget for this properly — it's roughly the same authoring cost as
+  180 MCQs, and it is what the embedding model exists to serve. Twenty is enough to ship.
+- **~120 hand-labelled responses** for `calibrate.js` (§6.5.7), tagged good/partial/wrong
 - **≥ 65 achievements**, from *First Steps* to *Answer 5,000 questions*
 - Reference screens: technique glossary, rubric and band descriptors, module concept notes,
   essay structure guide, and a per-text quote sheet
@@ -294,7 +348,7 @@ The chemistry app shipped comparable numbers; match or beat them.
 |---|---|---|
 | ⚡ Rapid Fire | ⚡ **Rapid Fire** | Unchanged in shape. 2 min, endless technique/context/concept questions, streak multiplier to ×3. |
 | 🎯 Module Drill | 🎯 **Module Drill** | 15 adaptive questions from one module or one text, no clock. |
-| ⚖️ Balance Blitz | ⭐ ✍️ **Thesis Forge** | Chemistry showed a live per-element atom tally as you balanced. Here the student assembles a thesis from clause cards and gets **live structural feedback**: does it take a position? name the module concept? use a conceptual verb rather than a plot verb? reference the text? All four are checkable without judging the prose — which is exactly the §0 line. Same "the game tells you the truth as you build" feel. |
+| ⚖️ Balance Blitz | ⭐ ✍️ **Thesis Forge** | Chemistry showed a live per-element atom tally as you balanced. Here the student **types a thesis** and gets live feedback on two levels: deterministic structure (does it take a position? name the module concept? use a conceptual verb rather than a plot verb? reference the text?) *and*, once they submit, Layer C similarity against 3–5 exemplar theses (§6.5.3). Same "the game tells you the truth as you build" feel, and it's the mode that most justifies the embedding model. |
 | 🧩 Ion Memory | 🃏 **Quote Match** | Concentration-style. Match quote↔technique, quote↔character, technique↔effect, concept↔quote. |
 | 🏷️ Name That Compound | ⭐ 🔍 **Name That Technique** | Given a quote with a highlighted span, identify the technique — and the reverse, given a technique pick the quote that demonstrates it. The single most drillable skill in the course. **Read §9.7 before authoring a single one of these.** |
 | 🔢 Calculation Crunch | ⭐ 🕳️ **Cloze Crunch** | Chemistry generated numeric problems procedurally. English's procedural equivalent is quote recall: delete words from a memorised quote by algorithm — increasing deletion rate with the card's Leitner box, always deleting the *load-bearing* words (the ones tagged in `span`), never the articles. Infinite, deterministic, and it drills the thing students most reliably lose marks for. |
@@ -305,7 +359,9 @@ The chemistry app shipped comparable numbers; match or beat them.
 | 🩹 Mistake Rehab | 🩹 **Mistake Rehab** | Unchanged. Only questions you've previously missed. |
 | 🃏 *(flashcards)* | ⭐ 🗝️ **The Quote Vault** | Chemistry's flashcards were a side feature. Here, promote quote memorisation to a top-level screen with its own nav slot. 5-box Leitner over the quote bank, with Cloze Crunch as its testing mode. For HSC English this is the highest-leverage thing in the whole app. |
 | *(new)* | 🎯 **Question Deconstruction** | Procedurally assemble essay questions from a grammar of rubric verb + module concept + directive, then ask what's actually being demanded: which verb, which concept, what would an off-task response look like. Cheap to generate, and it addresses the most common way strong students lose marks. |
-| *(new, earns nothing)* | 📄 **Draft Desk** | Per §0: a plain writing space with word count, timer and export. No XP, no feedback, no grading. |
+| *(new, Layer C)* | ⭐ 💬 **Say It In One** | The purest expression of the marking stack. A quote, a technique, or a module concept appears; the student states its effect **in one sentence, in their own words**. Marked by Layer C against 3–5 exemplars with contrastive near-misses (§6.5.4), then all the exemplars are revealed for self-comparison. Short, repeatable, and it drills the exact sentence-level move that separates a Band 4 paragraph from a Band 6 one. |
+| *(new, Layer C)* | 🔧 **Rewrite Rescue** | A weak sentence is shown — plot summary, technique named but unanalysed, floating quote. The student rewrites it. Marked on similarity to exemplar *rewrites*, with the original as a `nearMiss` so "barely changed it" is caught automatically. A neat use of the contrastive rule that costs no extra authoring. |
+| *(new, earns nothing)* | 📄 **Draft Desk** | Per §0.5: a plain writing space with word count, timer and export. No XP, no marking, no grading. |
 
 ### Boss fights
 
@@ -333,16 +389,17 @@ calling `UI.award()` from arcade code.
 
 ---
 
-## 6. The two hard problems
+## 6. The hard problems
 
 Chemistry's hard problem was rendering formulas. Maths's was rendering notation and checking
-algebra. English has two of its own, and neither is what you'd expect.
+algebra. English has three, and **§6.5 — the marking stack — is by far the largest.** Budget
+for it accordingly: it is more engineering than any other single part of this app.
 
-### 6.1 Making structural marking feel like real English, not trivia
+### 6.1 Making the multiple-choice half feel like real English, not trivia
 
-The failure mode of a "no free prose" English app is that it degenerates into a technique
-vocabulary quiz — *what is anaphora?* — which is memorisation, not analysis, and students
-see through it in ten minutes.
+Layer C handles free text, but most of the bank is still Layer A, and its failure mode is
+degenerating into a technique vocabulary quiz — *what is anaphora?* — which is memorisation,
+not analysis, and students see through it in ten minutes.
 
 The fix is that **every question should require reasoning from a specific text to a specific
 effect**, not recall of a definition. Concretely:
@@ -413,7 +470,7 @@ Mercifully light compared to maths. You need:
 ordering — escape first, then insert markup. Quotes contain apostrophes and em dashes and
 occasionally angle brackets; a study app with an XSS hole is still an XSS hole.
 
-### 6.4 `U.cloze` — the procedural generator
+### 6.4 `U.cloze` — the procedural generator (Layer B's main customer)
 
 ```js
 // Delete n words from a quote, biased towards the load-bearing ones (those inside `span`
@@ -424,8 +481,151 @@ U.cloze(quote, { rate, seed })  // → { display, blanks:[{i, word, alts:[...]}]
 ```
 
 `alts` matters: accept obvious inflections and British/American spellings so the student
-isn't punished for typing "realise". This is *not* the fuzzy prose matching rejected in §0 —
-it's a single word against a short authored list.
+isn't punished for typing "realise". Run the comparison through **Layer B** (§6.5.6) — a
+normalised Levenshtein ratio at 0.85 — so a typo doesn't cost a mark. This is exactly the
+scope §0.1 permits: one word against a short authored list, where surface form *is* the
+thing being tested.
+
+### 6.5 The marking stack — `js/core/mark.js`
+
+Everything the student types goes through one API, so no game mode invents its own marking
+and the anti-farm rules in §9 apply uniformly:
+
+```js
+Mark.check(response, spec)  // → { verdict, score, layer, feedback, exemplars }
+// spec = { layer:"B"|"C", answers:[...], nearMiss:[...], domain, threshold }
+// verdict = "nailed" | "close" | "notYet" | "unavailable"
+```
+
+`"unavailable"` is a first-class verdict, not an error: Layer C can't run from `file://`
+(§6.5.2) or before the model has been downloaded (§6.5.5), and the UI must handle that
+gracefully — show the exemplars, award nothing, don't pretend.
+
+#### 6.5.1 What to vendor, and why it isn't really a dependency
+
+- **Runtime:** `transformers.js` (Xenova) — ~1–3 MB minified, plus the `onnxruntime-web`
+  WASM binaries it needs.
+- **Model:** `all-MiniLM-L6-v2`, int8-quantised ONNX — **~23 MB**, 384-dimensional output.
+  This is the model the 384-dim figure in the proposal refers to, and it's the right choice:
+  Universal Sentence Encoder via TensorFlow.js is larger, slower to start, and no better at
+  short analytical sentences.
+
+Check both into the repo as plain files under `vendor/` and `models/`. No npm, no build
+step, no install — the constraint in §2 is about *toolchains*, and a checked-in file is just
+an asset like the icons.
+
+**Critical configuration:** transformers.js fetches from the HuggingFace CDN by default,
+which would break the no-network promise in the most embarrassing possible way — silently,
+online only, and never in your offline test. Set explicitly:
+
+```js
+env.allowRemoteModels = false;                    // never phone home
+env.localModelPath   = "./models/";
+env.backends.onnx.wasm.wasmPaths = "./vendor/transformers/";
+```
+
+Then assert it: `offline.js` (§8) must fail the build if *any* outbound request is made
+after load.
+
+#### 6.5.2 It will not run from `file://`
+
+WASM instantiation and web workers are blocked by CORS on `file://`. The rest of the app
+runs there fine and must continue to — so:
+
+- Feature-detect at boot; if unavailable, `Mark.check` returns `"unavailable"` for Layer C.
+- Say why, once, in plain words: *"Sentence marking needs the app served over http — it
+  works on your phone install and on the published site, just not by double-clicking the
+  file."*
+- **All Layer A and B modes must remain fully playable from `file://`.** Test this.
+
+#### 6.5.3 Multiple model answers, and negative exemplars
+
+This is the highest-leverage content decision in the whole marking design.
+
+```js
+{ id:"cm-thesis-04", mod:"common", text:"1984", type:"free",
+  prompt:"In one sentence, state what Orwell's use of the Party slogans suggests about the relationship between language and power.",
+  answers:[                               // 3–5 genuinely different valid answers
+    "Controlling language lets the Party control what can be thought.",
+    "Orwell presents language as the instrument through which power reproduces itself.",
+    "By narrowing what words exist, the Party narrows the range of possible dissent." ],
+  nearMiss:[                              // semantically CLOSE but wrong — see §6.5.4
+    "The Party uses slogans because propaganda is memorable.",
+    "Language is controlled by the people rather than the Party." ],
+  domain:"common/language-power", threshold:0.62 }
+```
+
+Score as **best cosine across `answers`**, then apply the contrastive rule below. Authoring
+three to five valid answers per prompt costs about as much as writing three distractors for
+an MCQ, and it does more for accuracy than any amount of threshold tuning — because English
+questions genuinely have many right answers, and a single exemplar encodes one person's
+phrasing as the truth.
+
+#### 6.5.4 The negation fix — do not skip this
+
+Embeddings are famously weak on negation and direction. *"Hotspur values honour above
+pragmatism"* and *"Hotspur values pragmatism above honour"* score ~0.95 against each other.
+Marked naively, the app will confidently accept the opposite of the right answer, which is
+worse than not marking at all.
+
+**Fix: contrastive scoring against authored near-misses.**
+
+```js
+const best   = max(cos(student, a) for a in answers);
+const worst  = max(cos(student, n) for n in nearMiss);
+if (worst >= best - 0.02) return "notYet";   // closer to a wrong reading than a right one
+return best >= threshold ? "nailed" : best >= threshold - 0.10 ? "close" : "notYet";
+```
+
+Author `nearMiss` entries as the *inversions and misreadings you'd otherwise write as MCQ
+distractors* — reversed direction, right idea about the wrong character, plot summary
+instead of analysis. You are already writing these; point them at the marker too.
+
+Add a cheap deterministic backstop for the specific case of reversal: if the prompt's key
+terms appear in both the model answer and the student answer but in **opposite relational
+order**, flag it regardless of cosine. Twenty lines, and it catches the failure mode that
+embarrasses you most.
+
+#### 6.5.5 Downloading 23 MB politely
+
+Do **not** put the model in the initial `PRECACHE` — a 23 MB first load on mobile data is
+hostile, and it would block the app's first paint.
+
+- Ship the app without it; every Layer A/B mode works immediately.
+- Offer the download behind an explicit button with the size stated: *"Enable sentence
+  marking — 23 MB, one time, then works offline forever."*
+- Store it in a **separate cache bucket** (`molequest-model-v1`) that survives app-version
+  cache bumps, so shipping a content update doesn't re-download 23 MB.
+- Show real progress. Handle interruption and resume.
+- On a version bump of the model itself, and only then, invalidate that bucket.
+
+#### 6.5.6 Layer B, precisely scoped
+
+```js
+// Normalised Levenshtein ratio, after: lowercase, strip punctuation and diacritics,
+// collapse whitespace, apply the British/American spelling map.
+// 0.85 threshold. Single words and short names ONLY — never a sentence. See §0.1.
+Mark.fuzzy(input, alts)  // → { ok, matched, ratio }
+```
+
+If you ever find yourself passing a full sentence to `Mark.fuzzy`, that's the §0.1 mistake
+reasserting itself. Sentences go to Layer C or to a structural mode. There is no third path.
+
+#### 6.5.7 Calibrate the threshold with data, not vibes
+
+`0.62`–`0.75` is the plausible range for MiniLM cosine on short analytical sentences, and
+the right value differs per prompt type. Guessing produces an app that is either insultingly
+generous or maddeningly strict.
+
+Build `calibrate.js` (§8) with **~120 hand-labelled student responses** — real-ish sentences
+you write, each tagged `good` / `partial` / `wrong` — and have it report the precision and
+recall at each threshold from 0.50 to 0.85 in steps of 0.01. Pick the value where false
+accepts (a wrong answer marked "nailed") drop to near zero, then accept whatever recall that
+buys. **Asymmetric on purpose:** wrongly accepting a bad answer teaches the student something
+false, wrongly rejecting a good one merely annoys them — and the exemplars shown afterwards
+soften the annoyance.
+
+Store the labelled set in the repo. Re-run it whenever the prompt bank grows.
 
 ---
 
@@ -496,16 +696,30 @@ Five plain Node + Playwright scripts, no test framework. Chromium is at
    what GitHub Pages looks like), confirms the service worker registers and precaches, then
    **cuts the network** and verifies every screen renders and that progress saved while
    offline survives a reload. **Additionally assert the app makes zero outbound requests
-   after load** — that's the §0 no-AI promise, mechanically enforced.
+   after load** — that's the §0 no-network promise, mechanically enforced, and it's the only
+   thing that will catch transformers.js silently reaching for the HuggingFace CDN (§6.5.1).
+   Also: download the model, cut the network, and confirm Layer C still marks correctly.
 
-4. **`exploit.js`** — a zero-knowledge bot: always picks option A, spams through the Quote
+4. **`calibrate.js`** — the threshold harness from §6.5.7. Runs the ~120 hand-labelled
+   responses through `Mark.check` and reports precision/recall per threshold, plus a
+   confusion matrix. **Fails the build if any labelled `wrong` response is marked "nailed"**
+   — a false accept is the one error class that actively teaches something untrue. Also
+   asserts the §6.5.4 negation pairs come out on opposite sides.
+
+5. **`exploit.js`** — a zero-knowledge bot: always picks option A, spams through the Quote
    Vault, assigns Band 4 to every Marking Desk sample (the modal band — a real strategy),
-   submits garbage everywhere. **Fails the build if any mode pays more than 25 XP, if the
-   sustained rate exceeds 2,000 XP/hour, or if pure guessing reaches level 2.** See §9.5.
+   and — new for this app — **pastes the same plausible-sounding sentence into every free-text
+   prompt**, then pastes lorem ipsum, then pastes the prompt back at itself. **Fails the build
+   if any mode pays more than 25 XP, if the sustained rate exceeds 2,000 XP/hour, or if pure
+   guessing reaches level 2.** See §9.5 and §9.8.
 
-5. **`arcade.js`** — tickets charge correctly, a broke player is refused, the clock runs only
+6. **`arcade.js`** — tickets charge correctly, a broke player is refused, the clock runs only
    while the game is on screen, high scores survive a reload, and **XP/level/currency are
    provably untouched** by playing — and by the Draft Desk.
+
+7. **`file-protocol.js`** — opens the app as `file://` and asserts every Layer A and B mode
+   is fully playable, that Layer C reports `"unavailable"` rather than throwing, and that the
+   explanation is shown (§6.5.2).
 
 **Also run an "honest player" bot** alongside `exploit.js`. Every anti-cheat measure in §9
 could plausibly break normal play, and the only way to know it hasn't is to measure both
@@ -611,6 +825,25 @@ the self-reported figure.
 ("did you remember it? yes") is unmarkable and farmable; a typed cloze answer is neither.
 Keep a self-rated mode for browsing, and pay nothing for it.
 
+**Layer C needs its own farm guard, and it's a softer target than anything in the chemistry
+app.** A similarity threshold is not an equality check, so these are all real attacks:
+
+- *One good sentence, everywhere.* A generically strong sentence — *"Orwell positions the
+  responder to interrogate the relationship between language and power"* — will clear
+  threshold on a surprising number of prompts. **Fix:** a free-text prompt pays **once per
+  day**, exactly like a flashcard, and cross-prompt repetition of the same response is
+  detected (hash the normalised text; if it's the student's own answer to a different prompt
+  today, pay nothing).
+- *Paste the prompt back.* Prompts and their exemplars are semantically close to each other
+  by construction. **Fix:** add the prompt itself to `nearMiss` automatically, at runtime,
+  for every free-text question. One line, closes the whole attack class.
+- *Resubmit until it passes.* **Fix:** one scored attempt per prompt per day. Further
+  attempts show feedback and exemplars but pay nothing — which is the pedagogically better
+  behaviour anyway.
+- *Cap the ceiling.* Layer C should never be the fastest XP per minute in the app. Keep its
+  per-response payout at or below a Layer A correct answer, and let the structural modes
+  carry the economy.
+
 ### 9.9 Produce the answer first, then derive the question
 The chemistry titration sim randomised concentrations and volumes independently, so the
 required titre could exceed the equipment's capacity — an unanswerable question, which the
@@ -627,6 +860,9 @@ bands by controlled degradation. Also:
   generate the question wording around it.
 - **Technique questions:** start from the effect you want to teach, then find the quote that
   demonstrates it — not the reverse.
+- **Free-text prompts (Layer C):** write the exemplar answers *first*, then write the prompt
+  that they are all valid answers to. Prompts authored first tend to admit readings your
+  exemplars don't cover, and every one of those is a false rejection of a correct student.
 
 ### 9.10 Procedural generators need a difficulty *contract*
 Chemistry's `calc.js` produced problems whose difficulty varied wildly for the same declared
@@ -666,15 +902,25 @@ design rather than a bug.
    own, and every later mode draws on it.
 7. Rapid Fire + Name That Technique. Now it's playable. Turn on the §9.7 validator checks
    here, before the bank grows.
-8. **The Quote Vault + Cloze Crunch.** Highest-leverage feature in the app; ship it early so
-   the student gets value while the rest is built.
-9. **The Marking Desk**, with 15 paragraphs authored by controlled degradation (§6.2). Then
-   Thesis Forge and Essay Architect.
-10. Remaining modes, cheapest first. Keep `smoke.js` green after each.
-11. Content push to §4.4. Run both bias checks (§9.7a) continuously.
-12. Shop, achievements, progress, daily/weekly, prestige. Bosses.
-13. PWA (manifest, service worker, icons) + `offline.js` including the zero-requests assert.
-14. Draft Desk and Arcade last — neither can break the economy if neither calls `award()`.
+8. **`mark.js` with Layers A and B only** (§6.5.6), plus the **Quote Vault + Cloze Crunch**.
+   Highest-leverage feature in the app; ship it early so the student gets value while the
+   rest is built. Layer B has no model to download, so this all still runs from `file://`.
+9. **The Marking Desk**, with 15 paragraphs authored by controlled degradation (§6.2), then
+   Essay Architect.
+10. **Layer C — the embedding marker.** Do it as one focused block, in this order, and don't
+    start until steps 1–9 are green:
+    a. Vendor transformers.js + MiniLM; wire `env.allowRemoteModels = false` (§6.5.1).
+    b. Prove it embeds and cosines correctly in a Node harness before any UI exists.
+    c. Author **20** free-text prompts with 3–5 exemplars and near-misses each (§6.5.3–4).
+    d. Build `calibrate.js` and the ~120 labelled responses; pick the threshold (§6.5.7).
+    e. Only now build the UI: Say It In One, Thesis Forge's submit path, Rewrite Rescue.
+    f. Model download flow with its own cache bucket and progress (§6.5.5).
+    g. `file-protocol.js` — confirm everything else still works without it (§6.5.2).
+11. Remaining modes, cheapest first. Keep `smoke.js` green after each.
+12. Content push to §4.4. Run both bias checks (§9.7a) and `calibrate.js` continuously.
+13. Shop, achievements, progress, daily/weekly, prestige. Bosses.
+14. PWA (manifest, service worker, icons) + `offline.js` including the zero-requests assert.
+15. Draft Desk and Arcade last — neither can break the economy if neither calls `award()`.
 
 Commit at each numbered step with the tests green. Don't batch.
 
@@ -696,7 +942,13 @@ Commit at each numbered step with the tests green. Don't batch.
   than losing XP.
 - **Bump the `CACHE` constant in `sw.js` on every deploy** and keep `PRECACHE` in sync with
   the files on disk. The validator should fail the build if they drift. Note that adding a
-  text file changes the list, so it must bump the cache too.
+  text file changes the list, so it must bump the cache too. **The model bucket
+  (`molequest-model-v1`) is versioned separately and must NOT be invalidated by an app-version
+  bump** (§6.5.5) — otherwise every content update costs the student another 23 MB.
+- **The repo will be ~30 MB** once the model and runtime are vendored. That's fine for GitHub
+  (well under the 100 MB per-file limit and the 1 GB soft repo limit), but mention it to the
+  user so the clone time isn't a surprise. Don't use Git LFS — Pages doesn't serve LFS
+  objects, and the model would 404 in production while working perfectly for you locally.
 
 ---
 
@@ -718,6 +970,13 @@ explaining why a line works, not like a marking rubric with jokes.
 Desk expecting feedback, the empty state should say what it is — *"Somewhere to write. No
 marks, no score, no one reading over your shoulder."* — rather than silently doing nothing.
 Honesty about what the app can't do is what makes the rest of it trustworthy.
+
+**Never present a cosine score as a mark.** Layer C's verdict is three words — *nailed it*,
+*close*, *not yet* — followed by the exemplar answers. Do not show "0.71", do not render it
+as a percentage, and above all do not map it to a band. It measures *"this means roughly what
+a good answer means"*, and dressing that up as a mark out of 20 would be the one genuinely
+dishonest thing this app could do. When the verdict is *close* or *not yet*, the exemplars
+are the feedback — that's why they're always revealed.
 
 Synthesise **all** sound effects in WebAudio (`js/core/audio.js` has ~67 of them in 273
 lines) — no audio files, nothing to precache, nothing to license. The reference app's user
