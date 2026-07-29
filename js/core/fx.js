@@ -97,7 +97,14 @@ CHEM.FX = (function () {
   }
 
   const api = {
-    setReduced(v) { reduced = !!v; },
+    /* Also flag it on <html>, so the CSS animations honour the in-app toggle and not
+       just the OS-level prefers-reduced-motion. Someone on a slow phone turning motion
+       off previously still got every CSS animation, including the full-screen
+       background drift, which is the most expensive one in the app. */
+    setReduced(v) {
+      reduced = !!v;
+      try { document.documentElement.dataset.motion = reduced ? "off" : "on"; } catch (e) { /* ignore */ }
+    },
 
     /** Small pop at a screen point — used for correct answers. */
     pop(x, y) { burst(x, y, { count: 18, speed: 4.5, size: 4, life: 45, shape: "circle" }); },

@@ -77,7 +77,7 @@ Three arcade games you **rent by the minute** with Moles — 5, 15 or 30 minutes
 | Game | | Cheapest ticket |
 |---|---|---|
 | 💠 **Ion Crush** | 8×8 match-3 on six polyatomic ions. Runs of 4+ forge power tiles — ⚡ Charged clears a row and column, ☢ Unstable a 3×3, ✳ Catalyst every ion of one type — and blasts set each other off in chains | 250 🪙 / 5 min |
-| 🏃 **Mole Runner** | Endless side-scroller: jump the hazards, duck the fume clouds, grab 🛡 Buffers and ⚡ Catalysts, and take near-misses for bonus points | 200 🪙 / 5 min |
+| 🏃 **Mole Runner** | Endless side-scroller: jump the hazards, duck the fume clouds, grab 🛡 Buffers and ⚡ Catalysts, and take near-misses for bonus points. Big hold-to-act buttons on phones | 200 🪙 / 5 min |
 | 🔬 **Isotope 2048** | Slide-and-merge up the periodic table — two Hydrogens make Helium, all the way to Argon. Three undos per run | 220 🪙 / 5 min |
 
 **They pay nothing.** No XP, no Moles, no achievements — only a high score. That's
@@ -243,7 +243,9 @@ the old worker survives — a backgrounded PWA or a second tab is enough. Settin
 ## Accessibility & compatibility
 
 Keyboard: `1`–`4` answer multiple-choice questions, `Enter` advances, `Esc` closes modals.
-`prefers-reduced-motion` disables particles and background animation. Themes are
+`prefers-reduced-motion` disables particles and background animation, and so does the
+in-app Motion toggle — it sets `data-motion` on the root element, so it silences the CSS
+animations too rather than only the JS particle effects. Themes are
 theme-aware down to 390 px with no horizontal overflow. Tested in Chromium; uses only
 widely-supported CSS (`color-mix`, custom properties, grid).
 

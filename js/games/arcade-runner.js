@@ -20,26 +20,39 @@ CHEM.ArcadeGames.runner = (function () {
     const wrap = U.el("div", { class: "runner-wrap" });
     const canvas = U.el("canvas", { class: "runner-canvas" });
     const hint = U.el("div", { class: "tiny muted", style: "text-align:center; margin-top:8px",
-      text: "Space / ↑ / tap to jump (hold for higher) · ↓ to duck · grab 🛡 and ⚡" });
+      text: "Jump (hold for higher) · duck under fumes · grab 🛡 and ⚡" });
     wrap.appendChild(canvas);
     stage.appendChild(wrap);
     stage.appendChild(hint);
 
     const ctx = canvas.getContext("2d");
-    const W = 800, H = 260;          // internal resolution; CSS scales it
+
+    /* The world is measured in its own units and CSS scales the canvas to fit.
+       On a phone the old fixed 800×260 became a ~125px letterbox strip stranded at
+       the top of the screen — technically playable, actually horrible. A narrow
+       screen now gets a shorter, taller world, so everything is drawn bigger.
+       Speed is expressed per 800 units and scaled at use, so an obstacle still takes
+       the same number of seconds to cross the screen however wide the world is. */
+    let W = 800, H = 260, GROUND = 216, worldScale = 1;
     let dpr = 1;
 
-    function resize() {
+    function layout() {
+      const narrow = Math.min(window.innerWidth, 900) < 700;
+      W = narrow ? 470 : 800;
+      H = narrow ? 330 : 260;
+      GROUND = H - 46;
+      worldScale = W / 800;
+      canvas.style.aspectRatio = W + " / " + H;
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = W * dpr;
       canvas.height = H * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (player) player.y = Math.min(player.y, GROUND);
     }
-    resize();
-    window.addEventListener("resize", resize);
-
-    const GROUND = H - 44;
-    const player = { x: 90, y: GROUND, vy: 0, w: 30, h: 38, ducking: false, onGround: true };
+    const player = { x: 70, y: 0, vy: 0, w: 30, h: 38, ducking: false, onGround: true };
+    layout();
+    player.y = GROUND;
+    window.addEventListener("resize", layout);
     const GRAVITY = 0.62;
     const JUMP_V = -11.4;
     const COYOTE = 6;                // frames of grace after leaving the ground
@@ -115,6 +128,37 @@ CHEM.ArcadeGames.runner = (function () {
     canvas.addEventListener("touchend", onTouchEnd);
     canvas.addEventListener("mousedown", jump);
     canvas.addEventListener("mouseup", () => { holdingJump = false; });
+
+    /* On-screen controls. Tapping the canvas still works, but on a phone the canvas
+       is a strip near the top and reaching it with a thumb is awkward — these sit
+       where your hands already are. Both are press-and-hold: jump height depends on
+       how long you hold, and duck lasts as long as the button is down. */
+    const jumpBtn = U.el("button", { class: "btn btn-primary run-btn", type: "button" }, [
+      U.el("span", { class: "run-btn-ico", text: "⤒" }),
+      U.el("span", { text: "Jump" })
+    ]);
+    const duckBtn = U.el("button", { class: "btn run-btn", type: "button" }, [
+      U.el("span", { class: "run-btn-ico", text: "⤓" }),
+      U.el("span", { text: "Duck" })
+    ]);
+    const pad = U.el("div", { class: "run-pad" }, [duckBtn, jumpBtn]);
+    stage.appendChild(pad);
+
+    /* Pointer events cover mouse and touch in one path. `setPointerCapture` keeps the
+       release coming to us even if the thumb slides off the button mid-jump. */
+    function hold(btn, down, up) {
+      btn.addEventListener("pointerdown", e => {
+        e.preventDefault();
+        if (btn.setPointerCapture) { try { btn.setPointerCapture(e.pointerId); } catch (_) {} }
+        down();
+      });
+      ["pointerup", "pointercancel", "pointerleave"].forEach(ev =>
+        btn.addEventListener(ev, e => { e.preventDefault(); up(); }));
+      // Stop the browser turning a long press into text selection or a scroll.
+      btn.addEventListener("contextmenu", e => e.preventDefault());
+    }
+    hold(jumpBtn, jump, () => { holdingJump = false; });
+    hold(duckBtn, () => duck(true), () => duck(false));
 
     /* ── particles ──────────────────────────────────────────── */
     function puff(x, y, n, colour) {
@@ -245,8 +289,9 @@ CHEM.ArcadeGames.runner = (function () {
 
         const ph = player.ducking && player.onGround ? 20 : player.h;
         const py = player.y - ph;
+        const sp = speed * worldScale;
         for (const o of obstacles.slice()) {
-          o.x -= speed;
+          o.x -= sp;
           const hit = player.x + player.w - 6 > o.x && player.x + 6 < o.x + o.w &&
                       py + 4 < o.y && py + ph > o.y - o.h;
           if (hit && !absorb(o)) die();
@@ -260,7 +305,7 @@ CHEM.ArcadeGames.runner = (function () {
         obstacles = obstacles.filter(o => o.x > -80);
 
         for (const p of pickups.slice()) {
-          p.x -= speed;
+          p.x -= sp;
           const dx = (player.x + player.w / 2) - p.x;
           const dy = (player.y - ph / 2) - p.y;
           if (dx * dx + dy * dy < (p.r + 20) * (p.r + 20)) {
@@ -276,7 +321,7 @@ CHEM.ArcadeGames.runner = (function () {
 
       clouds.forEach(c => { c.x -= c.s; if (c.x < -60) { c.x = W + 40; c.y = 25 + Math.random() * 75; } });
       props.forEach(p => {
-        p.x -= speed * (p.layer ? 0.34 : 0.16);
+        p.x -= speed * worldScale * (p.layer ? 0.34 : 0.16);
         if (p.x < -70) { p.x = W + Math.random() * 90; p.h = 26 + Math.random() * 54; }
       });
       particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.24; p.life--; });
@@ -475,7 +520,7 @@ CHEM.ArcadeGames.runner = (function () {
         cancelAnimationFrame(raf);
         document.removeEventListener("keydown", onKeyDown);
         document.removeEventListener("keyup", onKeyUp);
-        window.removeEventListener("resize", resize);
+        window.removeEventListener("resize", layout);
       }
     };
   }

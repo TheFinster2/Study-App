@@ -236,8 +236,10 @@ CHEM.ArcadeGames.ioncrush = (function () {
     function build() {
       board.innerHTML = "";
       cellNodes.length = 0;
+      painted.length = 0;
       for (let r = 0; r < SIZE; r++) {
         cellNodes[r] = [];
+        painted[r] = [];
         for (let c = 0; c < SIZE; c++) {
           const btn = U.el("button", { class: "crush-cell", type: "button" });
           btn.addEventListener("click", () => pick(r, c));
@@ -247,29 +249,51 @@ CHEM.ArcadeGames.ioncrush = (function () {
       }
     }
 
+    /* Face HTML is fixed per tile type, so build it once rather than re-running the
+       subscript renderer on every repaint. */
+    const FACE = TILES.map(t => U.formula(t.sym));
+    const POWER_FACE = {};
+    Object.keys(POWER).forEach(k => (POWER_FACE[k] = `<span class="crush-power">${POWER[k].glyph}</span>`));
+
+    /* What each cell currently shows, so an unchanged cell is never touched.
+       Rewriting innerHTML and box-shadow for all 64 cells on every repaint was
+       most of the cost, and a cascade repaints several times per swap. */
+    const painted = [];
+
     function paint(clearing, animateDrop) {
+      const dropping = [];
       for (let r = 0; r < SIZE; r++) {
         for (let c = 0; c < SIZE; c++) {
           const btn = cellNodes[r][c];
           const t = grid[r][c];
           const tile = TILES[t];
           const kind = power[r][c];
-          btn.innerHTML = tile
-            ? (kind ? `<span class="crush-power">${POWER[kind].glyph}</span>` : U.formula(tile.sym))
-            : "";
-          btn.style.background = tile ? tile.colour : "transparent";
-          btn.style.boxShadow = tile ? `0 3px 0 ${tile.glow}` : "none";
+          const sig = t + "|" + (kind || "");
+          if (painted[r][c] !== sig) {
+            painted[r][c] = sig;
+            btn.innerHTML = tile ? (kind ? POWER_FACE[kind] : FACE[t]) : "";
+            btn.style.background = tile ? tile.colour : "transparent";
+            btn.style.boxShadow = tile ? `0 3px 0 ${tile.glow}` : "none";
+          }
+          // classList toggles are cheap and, unlike reading a layout property,
+          // do not force the browser to flush styles mid-loop.
           btn.classList.toggle("sel", !!selected && selected.r === r && selected.c === c);
           btn.classList.toggle("popping", !!clearing && clearing.has(key(r, c)));
           btn.classList.toggle("charged", !!kind);
           btn.classList.remove("dropping");
           if (animateDrop && drops[r][c] > 0) {
             btn.style.setProperty("--d", drops[r][c]);
-            // Restart the animation even if the class was just removed.
-            void btn.offsetWidth;
-            btn.classList.add("dropping");
+            dropping.push(btn);
           }
         }
+      }
+      /* Restarting a CSS animation needs one reflow between removing and re-adding
+         the class. Doing that per cell meant up to 64 forced synchronous layouts
+         per repaint — the single biggest cause of stutter on a phone. One is enough
+         for the whole board. */
+      if (dropping.length) {
+        void board.offsetWidth;
+        for (let i = 0; i < dropping.length; i++) dropping[i].classList.add("dropping");
       }
     }
 

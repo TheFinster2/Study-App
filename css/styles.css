@@ -405,15 +405,26 @@ code,.mono{ font-family:"Cascadia Code",ui-monospace,"SF Mono",Menlo,Consolas,mo
   background:transparent; padding:0; perspective:700px; font:inherit;
 }
 .mcard-inner{ position:relative; width:100%; height:100%; transition:transform .45s cubic-bezier(.3,1.2,.4,1);
-  transform-style:preserve-3d; }
-.mcard.flip .mcard-inner{ transform:rotateY(180deg); }
+  /* Older iOS Safari needs the prefixed forms; without them it renders both faces
+     during the turn, which reads as flicker rather than a flip. `will-change` gives
+     the card its own layer so the rotation is composited instead of repainted. */
+  -webkit-transform-style:preserve-3d; transform-style:preserve-3d;
+  will-change:transform; }
+.mcard.flip .mcard-inner{ -webkit-transform:rotateY(180deg); transform:rotateY(180deg); }
 .mface{ position:absolute; inset:0; border-radius:14px; display:grid; place-items:center; padding:6px;
-  backface-visibility:hidden; text-align:center; }
+  -webkit-backface-visibility:hidden; backface-visibility:hidden; text-align:center; }
 .mface-back{ background:linear-gradient(135deg,var(--card-2),var(--card)); border:1px solid var(--line); font-size:22px; }
 .mface-front{ background:color-mix(in srgb,var(--accent) 16%,var(--bg-1)); border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);
-  transform:rotateY(180deg); font-size:clamp(11px,2.6vw,15px); font-weight:800; line-height:1.2; word-break:break-word; }
+  -webkit-transform:rotateY(180deg); transform:rotateY(180deg); font-size:clamp(11px,2.6vw,15px); font-weight:800; line-height:1.2; word-break:break-word; }
 .mcard.done .mface-front{ background:color-mix(in srgb,var(--good) 22%,var(--bg-1)); border-color:var(--good); }
-.mcard.done{ animation:pop .4s; pointer-events:none; }
+/* Scaling the card animated `transform` on the very element that owns the
+   perspective, which flattens the child's 3D context mid-flip and flickers on
+   Safari. A ring flash gets the same "matched!" beat without touching transform. */
+.mcard.done{ animation:matchFlash .45s ease-out; pointer-events:none; }
+@keyframes matchFlash{
+  from{ box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 65%,transparent); }
+  to{ box-shadow:0 0 0 13px transparent; }
+}
 .mcard.miss .mface-front{ background:color-mix(in srgb,var(--bad) 20%,var(--bg-1)); border-color:var(--bad); }
 
 /* pathway builder */
@@ -580,6 +591,14 @@ code,.mono{ font-family:"Cascadia Code",ui-monospace,"SF Mono",Menlo,Consolas,mo
     transition-duration:.01ms !important; }
   body::before{ animation:none; }
 }
+/* The in-app Motion toggle, which until now only silenced the JS particle effects. */
+:root[data-motion="off"] *,
+:root[data-motion="off"] *::before,
+:root[data-motion="off"] *::after{
+  animation-duration:.01ms !important; animation-iteration-count:1 !important;
+  transition-duration:.01ms !important;
+}
+:root[data-motion="off"] body::before{ animation:none; }
 @media(max-width:560px){
   .lvl-title{ display:none; }
   .view{ padding:16px 13px 116px; }
@@ -651,6 +670,18 @@ code,.mono{ font-family:"Cascadia Code",ui-monospace,"SF Mono",Menlo,Consolas,mo
 
 /* Mole Runner */
 .runner-wrap{ width:min(96vw,800px); }
+.run-pad{
+  display:grid; grid-template-columns:1fr 1fr; gap:10px;
+  width:min(96vw,520px); margin:14px auto 0;
+}
+.run-btn{
+  display:grid; place-items:center; gap:2px;
+  min-height:74px; font-size:15px; font-weight:800;
+  touch-action:none; user-select:none; -webkit-user-select:none;
+}
+.run-btn:active{ transform:scale(.96); }
+.run-btn-ico{ font-size:22px; line-height:1; }
+@media(min-width:760px){ .run-pad{ display:none; } }
 .runner-canvas{
   width:100%; height:auto; display:block; border-radius:16px;
   background:linear-gradient(180deg,color-mix(in srgb,var(--bg-2) 80%,transparent),var(--bg-1));
