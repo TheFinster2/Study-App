@@ -3,7 +3,7 @@
    on activate. Keep PRECACHE in sync with the files on disk (the content
    validator asserts this, so a missing entry fails the build check). */
 
-const CACHE = "molequest-v7";
+const CACHE = "molequest-v8";
 
 const PRECACHE = [
   "./",

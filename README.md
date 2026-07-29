@@ -59,7 +59,7 @@ save files. Use Settings → *Export save* / *Import save* to move one across.
 | 🔢 **Calculation Crunch** | Procedurally generated moles, pH, dilution, Ksp, calorimetry problems |
 | 🌧️ **Precipitation Panic** | Fill a solubility grid against the clock |
 | 🧪 **Titration Lab** | A simulated titration: find the end point, then do the calculation |
-| 🔗 **Pathway Puzzle** | Build organic synthesis routes by choosing reagents |
+| 🔗 **Pathway Puzzle** | Build organic synthesis routes by choosing reagents — 5 routes a game |
 | 💀 **Survival** | One life, tightening clock, escalating difficulty — how deep can you go? |
 | 🩹 **Mistake Rehab** | Only the questions you've previously missed |
 
@@ -104,7 +104,10 @@ withheld entirely below 50% accuracy. Answers given faster than 1.2 s — quicke
 question can be read — earn nothing. Precipitation Panic scores net (right − wrong), pays
 only for accuracy above a 55% baseline, and re-draws any board where one state holds more
 than 65% of the cells — otherwise an almost-all-precipitate board makes "tap PPT sixteen
-times" a legitimately perfect score. A titration
+times" a legitimately perfect score. Pathway Puzzle pays on route *efficiency* — the ideal
+step count over what you actually spent, wasted reagents included — because a bot that
+tries every card in turn does eventually reach the target, and used to collect a per-puzzle
+minimum plus a full completion bonus for doing so. A titration
 end point more than 0.5 mL out pays nothing. Flashcards are self-graded, so a card pays
 only once per day, only if it was genuinely due, and only if it stayed on screen long
 enough to read. A bot spamming every mode earns **0 XP**; it used to earn 35,000 XP/hour.
@@ -170,7 +173,7 @@ Everything lives in `js/data/` as plain JS — edit it without touching the engi
 - **263** flashcards across all 8 modules
   (M1 34 · M2 24 · M3 22 · M4 18 · M5 32 · M6 42 · M7 43 · M8 48)
 - **28** named organic compounds with plausible distractors
-- **10** synthesis pathway puzzles over a 16-edge reaction graph
+- **44** synthesis pathway puzzles over a 29-node, 44-edge reaction graph (19 reagent cards)
 - **65** achievements, scaled from *First Steps* to *Answer 5,000 questions*
 - Reference tables: flame tests, hydroxide precipitates, solubility grid, Ka/pKa values,
   indicator ranges, polyatomic ions, and a formula sheet
@@ -259,7 +262,9 @@ widely-supported CSS (`color-mix`, custom properties, grid).
 
 `node --check` passes on all 52 JS files. Content is validated separately — every stored
 equation is re-balanced from its parsed formulas, every pathway puzzle is BFS-checked
-against its declared step count, every achievement is asserted not to unlock on a fresh
+against its declared step count and rejected if two edges leave the same compound via
+the same reagent (the second would be unreachable) or if a compound is neither
+producible nor a starting point, every achievement is asserted not to unlock on a fresh
 save, the service worker's precache list is diffed against the files on disk, and the
 answer-length distribution is checked per module so the correct option never becomes
 guessable. Question stems are also compared pairwise within each topic — bigram Jaccard

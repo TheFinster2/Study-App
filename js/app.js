@@ -96,13 +96,38 @@
         /* A new worker may already be installed and waiting from a previous visit.
            `updatefound` fires once, when installation *starts* — it will never fire
            again for a worker that is already sitting in `waiting`, so without this
-           check the update is silently never applied and the app stays on the old
-           version indefinitely. Applying it right at boot is safe: the session has
-           only just started, so there is nothing in progress to interrupt. */
-        if (reg.waiting && navigator.serviceWorker.controller) {
-          reg.waiting.postMessage("SKIP_WAITING");
-          return;
-        }
+           the update is silently never applied and the app stays on the old version
+           indefinitely. Applying it right at boot is safe: the session has only just
+           started, so there is nothing in progress to interrupt.
+
+           Re-checked over a short window rather than read once, because `reg.waiting`
+           is not reliably populated by the time register() resolves — the browser
+           attaches it a moment later. A single read found it most of the time and
+           missed it perhaps one launch in four, and a miss is permanent: no event is
+           ever coming for that worker.
+
+           This has to finish BEFORE the app runs its own update check, not alongside
+           it. Calling update() on a registration whose worker is already waiting makes
+           Chromium install that same worker again, which fires `updatefound` — so a
+           check racing the poll turned a silent, correct "apply the pending update"
+           into a reload prompt that the user has to notice and accept, and dismissing
+           it left them on the old version until the next launch, where the same thing
+           happened again. That is the "updates take forever to arrive" symptom. */
+        const claimDeadline = Date.now() + 2000;
+        (function claimWaitingWorker() {
+          if (reg.waiting && navigator.serviceWorker.controller) {
+            applying = true;
+            reg.waiting.postMessage("SKIP_WAITING");
+            return;                       // controllerchange reloads the page
+          }
+          if (Date.now() < claimDeadline) { setTimeout(claimWaitingWorker, 200); return; }
+          /* Nothing was pending from a previous visit. Only now go looking for a new
+             version — anything found from here on arrives mid-session and gets the
+             reload prompt rather than yanking the page out from under the player.
+             Don't wait for the browser's own schedule: it only checks on a real
+             navigation, and reopening an installed PWA usually just resumes the page. */
+          checkForUpdate(true);
+        })();
 
         reg.addEventListener("updatefound", () => {
           const incoming = reg.installing;
@@ -110,15 +135,11 @@
           incoming.addEventListener("statechange", () => {
             // "installed" with an existing controller means an update is waiting,
             // rather than the very first install.
-            if (incoming.state === "installed" && navigator.serviceWorker.controller) {
+            if (incoming.state === "installed" && navigator.serviceWorker.controller && !applying) {
               offerUpdate(incoming);
             }
           });
         });
-
-        // Don't wait for the browser's own schedule. It only checks on a real
-        // navigation, and reopening an installed PWA usually just resumes the page.
-        checkForUpdate(true);
       }).catch(err => console.warn("Offline support unavailable:", err));
 
       // Coming back to the app is the natural moment to look for a new version.
@@ -139,6 +160,9 @@
   let swReg = null;
   let lastCheck = 0;
   let updateBar = null;
+  // Set once a waiting worker has been told to take over, so the reload prompt does
+  // not also appear for an update that is already being applied.
+  let applying = false;
 
   /** Ask the server whether sw.js has changed. Throttled, since it is a network hit. */
   function checkForUpdate(force) {
@@ -177,5 +201,22 @@
     U.$("#topbar").hidden = false;
     U.$("#navbar").hidden = false;
     setTimeout(() => { const b = U.$("#boot"); if (b) b.remove(); }, 600);
+    trackTopbarHeight();
+  }
+
+  /* Publish the sticky top bar's height as --topbar-h so anything else that wants to
+     stick below it (the Pathway Puzzle track) lands in the right place. It is not a
+     constant: the safe-area inset on a notched phone adds to it, and it changes on
+     rotation, so measure rather than hardcode. */
+  function trackTopbarHeight() {
+    const bar = U.$("#topbar");
+    if (!bar) return;
+    const apply = () => {
+      const h = Math.round(bar.getBoundingClientRect().height);
+      if (h) document.documentElement.style.setProperty("--topbar-h", h + "px");
+    };
+    apply();
+    if (window.ResizeObserver) new ResizeObserver(apply).observe(bar);
+    else window.addEventListener("resize", apply);
   }
 })();

@@ -428,8 +428,15 @@ code,.mono{ font-family:"Cascadia Code",ui-monospace,"SF Mono",Menlo,Consolas,mo
 .mcard.miss .mface-front{ background:color-mix(in srgb,var(--bad) 20%,var(--bg-1)); border-color:var(--bad); }
 
 /* pathway builder */
+/* Sticky, because the reagent pool is nineteen cards long on a phone: without this you
+   scroll far enough to pick a reagent that you can no longer see which compound you are
+   holding, which is the one piece of information the choice depends on. */
 .path-track{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:14px; border-radius:16px;
-  background:var(--card-2); border:1px dashed var(--line); min-height:70px; }
+  /* --card-2 is a translucent tint, which let the reagent cards read straight through
+     the track once it started overlapping them. Same tint, over an opaque base. */
+  background:linear-gradient(var(--card-2),var(--card-2)), var(--bg-0);
+  border:1px dashed var(--line); min-height:70px;
+  position:sticky; top:calc(var(--topbar-h,67px) + 6px); z-index:3; }
 .path-node{ padding:9px 13px; border-radius:12px; background:var(--card); border:1px solid var(--line);
   font-weight:700; font-size:14px; }
 .path-node.start{ border-color:var(--accent); color:var(--accent); }
@@ -437,7 +444,7 @@ code,.mono{ font-family:"Cascadia Code",ui-monospace,"SF Mono",Menlo,Consolas,mo
 .path-arrow{ color:var(--ink-faint); font-size:12px; text-align:center; }
 .path-arrow small{ display:block; color:var(--accent); font-size:10px; }
 .reagent-pool{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; }
-.reagent{ padding:11px; border-radius:13px; border:1px solid var(--line); background:var(--card-2);
+.reagent{ padding:9px 10px; border-radius:13px; border:1px solid var(--line); background:var(--card-2);
   color:var(--ink); font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; text-align:left; transition:.15s; }
 .reagent:hover:not(:disabled){ transform:translateY(-2px); border-color:var(--accent); }
 .reagent small{ display:block; font-weight:600; color:var(--ink-faint); margin-top:3px; font-size:11px; }

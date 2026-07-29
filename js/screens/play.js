@@ -181,7 +181,7 @@ CHEM.Screens.play = (function () {
       case "naming":      return CHEM.Games.naming.start(view, { count: 12 });
       case "calc":        return CHEM.Games.calc.start(view, { count: 10 });
       case "titration":   return CHEM.Games.titration.start(view);
-      case "pathway":     return CHEM.Games.pathway.start(view, { rounds: 3 });
+      case "pathway":     return CHEM.Games.pathway.start(view, { rounds: 5 });
       case "precipitate": return CHEM.Games.precipitate.start(view, { rows: 4, cols: 4, timeLimit: 150 });
       case "survival":    return CHEM.Games.survival.start(view);
       case "boss":        return CHEM.Games.boss.start(view, arg);

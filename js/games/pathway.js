@@ -33,12 +33,22 @@ CHEM.Games.pathway = (function () {
   }
 
   function start(root, cfg) {
-    const c = Object.assign({ rounds: 3 }, cfg);
+    const c = Object.assign({ rounds: 5 }, cfg);
     S.markMode("pathway");
     S.touchStreak();
 
     const puzzles = U.sample(CHEM.DATA.pathwayPuzzles, c.rounds);
     let round = 0, solved = 0, xpEarned = 0, coins = 0, totalWasted = 0, finished = false;
+    /* Route quality, tracked across the whole run: the ideal step count against what
+       it actually took, wasted reagents included. Clicking every card until something
+       reacts does eventually reach the target, so "solved" alone is not evidence of
+       knowing anything — this is what the completion bonus is gated on. */
+    let totalOptimal = 0, totalTaken = 0;
+    /* Wasted picks are held per round rather than per attempt, so "Restart this route"
+       clears the track but not the cost. The button exists to rescue a player who has
+       wandered off-route, not to let one try all nineteen cards, note which reacted,
+       and then walk the route cleanly for full marks. */
+    const wastedByRound = [];
 
     const shell = UI.gameShell("Pathway Puzzle", { confirmExit: true });
     root.appendChild(shell.root);
@@ -54,7 +64,7 @@ CHEM.Games.pathway = (function () {
       const optimal = shortest(p.start, p.target);
       let current = p.start;
       let path = [{ node: p.start }];
-      let wasted = 0;
+      if (wastedByRound[round] == null) wastedByRound[round] = 0;
       let done = false;
 
       progChip.textContent = `${round + 1} / ${puzzles.length}`;
@@ -124,13 +134,13 @@ CHEM.Games.pathway = (function () {
         feedback.innerHTML = "";
 
         if (!e) {
-          wasted++;
+          wastedByRound[round]++;
           totalWasted++;
           CHEM.Sound.noReaction();
           CHEM.FX.shake();
           feedback.appendChild(U.el("div", { class: "feedback no", html:
             `<b>No reaction.</b> ${U.formula(rg.label)} does not react with ${U.escapeHtml(nodes()[current].label)} to give a new product here.` }));
-          stepChip.textContent = `${path.length - 1} steps · ${wasted} wasted`;
+          stepChip.textContent = `${path.length - 1} steps · ${wastedByRound[round]} wasted`;
           return;
         }
 
@@ -138,7 +148,7 @@ CHEM.Games.pathway = (function () {
         path.push({ node: e.to, via: rg.id });
         CHEM.Sound.reaction();
         drawTrack();
-        stepChip.textContent = `${path.length - 1} steps${wasted ? " · " + wasted + " wasted" : ""}`;
+        stepChip.textContent = `${path.length - 1} steps${wastedByRound[round] ? " · " + wastedByRound[round] + " wasted" : ""}`;
 
         if (current === p.target) {
           done = true;
@@ -150,10 +160,17 @@ CHEM.Games.pathway = (function () {
           S.save();
 
           const steps = path.length - 1;
+          const wasted = wastedByRound[round];
           const efficiency = optimal / steps;
+          totalOptimal += optimal;
+          totalTaken += steps + wasted;
+          /* No floor. There used to be a `Math.max(15, …)` here, which meant a run
+             that clicked every reagent on every puzzle still banked the minimum on
+             all five rounds — and it scored full accuracy, because it did finish
+             them. Detours and dead ends now subtract all the way to nothing. */
           const gain = Math.round(60 * p.diff * efficiency) - wasted * 8;
-          xpEarned += Math.max(15, gain);
-          coins += Math.max(5, Math.round(18 * efficiency) - wasted * 2);
+          xpEarned += Math.max(0, gain);
+          coins += Math.max(0, Math.round(18 * efficiency) - wasted * 2);
 
           CHEM.Sound.win();
           CHEM.FX.confetti(60);
@@ -170,9 +187,18 @@ CHEM.Games.pathway = (function () {
         }
       }
 
+      /* Restarting is often the only way out: every polymer, ester and salt is a dead
+         end with no outgoing reaction, so one wrong turn strands you. The button has
+         to exist — but the steps already taken are charged to the round before the
+         track is cleared, otherwise it is a free undo and the cheapest strategy
+         becomes "react at random, restart, repeat until you have mapped the graph". */
       const resetBtn = U.el("button", {
         class: "btn btn-sm btn-ghost", text: "↺ Restart this route",
-        on: { click: () => { if (!done) render(); } }
+        on: { click: () => {
+          if (done) return;
+          wastedByRound[round] += path.length - 1;
+          render();
+        } }
       });
       stage.appendChild(U.el("div", { class: "row" }, [resetBtn]));
 
@@ -185,12 +211,15 @@ CHEM.Games.pathway = (function () {
       finished = true;
       const newBest = S.recordScore("pathway", solved);
       if (solved === puzzles.length && totalWasted === 0) S.bump("perfectRuns");
+      const quality = totalTaken ? totalOptimal / totalTaken : 0;
       const got = UI.award({ xp: xpEarned, coins, bonus: S.streakBonus(),
-                             accuracy: solved / puzzles.length });
+                             accuracy: (solved / puzzles.length) * quality });
       UI.results({
         title: "Synthesis complete",
         correct: solved, total: puzzles.length, xp: got.xp, coins: got.coins, newBest,
-        extraStats: [["Wasted reagents", totalWasted], ["Routes solved", `${solved}/${puzzles.length}`]],
+        extraStats: [["Wasted reagents", totalWasted],
+                     ["Routes solved", `${solved}/${puzzles.length}`],
+                     ["Route efficiency", Math.round(quality * 100) + "%"]],
         onAgain: () => UI.handleRoute()
       });
     }
