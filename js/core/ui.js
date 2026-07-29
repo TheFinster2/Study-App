@@ -171,10 +171,12 @@ CHEM.UI = (function () {
     }
 
     // Difficulty and prestige bonuses are applied here and nowhere else, so every
-    // mode gets them consistently. Coins are deliberately scarcer than XP.
+    // mode gets them consistently. Coins stay scarcer than XP, but at 0.75 rather
+    // than the original 0.6 — a 25% pay rise. Arcade ticket prices went up by the
+    // same 25% in the same change, so the play time a run buys is unchanged.
     const mult = o.raw ? 1 : S.xpMultiplier();
     const xp = Math.round((Math.max(0, o.xp || 0) + bonus) * mult);
-    const coins = Math.round((o.coins || 0) * (o.raw ? 1 : 0.6));
+    const coins = Math.round((o.coins || 0) * (o.raw ? 1 : 0.75));
 
     if (coins) S.addCoins(coins, true);
     const res = xp ? S.addXP(xp) : { levelsGained: 0 };

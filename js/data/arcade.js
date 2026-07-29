@@ -14,9 +14,9 @@ CHEM.DATA.arcade = [
     how: "Tap a tile, then tap an adjacent one to swap. A swap is only allowed if it makes a match of three or more. Chains and cascades multiply your score.",
     minLevel: 3,
     tickets: [
-      { secs: 300,  cost: 250,  label: "5 minutes" },
-      { secs: 900,  cost: 600,  label: "15 minutes" },
-      { secs: 1800, cost: 1000, label: "30 minutes" }
+      { secs: 300,  cost: 315,  label: "5 minutes" },
+      { secs: 900,  cost: 750,  label: "15 minutes" },
+      { secs: 1800, cost: 1250, label: "30 minutes" }
     ]
   },
   {
@@ -28,9 +28,9 @@ CHEM.DATA.arcade = [
     how: "Space, ↑ or tap to jump — hold for a higher jump. ↓ or swipe down to duck under fume clouds. It gets faster the longer you last.",
     minLevel: 3,
     tickets: [
-      { secs: 300,  cost: 200,  label: "5 minutes" },
-      { secs: 900,  cost: 500,  label: "15 minutes" },
-      { secs: 1800, cost: 850,  label: "30 minutes" }
+      { secs: 300,  cost: 250,  label: "5 minutes" },
+      { secs: 900,  cost: 625,  label: "15 minutes" },
+      { secs: 1800, cost: 1065, label: "30 minutes" }
     ]
   },
   {
@@ -42,9 +42,9 @@ CHEM.DATA.arcade = [
     how: "Arrow keys, WASD or swipe to slide every tile. Two identical tiles merge into the next element up. How far up the periodic table can you get?",
     minLevel: 5,
     tickets: [
-      { secs: 300,  cost: 220,  label: "5 minutes" },
-      { secs: 900,  cost: 550,  label: "15 minutes" },
-      { secs: 1800, cost: 900,  label: "30 minutes" }
+      { secs: 300,  cost: 275,  label: "5 minutes" },
+      { secs: 900,  cost: 690,  label: "15 minutes" },
+      { secs: 1800, cost: 1125, label: "30 minutes" }
     ]
   }
 ];

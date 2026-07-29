@@ -111,10 +111,10 @@ CHEM.State = (function () {
   function onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); }
 
   /* ── levelling ───────────────────────────────────────────── */
-  /* Polynomial curve: level 10 costs ~4,100 XP and level 40 ~32,900. Reaching
-     level 20 takes ~93,000 XP and level 60 about 1.45 million — a full-year
-     progression, not something you finish in a weekend. */
-  const xpNeeded = level => Math.round(130 * Math.pow(level, 1.5));
+  /* Polynomial curve. Reaching level 20 takes ~77,000 XP and level 60 about
+     1.26 million — still a full-year progression, not something you finish in a
+     weekend, but eased by about 11% from the original 130 coefficient. */
+  const xpNeeded = level => Math.round(115 * Math.pow(level, 1.5));
 
   const MAX_LEVEL = 60;
 

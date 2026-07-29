@@ -53,7 +53,7 @@ save files. Use Settings → *Export save* / *Import save* to move one across.
 |---|---|
 | ⚡ **Rapid Fire** | 2 minutes, endless questions, streak multipliers to ×3 |
 | 🎯 **Module Drill** | 15 adaptive questions from one module, no clock |
-| ⚖️ **Balance Blitz** | Balancing equations, with a live per-element atom tally |
+| ⚖️ **Balance Blitz** | Balancing equations, with an optional live per-element atom tally |
 | 🧩 **Ion Memory** | Concentration-style matching of polyatomic ions to formulas |
 | 🏷️ **Name That Compound** | IUPAC nomenclature — structure→name *and* name→structure |
 | 🔢 **Calculation Crunch** | Procedurally generated moles, pH, dilution, Ksp, calorimetry problems |
@@ -76,9 +76,9 @@ Three arcade games you **rent by the minute** with Moles — 5, 15 or 30 minutes
 
 | Game | | Cheapest ticket |
 |---|---|---|
-| 💠 **Ion Crush** | 8×8 match-3 on six polyatomic ions. Runs of 4+ forge power tiles — ⚡ Charged clears a row and column, ☢ Unstable a 3×3, ✳ Catalyst every ion of one type — and blasts set each other off in chains | 250 🪙 / 5 min |
-| 🏃 **Mole Runner** | Endless side-scroller: jump the hazards, duck the fume clouds, grab 🛡 Buffers and ⚡ Catalysts, and take near-misses for bonus points. Big hold-to-act buttons on phones | 200 🪙 / 5 min |
-| 🔬 **Isotope 2048** | Slide-and-merge up the periodic table — two Hydrogens make Helium, all the way to Argon. Three undos per run | 220 🪙 / 5 min |
+| 💠 **Ion Crush** | 8×8 match-3 on six polyatomic ions. Runs of 4+ forge power tiles — ⚡ Charged clears a row and column, ☢ Unstable a 3×3, ✳ Catalyst every ion of one type — and blasts set each other off in chains | 315 🪙 / 5 min |
+| 🏃 **Mole Runner** | Endless side-scroller: jump the hazards, duck the fume clouds, grab 🛡 Buffers and ⚡ Catalysts, and take near-misses for bonus points. Big hold-to-act buttons on phones | 250 🪙 / 5 min |
+| 🔬 **Isotope 2048** | Slide-and-merge up the periodic table — two Hydrogens make Helium, all the way to Argon. Three undos per run | 275 🪙 / 5 min |
 
 **They pay nothing.** No XP, no Moles, no achievements — only a high score. That's
 deliberate: an endless runner that paid XP would be a better farm than studying, which is
@@ -94,9 +94,9 @@ level 3, Isotope 2048 at level 5. High scores and unspent time survive a reload.
 ## How the systems work
 
 **XP and levels.** Correct answers pay `10 × difficulty`, multiplied by your streak
-(×1 → ×3 in half steps every 5 correct). Level *n* costs `round(130 × n^1.5)` XP —
-**60 levels**, from *Lab Rat* to *MoleQuest Legend*. Reaching level 20 takes ~87,000 XP
-and level 60 about 1.42 million. This is a whole-HSC-year progression, not an afternoon's.
+(×1 → ×3 in half steps every 5 correct). Level *n* costs `round(115 × n^1.5)` XP —
+**60 levels**, from *Lab Rat* to *MoleQuest Legend*. Reaching level 20 takes ~77,000 XP
+and level 60 about 1.26 million. This is a whole-HSC-year progression, not an afternoon's.
 
 **Nothing is paid for guessing.** XP is earned per *correct* answer; every wrong answer
 subtracts XP from the run's pool (floored at zero), and the end-of-run completion bonus is
@@ -108,6 +108,12 @@ times" a legitimately perfect score. A titration
 end point more than 0.5 mL out pays nothing. Flashcards are self-graded, so a card pays
 only once per day, only if it was genuinely due, and only if it stayed on screen long
 enough to read. A bot spamming every mode earns **0 XP**; it used to earn 35,000 XP/hour.
+
+**Crutches are opt-in and cost you.** Balance Blitz's per-element atom tally and Titration
+Lab's digital pH meter both turn a chemistry problem into arithmetic, so both start off and
+cost XP once used — 25% for the tally, 30% for the meter. Switching one back off before you
+submit does *not* refund the penalty: the flag latches the moment you first press the
+button and is never cleared for the rest of the run, so peeking is a one-way door.
 
 **No length tells.** Options are deliberately length-matched. Question banks are written
 with mini-explanation keys by default, which makes the correct answer the longest option
@@ -125,7 +131,7 @@ XP** bonus that stacks with each further ascension, plus 2,500 Moles and 3 Catal
 Nightmare (×2.1 XP, 45% less time, brutal bosses, and 50/50 and Skip are disabled). Set it
 once in Settings; it applies to every mode.
 
-**Moles (🪙).** The currency, and deliberately scarce — game payouts are scaled to 60%.
+**Moles (🪙).** The currency, and deliberately scarce — game payouts are scaled to 75%.
 Spend them on seven power-ups (50/50, Skip, Time Freeze, Buffer, Catalyst, Insight,
 Adrenaline), **ten lab skins**, **twenty-two avatars**, three tiers of random supply
 crate, and **arcade playtime**. Most of the good items are level-gated as well as priced.

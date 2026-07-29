@@ -58,6 +58,13 @@ CHEM.Games.balance = (function () {
     const set = U.sample(pool, c.count);
 
     let idx = 0, solved = 0, attempts = 0, xpEarned = 0, coins = 0, hintsUsed = 0;
+    /* The live atom tally is a genuine crutch — with it up, balancing is arithmetic
+       rather than chemistry — so it is opt-in and costs XP, mirroring the titration
+       pH meter. `usedTally` is a LATCH: it is set the moment the table is switched on
+       and never cleared, so peeking and then hiding it again does not restore the XP.
+       Kept for the whole run rather than per equation, since one look teaches you the
+       method for every equation after it. */
+    let tallyOn = false, usedTally = false;
     let timeLeft = c.totalTime, timerId = null, finished = false;
 
     const shell = UI.gameShell("Balance Blitz", { confirmExit: true });
@@ -116,7 +123,20 @@ CHEM.Games.balance = (function () {
       });
       stage.appendChild(line);
 
-      const tallyBox = U.el("div", { class: "tally" });
+      const tallyBox = U.el("div", { class: "tally", hidden: !tallyOn });
+      const tallyBtn = U.el("button", {
+        class: "btn btn-sm btn-ghost",
+        text: tallyOn ? "🧮 Atom tally on (−25% XP)" : "🧮 Show atom tally (−25% XP)",
+        on: { click: () => {
+          tallyOn = !tallyOn;
+          usedTally = true;                       // latched for the rest of the run
+          tallyBox.hidden = !tallyOn;
+          tallyBtn.textContent = tallyOn ? "🧮 Atom tally on (−25% XP)" : "🧮 Show atom tally (−25% XP)";
+          CHEM.Sound.click();
+          if (tallyOn) updateTally();
+        } }
+      });
+      stage.appendChild(U.el("div", { class: "row", style: "justify-content:center" }, [tallyBtn]));
       stage.appendChild(tallyBox);
 
       const feedbackSlot = U.el("div");
@@ -139,6 +159,7 @@ CHEM.Games.balance = (function () {
       function coeffs() { return inputs.map(i => parseInt(i.value, 10) || 0); }
 
       function updateTally() {
+        if (!tallyOn) return;
         const cs = coeffs();
         const left = tally(eq.lhs, cs.slice(0, eq.lhs.length));
         const right = tally(eq.rhs, cs.slice(eq.lhs.length));
@@ -229,14 +250,17 @@ CHEM.Games.balance = (function () {
       finished = true;
       clearInterval(timerId);
       const bonus = S.streakBonus();
-      const total = xpEarned + bonus;
+      // Same shape as the titration meter: the penalty applies to the whole run once
+      // the crutch has been touched, so it cannot be toggled off before submitting.
+      const total = Math.round((xpEarned + bonus) * (usedTally ? 0.75 : 1));
       const newBest = S.recordScore("balance", solved);
       if (solved === set.length) S.bump("perfectRuns");
       const got = UI.award({ xp: total, coins });
       UI.results({
         title: "Balance Blitz complete",
         correct: solved, total: set.length, xp: got.xp, coins: got.coins, newBest,
-        extraStats: [["Attempts", attempts], ["Daily bonus", "+" + bonus]],
+        extraStats: [["Attempts", attempts], ["Daily bonus", "+" + bonus],
+                     ["Atom tally", usedTally ? "used" : "no"]],
         onAgain: () => UI.handleRoute()
       });
     }
