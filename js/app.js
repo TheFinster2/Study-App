@@ -86,7 +86,11 @@
       // so it must not trigger a reload — otherwise every first load reloads itself.
       const hadController = !!navigator.serviceWorker.controller;
 
-      navigator.serviceWorker.register("sw.js").then(reg => {
+      /* updateViaCache:"none" keeps sw.js and anything it imports out of the browser's
+         HTTP cache. The default ("imports") already bypasses it for the top-level
+         script, but being explicit costs nothing and removes a whole class of
+         "the server has v6 but the phone keeps installing v5" confusion. */
+      navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(reg => {
         swReg = reg;
 
         /* A new worker may already be installed and waiting from a previous visit.

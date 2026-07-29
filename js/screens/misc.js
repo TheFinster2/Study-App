@@ -219,7 +219,56 @@ CHEM.Screens.settings = function (view) {
                             "Updates only apply when the app is served over the web, not opened as a local file.";
     });
   });
-  view.appendChild(U.el("div", { class: "card" }, [verNote, U.el("div", { class: "row" }, [verBtn])]));
+  /* The active cache name IS the build version, so it needs no maintenance and
+     can never drift from what is actually being served. */
+  const buildLine = U.el("div", { class: "tiny", style: "font-variant-numeric:tabular-nums", text: "Build: checking…" });
+  if (window.caches) {
+    caches.keys().then(keys => {
+      const mine = keys.filter(k => k.indexOf("molequest") === 0).sort();
+      buildLine.textContent = mine.length
+        ? "Build: " + mine.join(" + ")
+        : "Build: not cached (running straight from the network)";
+    }).catch(() => { buildLine.textContent = "Build: unavailable"; });
+  } else {
+    buildLine.textContent = "Build: unavailable (opened as a local file)";
+  }
+
+  /* The escape hatch. On iOS especially, removing a home-screen web app does NOT
+     clear its website data, so reinstalling reuses the same stale service worker
+     and cache — the app looks reinstalled but is byte-for-byte the old version.
+     This tears the whole thing down from inside the app instead. */
+  const nukeBtn = U.el("button", { class: "btn btn-sm btn-ghost", text: "⤓ Force refresh" });
+  nukeBtn.addEventListener("click", () => {
+    UI.confirmDialog(
+      "Force a full refresh?",
+      "Unregisters the offline worker, clears the cached copy of the app and reloads from the server. " +
+      "Your saved progress is untouched — it lives separately.",
+      () => {
+        nukeBtn.disabled = true;
+        buildLine.textContent = "Clearing…";
+        S.flush();                                     // progress is in localStorage, not the cache
+        const reload = () => {
+          // The query defeats the browser's own HTTP cache, which sits underneath the
+          // service worker and survives everything above.
+          location.replace(location.pathname + "?fresh=" + Date.now() + "#/settings");
+        };
+        const unreg = navigator.serviceWorker
+          ? navigator.serviceWorker.getRegistrations().then(rs => Promise.all(rs.map(r => r.unregister())))
+          : Promise.resolve();
+        const wipe = window.caches
+          ? caches.keys().then(ks => Promise.all(ks.map(k => caches.delete(k))))
+          : Promise.resolve();
+        Promise.all([unreg.catch(() => {}), wipe.catch(() => {})]).then(reload, reload);
+      },
+      "Refresh"
+    );
+  });
+
+  view.appendChild(U.el("div", { class: "card" }, [
+    verNote,
+    buildLine,
+    U.el("div", { class: "row", style: "margin-top:10px" }, [verBtn, U.el("div", { class: "spacer" }), nukeBtn])
+  ]));
 
   /* data */
   view.appendChild(U.el("h2", { text: "Save data" }));
