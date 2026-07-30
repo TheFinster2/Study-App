@@ -36,6 +36,9 @@ CHEM.UI = (function () {
     }
     currentCleanup = null;
 
+    // A "Show results" button left over from a review belongs to the screen being left.
+    U.$$(".results-reopen").forEach(n => n.remove());
+
     const view = U.$("#view");
     if (view.childNodes.length) CHEM.Sound.nav();
     view.innerHTML = "";
@@ -268,6 +271,7 @@ CHEM.UI = (function () {
     const r = rank(acc, o.bonus);
     const perfect = o.total > 0 && o.correct === o.total;
 
+    // Only on the first open — reopening after a review should not re-celebrate.
     if (perfect) { CHEM.Sound.win(); CHEM.FX.confetti(140); }
     else if (acc >= 60) { CHEM.Sound.win(); CHEM.FX.confetti(70); }
     else CHEM.Sound.lose();
@@ -290,6 +294,15 @@ CHEM.UI = (function () {
         ])
       )),
       o.coins ? U.el("p", { class: "muted", html: `Earned <b>${o.coins}</b> 🪙 Moles` }) : null,
+      /* The run's explanations are still on the page underneath. Getting back to them
+         used to mean quitting the run, which threw them away — so the working, which is
+         the part actually worth reading, was only ever visible for as long as it took
+         the modal to open. Opt out with review:false where there is nothing to read. */
+      o.review === false ? null : U.el("button", {
+        class: "btn btn-ghost btn-sm btn-block", style: "margin-top:8px",
+        text: o.reviewLabel || "👁 Review the working",
+        on: { click: () => { closeModal(); showReopen(); } }
+      }),
       U.el("div", { class: "row", style: "margin-top:8px" }, [
         U.el("button", {
           class: "btn btn-ghost btn-sm", text: "Back to games",
@@ -302,6 +315,20 @@ CHEM.UI = (function () {
         })
       ])
     ]);
+
+    /* While reviewing, a single floating button is the whole way back — the results are
+       otherwise unreachable, and the run is already scored, so there is nothing to
+       recompute. handleRoute clears any stray one on navigation. */
+    function showReopen() {
+      U.$$(".results-reopen").forEach(n => n.remove());
+      const btn = U.el("button", {
+        class: "results-reopen btn btn-primary", text: "Show results ↑",
+        on: { click: () => { btn.remove(); modal(box, { sticky: true }); } }
+      });
+      document.body.appendChild(btn);
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+    }
+
     modal(box, { sticky: true });
   }
 

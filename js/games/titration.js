@@ -231,7 +231,19 @@ CHEM.Games.titration = (function () {
           `Same number of moles of ${sc.analyte} in ${(va / 1000).toFixed(5)} L → ` +
           `c = ${U.sigFig(expected, 4)} mol L⁻¹. (True value: ${ca.toFixed(4)} mol L⁻¹.)` }));
 
-        finish(error, perfect, good, ok, calcOk);
+        /* Wait for the player before covering the screen. This used to call finish()
+           straight from here, so the results modal opened over the working the instant
+           the answer was submitted — the one part of the run worth reading, and the
+           only chance to see where the number came from. Every other mode already
+           gates its results behind a button; this one didn't. */
+        const seeResults = U.el("button", {
+          class: "btn btn-primary btn-block", text: "See results →",
+          // Removed once used, so reviewing doesn't leave two buttons that both claim
+          // to show the results — the floating one is the way back from here on.
+          on: { click: () => { seeResults.remove(); finish(error, perfect, good, ok, calcOk); } }
+        });
+        card.appendChild(U.el("div", { style: "margin-top:14px" }, [seeResults]));
+        seeResults.focus();
       }
 
       submit.addEventListener("click", submitAnswer);
@@ -258,7 +270,14 @@ CHEM.Games.titration = (function () {
 
       const got = UI.award({ xp, coins, bonus: S.streakBonus(), accuracy });
       UI.results({
-        title: perfect ? "Perfect titration" : ok ? "Titration complete" : "Overshot",
+        /* The end point and the calculation are scored separately, so the title has to
+           name both — "Perfect titration" over a rank D because the arithmetic was
+           wrong just reads as a bug. */
+        title: perfect && calcOk ? "Perfect titration"
+             : perfect ? "Perfect end point, wrong calculation"
+             : ok && calcOk ? "Titration complete"
+             : ok ? "Good titre, wrong calculation"
+             : "Overshot",
         correct: (ok ? 1 : 0) + (calcOk ? 1 : 0), total: 2, xp: got.xp, coins: got.coins, newBest,
         extraStats: [
           ["Titre", vb.toFixed(2) + " mL"],

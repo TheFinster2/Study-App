@@ -191,6 +191,17 @@ body::after{ /* subtle hex-lab grid */
 @keyframes viewIn{ from{ opacity:0; transform:translateY(10px);} }
 .view:focus{ outline:none; }
 
+/* Floating way back to a results modal that was dismissed to read the working.
+   Sits above the nav bar, which is itself fixed at the bottom. */
+.results-reopen{
+  position:fixed; left:50%; transform:translateX(-50%);
+  bottom:calc(max(12px,env(safe-area-inset-bottom)) + 74px);
+  z-index:69; box-shadow:0 10px 30px rgba(0,0,0,.5);
+  animation:reopenIn .25s cubic-bezier(.2,1.5,.4,1) both;
+}
+@keyframes reopenIn{ from{ opacity:0; transform:translate(-50%,14px);} }
+:root[data-motion="off"] .results-reopen{ animation:none; }
+
 .navbar{
   position:fixed; left:50%; transform:translateX(-50%); bottom:max(12px,env(safe-area-inset-bottom));
   z-index:70; display:flex; gap:2px; padding:6px;
@@ -237,7 +248,11 @@ code,.mono{ font-family:"Cascadia Code",ui-monospace,"SF Mono",Menlo,Consolas,mo
   font:inherit; font-weight:700; font-size:14px; padding:11px 18px; border-radius:14px; cursor:pointer;
   transition:transform .14s cubic-bezier(.2,1.5,.4,1), background .15s, box-shadow .15s;
 }
-.btn:hover:not(:disabled){ transform:translateY(-2px); background:var(--card-2); box-shadow:0 8px 22px rgba(0,0,0,.3); }
+/* No background here. It repeated .btn's own value, so it did nothing for a plain
+   button — but it outranks .btn-primary and .btn-ghost, so hovering either replaced
+   their fill with the flat card colour while their text colour stayed put. A hovered
+   primary button was dark text on a dark background. Hover should only lift it. */
+.btn:hover:not(:disabled){ transform:translateY(-2px); box-shadow:0 8px 22px rgba(0,0,0,.3); }
 .btn:active:not(:disabled){ transform:translateY(0) scale(.98); }
 .btn:disabled{ opacity:.42; cursor:not-allowed; }
 .btn-primary{

@@ -112,6 +112,11 @@ end point more than 0.5 mL out pays nothing. Flashcards are self-graded, so a ca
 only once per day, only if it was genuinely due, and only if it stayed on screen long
 enough to read. A bot spamming every mode earns **0 XP**; it used to earn 35,000 XP/hour.
 
+**The working stays readable.** A run's results open only when you ask for them, never
+over the explanation you were mid-way through reading, and the results screen has a
+*Review the working* button that dismisses itself and leaves a floating way back — so you
+can re-read the solution without quitting the run and throwing it away.
+
 **Crutches are opt-in and cost you.** Balance Blitz's per-element atom tally and Titration
 Lab's digital pH meter both turn a chemistry problem into arithmetic, so both start off and
 cost XP once used — 25% for the tally, 30% for the meter. Switching one back off before you
