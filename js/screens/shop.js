@@ -1,185 +1,210 @@
-/* Shop — spend Moles on lab skins, avatars, power-ups and supply crates. */
-window.CHEM = window.CHEM || {};
-CHEM.Screens = CHEM.Screens || {};
+/* Shop — power-ups, themes, avatars and supply crates. */
+window.MQ = window.MQ || {};
+MQ.Screens = MQ.Screens || {};
 
-CHEM.Screens.shop = function (view) {
-  const U = CHEM.U, S = CHEM.State, UI = CHEM.UI;
+MQ.Screens.shop = function (view) {
+  const U = MQ.U, S = MQ.State, UI = MQ.UI;
+  const shop = MQ.DATA.shop;
   const d = S.data;
-  const SHOP = CHEM.DATA.shop;
 
-  view.appendChild(U.el("h1", { text: "Supply Store" }));
+  view.appendChild(U.el("h1", { text: "Shop" }));
   view.appendChild(U.el("p", { html:
-    `You have <b>${d.coins}</b> 🪙 Moles. Earn more by answering questions, clearing dailies and unlocking achievements.` }));
+    `You have <b>${d.coins.toLocaleString()}</b> 🔢 Primes. ` +
+    "Primes come from answering questions — the payout is deliberately scarce, so the good items are a goal." }));
 
-  /* ── power-ups ────────────────────────────────────────── */
+  /* ── power-ups ── */
   view.appendChild(U.el("h2", { text: "Power-ups" }));
-  view.appendChild(U.el("div", { class: "grid g3" }, SHOP.powerups.map(p => {
+  const puGrid = U.el("div", { class: "grid g3" });
+  shop.powerups.forEach(p => {
     const owned = d.inventory[p.id] || 0;
-    return U.el("div", { class: "shop-item" }, [
+    const afford = d.coins >= p.cost;
+    puGrid.appendChild(U.el("div", { class: "shop-item" }, [
       U.el("div", { class: "row" }, [
         U.el("div", { class: "shop-ico", text: p.icon }),
-        U.el("span", { class: "spacer" }),
-        U.el("span", { class: "chip", text: "×" + owned })
+        U.el("div", { class: "spacer" }),
+        U.el("span", { class: "chip" + (owned ? " on" : ""), text: "×" + owned })
       ]),
       U.el("div", { class: "shop-name", text: p.name }),
       U.el("div", { class: "shop-desc", text: p.desc }),
       U.el("button", {
-        class: "btn btn-sm " + (d.coins >= p.cost ? "btn-primary" : ""),
-        text: `${p.cost} 🪙`,
-        disabled: d.coins < p.cost,
-        on: { click: e => buy(p.cost, () => S.grantPowerup(p.id, 1), `${p.name} added to your kit.`, e.target) }
+        class: "btn btn-sm " + (afford ? "btn-primary" : ""), disabled: !afford,
+        text: p.cost + " 🔢",
+        on: { click: () => buy(p.cost, () => {
+          S.grantPowerup(p.id, 1);
+          UI.toast({ icon: p.icon, kind: "good", text: `<b>${U.escapeHtml(p.name)}</b> purchased.` });
+        }) }
       })
-    ]);
-  })));
+    ]));
+  });
+  view.appendChild(puGrid);
 
-  /* ── crates ───────────────────────────────────────────── */
-  view.appendChild(U.el("h2", { text: "Supply crates" }));
-  view.appendChild(U.el("div", { class: "grid g3" }, SHOP.crates.map(c => {
-    const levelLocked = c.minLevel && d.level < c.minLevel;
-    return U.el("div", { class: "shop-item crate" }, [
+  /* ── crates ── */
+  view.appendChild(U.el("h2", {}, [
+    document.createTextNode("Supply crates"),
+    U.el("span", { class: "h2-sub", text: "randomised contents" })
+  ]));
+  const crateGrid = U.el("div", { class: "grid g3" });
+  shop.crates.forEach(c => {
+    const locked = c.minLevel && d.level < c.minLevel;
+    const afford = d.coins >= c.cost && !locked;
+    crateGrid.appendChild(U.el("div", { class: "shop-item crate" }, [
       U.el("div", { class: "crate-box", text: c.icon }),
       U.el("div", { class: "shop-name", text: c.name }),
       U.el("div", { class: "shop-desc", text: c.desc }),
       U.el("button", {
-        class: "btn btn-sm " + (!levelLocked && d.coins >= c.cost ? "btn-primary" : ""),
-        text: levelLocked ? `🔒 Lv ${c.minLevel}` : `${c.cost} 🪙`,
-        disabled: levelLocked || d.coins < c.cost,
-        on: { click: e => openCrate(c, e.target) }
+        class: "btn btn-sm " + (afford ? "btn-primary" : ""), disabled: !afford,
+        text: locked ? "🔒 Lv " + c.minLevel : c.cost + " 🔢",
+        on: { click: () => buy(c.cost, () => openCrate(c)) }
       })
-    ]);
-  })));
+    ]));
+  });
+  view.appendChild(crateGrid);
 
-  /* ── themes ───────────────────────────────────────────── */
-  view.appendChild(U.el("h2", { text: "Lab skins" }));
-  view.appendChild(U.el("div", { class: "grid g2" }, SHOP.themes.map(t => {
+  /* ── themes ── */
+  view.appendChild(U.el("h2", { text: "Themes" }));
+  const themeGrid = U.el("div", { class: "grid g3" });
+  shop.themes.forEach(t => {
     const owned = S.ownsTheme(t.id);
     const active = d.profile.theme === t.id;
-    return U.el("div", { class: "shop-item" + (owned ? " owned" : "") }, [
-      U.el("div", { class: "row" }, [
-        U.el("div", { class: "theme-dots" }, t.dots.map(c =>
-          U.el("div", { class: "theme-dot", style: "background:" + c }))),
-        U.el("span", { class: "spacer" }),
-        active ? U.el("span", { class: "chip on", text: "Active" }) : null
-      ]),
+    const locked = t.minLevel && d.level < t.minLevel;
+    const afford = d.coins >= t.cost && !locked;
+    themeGrid.appendChild(U.el("div", { class: "shop-item" + (owned ? " owned" : "") }, [
+      U.el("div", { class: "theme-dots" }, t.dots.map(c =>
+        U.el("div", { class: "theme-dot", style: "background:" + c }))),
       U.el("div", { class: "shop-name", text: t.name }),
       U.el("div", { class: "shop-desc", text: t.desc }),
       owned
         ? U.el("button", {
-            class: "btn btn-sm" + (active ? "" : " btn-primary"),
-            text: active ? "In use" : "Equip", disabled: active,
-            on: { click: () => { UI.applyTheme(t.id); CHEM.Sound.equip(); UI.handleRoute(); } }
+            class: "btn btn-sm" + (active ? "" : " btn-primary"), disabled: active,
+            text: active ? "Active" : "Equip",
+            on: { click: () => { UI.applyTheme(t.id); MQ.Sound.equip(); UI.handleRoute(); } }
           })
         : U.el("button", {
-            class: "btn btn-sm " + (!(t.minLevel && d.level < t.minLevel) && d.coins >= t.cost ? "btn-primary" : ""),
-            text: (t.minLevel && d.level < t.minLevel) ? `🔒 Lv ${t.minLevel}` : `${t.cost} 🪙`,
-            disabled: (t.minLevel && d.level < t.minLevel) || d.coins < t.cost,
-            on: { click: e => buy(t.cost, () => {
+            class: "btn btn-sm " + (afford ? "btn-primary" : ""), disabled: !afford,
+            text: locked ? "🔒 Lv " + t.minLevel : t.cost + " 🔢",
+            on: { click: () => buy(t.cost, () => {
               d.owned.themes.push(t.id);
               UI.applyTheme(t.id);
-            }, `${t.name} unlocked and equipped.`, e.target) }
+              MQ.Sound.unlock();
+              MQ.FX.confetti(80);
+              UI.toast({ icon: "🎨", kind: "good", text: `<b>${U.escapeHtml(t.name)}</b> unlocked and equipped.` });
+            }) }
           })
-    ]);
-  })));
+    ]));
+  });
+  view.appendChild(themeGrid);
 
-  /* ── avatars ──────────────────────────────────────────── */
+  /* ── avatars ── */
   view.appendChild(U.el("h2", { text: "Avatars" }));
-  view.appendChild(U.el("div", { class: "grid g4" }, SHOP.avatars.map(a => {
+  const avGrid = U.el("div", { class: "grid g4" });
+  shop.avatars.forEach(a => {
     const owned = S.ownsAvatar(a.emoji);
     const active = d.profile.avatar === a.emoji;
-    const levelLocked = a.minLevel && d.level < a.minLevel;
-    return U.el("div", { class: "shop-item" + (owned ? " owned" : "") }, [
-      U.el("div", { class: "shop-ico", style: "text-align:center; font-size:36px", text: a.emoji }),
+    const locked = a.minLevel && d.level < a.minLevel;
+    const afford = d.coins >= a.cost && !locked;
+    avGrid.appendChild(U.el("div", { class: "shop-item" + (owned ? " owned" : "") }, [
+      U.el("div", { class: "shop-ico", style: "text-align:center", text: a.emoji }),
       U.el("div", { class: "shop-name", style: "text-align:center", text: a.name }),
       a.note ? U.el("div", { class: "shop-desc", style: "text-align:center", text: a.note }) : null,
       owned
         ? U.el("button", {
-            class: "btn btn-sm" + (active ? "" : " btn-primary"),
-            text: active ? "Worn" : "Wear", disabled: active,
+            class: "btn btn-sm" + (active ? "" : " btn-primary"), disabled: active,
+            text: active ? "Worn" : "Wear",
             on: { click: () => {
               d.profile.avatar = a.emoji;
               S.emit();
-              CHEM.Sound.equip();
+              MQ.Sound.equip();
               UI.handleRoute();
             } }
           })
         : U.el("button", {
-            class: "btn btn-sm " + (!levelLocked && d.coins >= a.cost ? "btn-primary" : ""),
-            text: levelLocked ? `🔒 Lv ${a.minLevel}` : `${a.cost} 🪙`,
-            disabled: levelLocked || d.coins < a.cost,
-            on: { click: e => buy(a.cost, () => {
+            class: "btn btn-sm " + (afford ? "btn-primary" : ""), disabled: !afford,
+            text: locked ? "🔒 Lv " + a.minLevel : a.cost + " 🔢",
+            on: { click: () => buy(a.cost, () => {
               d.owned.avatars.push(a.emoji);
               d.profile.avatar = a.emoji;
-            }, `${a.name} equipped.`, e.target) }
+              S.emit();
+              MQ.Sound.unlock();
+              UI.toast({ icon: a.emoji, kind: "good", text: `<b>${U.escapeHtml(a.name)}</b> unlocked.` });
+            }) }
           })
-    ]);
-  })));
+    ]));
+  });
+  view.appendChild(avGrid);
 
-  /* ── helpers ──────────────────────────────────────────── */
-  function buy(cost, apply, message, node) {
+  /** Spend, then run the effect. Purchases are asserted by `spendCoins`
+      returning true — never by "coins went down", which stops being true the
+      moment an achievement pays out mid-purchase. */
+  function buy(cost, effect) {
     if (!S.spendCoins(cost)) {
-      CHEM.Sound.denied();
-      UI.toast({ icon: "🪙", kind: "bad", text: "Not enough Moles." });
-      return;
+      MQ.Sound.denied();
+      return UI.toast({ icon: "🚫", kind: "bad", text: "Not enough Primes." });
     }
-    apply();
-    S.emit();
-    CHEM.Sound.purchase();
-    if (node) CHEM.FX.burstAt(node, { count: 24, speed: 5, size: 4 });
-    UI.toast({ icon: "✅", kind: "good", text: message });
+    MQ.Sound.purchase();
+    effect();
     S.checkAchievements();
     UI.handleRoute();
   }
 
-  function openCrate(crate, node) {
-    if (!S.spendCoins(crate.cost)) {
-      CHEM.Sound.denied();
-      UI.toast({ icon: "🪙", kind: "bad", text: "Not enough Moles." });
-      return;
+  function openCrate(crate) {
+    const tiers = { crate_s: [1, 2, 120], crate_l: [3, 5, 400], crate_x: [6, 9, 1100] };
+    const [lo, hi, coinBase] = tiers[crate.id] || [1, 2, 100];
+    const n = U.randInt(lo, hi);
+    const ids = MQ.DATA.shop.powerups.map(p => p.id).filter(id => id !== "revive");
+    const got = {};
+    for (let i = 0; i < n; i++) {
+      const id = U.pick(ids);
+      got[id] = (got[id] || 0) + 1;
+      S.grantPowerup(id, 1);
     }
-    CHEM.Sound.open();
-    if (node) CHEM.FX.burstAt(node, { count: 50, speed: 8, size: 5 });
+    const coins = U.randInt(Math.round(coinBase * 0.6), Math.round(coinBase * 1.6));
+    S.addCoins(coins, true);
 
-    const tier = { crate_s: 0, crate_l: 1, crate_x: 2 }[crate.id] || 0;
-    const counts = [[1, 2], [3, 5], [6, 9]][tier];
-    const payout = [[80, 340], [260, 900], [900, 2600]][tier];
-    const avatarChance = [0, 0.22, 0.55][tier];
-
-    const drops = [];
-    for (let i = 0; i < U.randInt(counts[0], counts[1]); i++) {
-      const p = U.pick(SHOP.powerups);
-      S.grantPowerup(p.id, 1);
-      drops.push(`${p.icon} ${p.name}`);
-    }
-    const coinDrop = U.randInt(payout[0], payout[1]);
-    S.addCoins(coinDrop, true);
-    drops.push(`🪙 ${coinDrop} Moles`);
-
-    // Only avatars the player has actually earned the level for can drop.
-    if (Math.random() < avatarChance) {
-      const locked = SHOP.avatars.filter(a =>
-        !S.ownsAvatar(a.emoji) && (!a.minLevel || d.level >= a.minLevel));
+    // A chance at a locked avatar — the only way the expensive ones arrive early.
+    let avatar = null;
+    const chance = { crate_s: 0.04, crate_l: 0.16, crate_x: 0.4 }[crate.id] || 0;
+    if (Math.random() < chance) {
+      const locked = MQ.DATA.shop.avatars.filter(a => !S.ownsAvatar(a.emoji));
       if (locked.length) {
-        const a = U.pick(locked);
-        d.owned.avatars.push(a.emoji);
-        drops.push(`${a.emoji} ${a.name} avatar`);
+        avatar = U.pick(locked);
+        S.data.owned.avatars.push(avatar.emoji);
       }
     }
-
     S.emit();
-    CHEM.FX.confetti(80);
-    if (drops.some(t => t.includes("avatar"))) CHEM.Sound.rareDrop();
-    else CHEM.Sound.coinPile();
 
-    const box = U.el("div", { class: "modal-center" }, [
+    MQ.Sound.open();
+    setTimeout(() => (avatar ? MQ.Sound.rareDrop() : MQ.Sound.coinPile()), 350);
+    MQ.FX.confetti(avatar ? 160 : 80);
+
+    UI.modal(U.el("div", { class: "modal-center" }, [
       U.el("div", { class: "modal-big", text: crate.icon }),
-      U.el("h2", { text: "Crate opened!", style: "justify-content:center" }),
-      U.el("div", { class: "grid", style: "margin:14px 0" },
-        drops.map(t => U.el("div", { class: "card", style: "padding:10px", text: t }))),
-      U.el("button", {
-        class: "btn btn-primary btn-block", text: "Nice",
-        on: { click: () => { UI.closeModal(); UI.handleRoute(); } }
-      })
-    ]);
-    UI.modal(box, { sticky: true });
+      U.el("h2", { style: "justify-content:center", text: crate.name + " opened" }),
+      U.el("div", { class: "grid", style: "text-align:left; margin:14px 0" },
+        Object.entries(got).map(([id, count]) => {
+          const p = MQ.DATA.shop.powerups.find(x => x.id === id);
+          return U.el("div", { class: "row" }, [
+            U.el("div", { style: "font-size:20px", text: p.icon }),
+            U.el("div", { style: "font-weight:700", text: p.name }),
+            U.el("div", { class: "spacer" }),
+            U.el("div", { class: "chip on", text: "×" + count })
+          ]);
+        }).concat([
+          U.el("div", { class: "row" }, [
+            U.el("div", { style: "font-size:20px", text: "🔢" }),
+            U.el("div", { style: "font-weight:700", text: "Primes" }),
+            U.el("div", { class: "spacer" }),
+            U.el("div", { class: "chip on", text: "+" + coins })
+          ])
+        ]).concat(avatar ? [
+          U.el("div", { class: "row" }, [
+            U.el("div", { style: "font-size:20px", text: avatar.emoji }),
+            U.el("div", { style: "font-weight:700", text: avatar.name }),
+            U.el("div", { class: "spacer" }),
+            U.el("div", { class: "chip on", text: "RARE" })
+          ])
+        ] : [])),
+      U.el("button", { class: "btn btn-primary btn-block", text: "Nice",
+        on: { click: () => { UI.closeModal(); UI.handleRoute(); } } })
+    ]), { sticky: true });
   }
 };

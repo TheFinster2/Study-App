@@ -1,82 +1,25 @@
-/* Arcade catalogue — pure-fun games you pay Moles to play for a fixed time.
-   These deliberately award NO XP and NO Moles: they are a sink for the currency
-   you earn by studying, not another way to earn it. */
-window.CHEM = window.CHEM || {};
-CHEM.DATA = CHEM.DATA || {};
+/* The Arcade catalogue. Three games rented with Primes in timed tickets.
 
-CHEM.DATA.arcade = [
-  {
-    id: "ioncrush",
-    icon: "💠",
-    name: "Ion Crush",
-    colour: "#ff5c8a",
-    blurb: "Match three or more ions to clear them. Cascades score big.",
-    how: "Tap a tile, then tap an adjacent one to swap. A swap is only allowed if it makes a match of three or more. Chains and cascades multiply your score.",
-    minLevel: 3,
-    tickets: [
-      { secs: 300,  cost: 250,  label: "5 minutes" },
-      { secs: 900,  cost: 600,  label: "15 minutes" },
-      { secs: 1800, cost: 1000, label: "30 minutes" }
-    ]
-  },
-  {
-    id: "runner",
-    icon: "🏃",
-    name: "Mole Runner",
-    colour: "#ffcc55",
-    blurb: "Endless dash through the lab. Jump the hazards, duck the fumes.",
-    how: "Space, ↑ or tap to jump — hold for a higher jump. ↓ or swipe down to duck under fume clouds. It gets faster the longer you last.",
-    minLevel: 3,
-    tickets: [
-      { secs: 300,  cost: 200,  label: "5 minutes" },
-      { secs: 900,  cost: 500,  label: "15 minutes" },
-      { secs: 1800, cost: 850,  label: "30 minutes" }
-    ]
-  },
-  {
-    id: "merge",
-    icon: "🔬",
-    name: "Isotope 2048",
-    colour: "#39d6c8",
-    blurb: "Slide and merge identical nuclei to build heavier elements.",
-    how: "Arrow keys, WASD or swipe to slide every tile. Two identical tiles merge into the next element up. How far up the periodic table can you get?",
-    minLevel: 5,
-    tickets: [
-      { secs: 300,  cost: 220,  label: "5 minutes" },
-      { secs: 900,  cost: 550,  label: "15 minutes" },
-      { secs: 1800, cost: 900,  label: "30 minutes" }
-    ]
-  }
-];
+   These award NO XP, NO Primes and NO achievements — only a high score.
+   That is not a balance decision, it is a structural one: an endless runner
+   paying even 1 XP/second beats studying, so the reference app nearly shipped
+   a mode that made itself the optimal strategy.
 
-/* Tile set for Ion Crush — six common ions, visually distinct. */
-CHEM.DATA.crushTiles = [
-  { sym: "Na⁺",   colour: "#ffd24a", glow: "#ffb300" },
-  { sym: "Cl⁻",   colour: "#7dffa6", glow: "#22c55e" },
-  { sym: "OH⁻",   colour: "#6fa8ff", glow: "#2563eb" },
-  { sym: "SO₄²⁻", colour: "#c8a2ff", glow: "#7c3aed" },
-  { sym: "NH₄⁺",  colour: "#ff8fb1", glow: "#e11d48" },
-  { sym: "CO₃²⁻", colour: "#5ee7e7", glow: "#0891b2" }
-];
+   The rule is enforced by arcade code NEVER calling UI.award(). Everything
+   else in the app funnels rewards through that one function, so "earns
+   nothing" is checkable rather than merely intended — tests/arcade.js asserts
+   XP, level and Primes are provably untouched by playing. */
+window.MQ = window.MQ || {};
+MQ.DATA = MQ.DATA || {};
 
-/* Merge ladder for Isotope 2048 — each merge climbs the periodic table. */
-CHEM.DATA.mergeLadder = [
-  { sym: "H",  name: "Hydrogen",  colour: "#3a4256" },
-  { sym: "He", name: "Helium",    colour: "#44506b" },
-  { sym: "Li", name: "Lithium",   colour: "#4f6390" },
-  { sym: "Be", name: "Beryllium", colour: "#4a77a8" },
-  { sym: "B",  name: "Boron",     colour: "#3f8bb4" },
-  { sym: "C",  name: "Carbon",    colour: "#2f9fae" },
-  { sym: "N",  name: "Nitrogen",  colour: "#2fae8b" },
-  { sym: "O",  name: "Oxygen",    colour: "#4bb85e" },
-  { sym: "F",  name: "Fluorine",  colour: "#8cc63f" },
-  { sym: "Ne", name: "Neon",      colour: "#d4c13c" },
-  { sym: "Na", name: "Sodium",    colour: "#e0a132" },
-  { sym: "Mg", name: "Magnesium", colour: "#e07b32" },
-  { sym: "Al", name: "Aluminium", colour: "#e0553a" },
-  { sym: "Si", name: "Silicon",   colour: "#d63a63" },
-  { sym: "P",  name: "Phosphorus",colour: "#b83ac4" },
-  { sym: "S",  name: "Sulfur",    colour: "#7c3aed" },
-  { sym: "Cl", name: "Chlorine",  colour: "#4f46e5" },
-  { sym: "Ar", name: "Argon",     colour: "#0ea5e9" }
+MQ.DATA.arcade = [
+  { id:"crush", icon:"🧮", name:"Prime Crush", colour:"#39d6c8", minLevel:3,
+    blurb:"8×8 match-3 on number tiles. Line up three primes, or three of anything.",
+    tickets:[{ mins:5, cost:250 }, { mins:15, cost:600 }, { mins:30, cost:1000 }] },
+  { id:"runner", icon:"🏃", name:"Vector Runner", colour:"#ffcc55", minLevel:5,
+    blurb:"An endless canvas runner. Jump the gaps, duck under the ceiling.",
+    tickets:[{ mins:5, cost:250 }, { mins:15, cost:600 }, { mins:30, cost:1000 }] },
+  { id:"tower", icon:"🗼", name:"Power Tower 2048", colour:"#7c5cff", minLevel:7,
+    blurb:"4×4 merge up the powers of 2. Already a maths game; we just kept score.",
+    tickets:[{ mins:5, cost:250 }, { mins:15, cost:600 }, { mins:30, cost:1000 }] }
 ];

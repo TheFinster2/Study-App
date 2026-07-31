@@ -1,297 +1,169 @@
-/* Mole Runner — a side-scrolling endless runner on canvas.
-   Jump beakers and burners, duck under fume clouds. Speed ramps with distance. */
-window.CHEM = window.CHEM || {};
-CHEM.ArcadeGames = CHEM.ArcadeGames || {};
+/* 🏃 Vector Runner — an endless canvas runner. Jump the gaps, duck the ceiling.
 
-CHEM.ArcadeGames.runner = (function () {
-  const U = CHEM.U;
+   Awards no XP, no Primes and no achievements. It never calls UI.award(). */
+window.MQ = window.MQ || {};
+MQ.Games = MQ.Games || {};
 
-  function start(stage, session) {
-    const wrap = U.el("div", { class: "runner-wrap" });
-    const canvas = U.el("canvas", { class: "runner-canvas" });
-    const hint = U.el("div", { class: "tiny muted", style: "text-align:center; margin-top:8px",
-      text: "Space / ↑ / tap to jump (hold for higher) · ↓ to duck" });
-    wrap.appendChild(canvas);
-    stage.appendChild(wrap);
-    stage.appendChild(hint);
+MQ.Games.runner = (function () {
+  const U = MQ.U, UI = MQ.UI;
+
+  function start(root) {
+    const cab = MQ.Arcade.cabinet("runner", "🏃 Vector Runner", {
+      help: "Tap the top half of the canvas (or press ↑ / Space) to jump, the bottom half " +
+            "(or ↓) to duck. Speed climbs the longer you survive." });
+    root.appendChild(cab.root);
+
+    const W = 800, H = 300;
+    const canvas = U.el("canvas", { class: "runner-canvas", width: String(W), height: String(H) });
+    cab.body.appendChild(U.el("div", { class: "arcade-stage" },
+      [U.el("div", { class: "runner-wrap" }, [canvas])]));
+    cab.body.appendChild(U.el("div", { class: "row", style: "justify-content:center; gap:8px" }, [
+      U.el("button", { class: "btn", text: "⤒ Jump", on: { click: () => jump() } }),
+      U.el("button", { class: "btn", text: "⤓ Duck", on: { pointerdown: () => (ducking = true),
+                                                           pointerup: () => (ducking = false),
+                                                           pointerleave: () => (ducking = false) } })
+    ]));
+    cab.body.appendChild(U.el("p", { class: "arcade-note",
+      text: "No XP, no Primes, no achievements — a high score and nothing else." }));
 
     const ctx = canvas.getContext("2d");
-    const W = 800, H = 260;          // internal resolution; CSS scales it
-    let dpr = 1;
+    const GROUND = H - 46;
 
-    function resize() {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = W * dpr;
-      canvas.height = H * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-    resize();
-    window.addEventListener("resize", resize);
+    let score = 0, dist = 0, speed = 5.2;
+    let py = GROUND, vy = 0, ducking = false, dead = false;
+    let obstacles = [];
+    let raf = null, last = 0, spawnIn = 60;
 
-    const GROUND = H - 44;
-    const player = { x: 90, y: GROUND, vy: 0, w: 30, h: 38, ducking: false, onGround: true };
-    const GRAVITY = 0.62;
-    const JUMP_V = -11.4;
-
-    let obstacles = [], particles = [], clouds = [];
-    let speed = 6.2, distance = 0, spawnIn = 60;
-    let dead = false, destroyed = false, raf = null;
-    let holdingJump = false, jumpHeld = 0;
-    let flashUntil = 0;
-
-    const theme = () => {
-      const cs = getComputedStyle(document.documentElement);
-      const g = n => (cs.getPropertyValue(n) || "").trim();
-      return { a: g("--glow-a") || "#39d6c8", b: g("--glow-b") || "#7c5cff",
-               ink: g("--ink") || "#eef3ff", bad: g("--bad") || "#ff6b81",
-               dim: g("--ink-faint") || "#6a7b9c" };
-    };
-
-    /* ── input ──────────────────────────────────────────────── */
     function jump() {
-      if (dead) { restart(); return; }
-      if (player.onGround) {
-        player.vy = JUMP_V;
-        player.onGround = false;
-        holdingJump = true;
-        jumpHeld = 0;
-        CHEM.Sound.puSkip();
-      }
-    }
-    function duck(on) {
       if (dead) return;
-      player.ducking = on;
+      if (py >= GROUND - 1) { vy = -13.5; MQ.Sound.jump(); }
     }
 
-    function onKeyDown(e) {
-      if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") { e.preventDefault(); jump(); }
-      if (e.code === "ArrowDown" || e.code === "KeyS") { e.preventDefault(); duck(true); }
+    function onKey(e) {
+      if (e.key === "ArrowUp" || e.key === " " || e.key === "w") { e.preventDefault(); jump(); }
+      if (e.key === "ArrowDown" || e.key === "s") { ducking = true; MQ.Sound.duck(); }
     }
-    function onKeyUp(e) {
-      if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") holdingJump = false;
-      if (e.code === "ArrowDown" || e.code === "KeyS") duck(false);
-    }
-    document.addEventListener("keydown", onKeyDown);
+    function onKeyUp(e) { if (e.key === "ArrowDown" || e.key === "s") ducking = false; }
+    document.addEventListener("keydown", onKey);
     document.addEventListener("keyup", onKeyUp);
 
-    // Touch: tap the top half to jump, hold the bottom half to duck.
-    let touchY = 0;
-    function onTouchStart(e) {
+    canvas.addEventListener("pointerdown", e => {
       const r = canvas.getBoundingClientRect();
-      touchY = e.touches[0].clientY - r.top;
-      if (touchY > r.height * 0.62) duck(true); else jump();
-      e.preventDefault();
-    }
-    function onTouchEnd() { holdingJump = false; duck(false); }
-    canvas.addEventListener("touchstart", onTouchStart, { passive: false });
-    canvas.addEventListener("touchend", onTouchEnd);
-    canvas.addEventListener("mousedown", jump);
-    canvas.addEventListener("mouseup", () => { holdingJump = false; });
+      if ((e.clientY - r.top) / r.height < 0.55) jump();
+      else { ducking = true; MQ.Sound.duck(); }
+    });
+    canvas.addEventListener("pointerup", () => (ducking = false));
+    canvas.addEventListener("pointerleave", () => (ducking = false));
 
-    /* ── world ──────────────────────────────────────────────── */
+    function palette() { return MQ.Draw.palette(); }
+
     function spawn() {
-      // Fume clouds float at head height and must be ducked under.
-      const kind = Math.random() < 0.28 && distance > 400 ? "fume" : "solid";
-      if (kind === "fume") {
-        obstacles.push({ kind, x: W + 40, y: GROUND - 58, w: 58, h: 26 });
-      } else {
-        const tall = Math.random() < 0.35;
-        obstacles.push({ kind, x: W + 40, y: GROUND, w: tall ? 26 : 34, h: tall ? 46 : 30,
-                         icon: tall ? "flask" : "burner" });
-      }
-      // Gap shrinks as speed rises, but never below a jumpable distance.
-      spawnIn = Math.max(34, Math.round((78 - speed * 3) + Math.random() * 40));
+      // Alternate ground obstacles (jump) and overhead bars (duck).
+      const overhead = Math.random() < 0.38;
+      obstacles.push(overhead
+        ? { x: W + 20, y: GROUND - 74, w: 26, h: 40, kind: "over" }
+        : { x: W + 20, y: GROUND - 34, w: 22 + Math.random() * 20, h: 34, kind: "ground" });
+      spawnIn = Math.max(34, 80 - dist / 400) + Math.random() * 34;
     }
 
-    function reset() {
-      obstacles = []; particles = []; clouds = [];
-      speed = 6.2; distance = 0; spawnIn = 70;
-      player.y = GROUND; player.vy = 0; player.onGround = true; player.ducking = false;
-      dead = false;
-      for (let i = 0; i < 6; i++) clouds.push({ x: Math.random() * W, y: 30 + Math.random() * 70, s: 0.3 + Math.random() * 0.5 });
-      session.setScore(0);
-    }
+    function loop(ts) {
+      if (cab.isOver()) return stop();
+      if (!last) last = ts;
+      last = ts;
 
-    function restart() {
-      reset();
-      CHEM.Sound.gameStart();
-    }
+      dist += speed;
+      speed = Math.min(13, 5.2 + dist / 2600);
+      score = Math.floor(dist / 12);
+      cab.setScore(score);
 
-    function die() {
-      if (dead) return;
-      dead = true;
-      flashUntil = performance.now() + 220;
-      CHEM.Sound.explode();
-      for (let i = 0; i < 26; i++) {
-        particles.push({ x: player.x + 14, y: player.y - 18,
-                         vx: (Math.random() - 0.5) * 7, vy: -Math.random() * 6,
-                         life: 40 + Math.random() * 25 });
-      }
-      // Let the explosion play, then hand the score to the session shell.
-      setTimeout(() => { if (!destroyed) session.gameOver(`You ran ${Math.round(distance)} m.`); }, 700);
-    }
+      vy += 0.72;
+      py = Math.min(GROUND, py + vy);
+      if (py >= GROUND) vy = 0;
 
-    /* ── loop ───────────────────────────────────────────────── */
-    function step() {
-      if (destroyed) return;
-      const t = theme();
+      if (--spawnIn <= 0) spawn();
+      obstacles.forEach(o => (o.x -= speed));
+      obstacles = obstacles.filter(o => o.x > -60);
 
-      if (!dead) {
-        distance += speed * 0.12;
-        speed = Math.min(15.5, 6.2 + distance * 0.0032);
-        session.setScore(Math.floor(distance));
-
-        // Variable jump height: holding the key briefly sustains the rise.
-        if (holdingJump && jumpHeld < 11 && player.vy < 0) {
-          player.vy -= 0.34;
-          jumpHeld++;
+      // Collision. Ducking halves the runner's height, which is the whole
+      // point of the overhead bars.
+      const rh = ducking && py >= GROUND ? 20 : 40;
+      const rTop = py - rh, rBot = py, rL = 60, rR = 60 + 24;
+      for (const o of obstacles) {
+        if (o.x < rR && o.x + o.w > rL && o.y + o.h > rTop && o.y < rBot) {
+          dead = true;
+          MQ.Sound.crash();
+          MQ.FX.shake();
+          return stop("Crashed");
         }
-        player.vy += GRAVITY;
-        player.y += player.vy;
-        if (player.y >= GROUND) { player.y = GROUND; player.vy = 0; player.onGround = true; }
-
-        if (--spawnIn <= 0) spawn();
-
-        const ph = player.ducking && player.onGround ? 20 : player.h;
-        const py = player.y - ph;
-        for (const o of obstacles) {
-          o.x -= speed;
-          const hit = player.x + player.w - 6 > o.x && player.x + 6 < o.x + o.w &&
-                      py + 4 < o.y && py + ph > o.y - o.h;
-          if (hit) die();
-        }
-        obstacles = obstacles.filter(o => o.x > -80);
       }
 
-      clouds.forEach(c => { c.x -= c.s; if (c.x < -60) { c.x = W + 40; c.y = 25 + Math.random() * 75; } });
-      particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.28; p.life--; });
-      particles = particles.filter(p => p.life > 0);
-
-      draw(t);
-      raf = requestAnimationFrame(step);
+      draw(rh);
+      raf = requestAnimationFrame(loop);
     }
 
-    function draw(t) {
+    function draw(rh) {
+      const P = palette();
       ctx.clearRect(0, 0, W, H);
 
-      // sky glow
-      const grad = ctx.createLinearGradient(0, 0, 0, H);
-      grad.addColorStop(0, "rgba(255,255,255,0.04)");
-      grad.addColorStop(1, "rgba(255,255,255,0)");
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, W, H);
+      // A moving vector field in the background — decorative, and on theme.
+      ctx.save();
+      ctx.strokeStyle = P.line;
+      ctx.lineWidth = 1;
+      for (let gx = -((dist * 0.4) % 60); gx < W; gx += 60) {
+        for (let gy = 40; gy < GROUND; gy += 60) {
+          const ang = Math.sin((gx + dist) * 0.004 + gy * 0.02) * 1.2;
+          ctx.beginPath();
+          ctx.moveTo(gx, gy);
+          ctx.lineTo(gx + Math.cos(ang) * 16, gy + Math.sin(ang) * 16);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
 
-      // background clouds
-      ctx.fillStyle = "rgba(255,255,255,0.06)";
-      clouds.forEach(c => {
-        ctx.beginPath();
-        ctx.ellipse(c.x, c.y, 34, 12, 0, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      // ground
-      ctx.strokeStyle = t.dim;
+      ctx.strokeStyle = P.faint;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(0, GROUND + 2);
-      ctx.lineTo(W, GROUND + 2);
+      ctx.moveTo(0, GROUND);
+      ctx.lineTo(W, GROUND);
       ctx.stroke();
 
-      // ground speckle, scrolling to convey speed
-      ctx.fillStyle = "rgba(255,255,255,0.14)";
-      const off = (distance * 8) % 40;
-      for (let x = -off; x < W; x += 40) ctx.fillRect(x, GROUND + 10, 14, 2);
+      ctx.fillStyle = P.warn;
+      obstacles.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
 
-      // obstacles
-      obstacles.forEach(o => {
-        if (o.kind === "fume") {
-          ctx.fillStyle = "rgba(180,140,255,0.55)";
-          ctx.beginPath();
-          ctx.ellipse(o.x + o.w / 2, o.y - o.h / 2, o.w / 2, o.h / 2, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "rgba(180,140,255,0.28)";
-          ctx.beginPath();
-          ctx.ellipse(o.x + o.w / 2 - 12, o.y - o.h / 2 - 6, o.w / 3, o.h / 2.6, 0, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (o.icon === "flask") {
-          ctx.fillStyle = t.a;
-          ctx.beginPath();
-          ctx.moveTo(o.x + 9, o.y - o.h);
-          ctx.lineTo(o.x + 17, o.y - o.h);
-          ctx.lineTo(o.x + o.w, o.y);
-          ctx.lineTo(o.x, o.y);
-          ctx.closePath();
-          ctx.fill();
-        } else {
-          ctx.fillStyle = t.bad;
-          ctx.fillRect(o.x, o.y - o.h, o.w, o.h);
-          ctx.fillStyle = "rgba(255,200,80,0.9)";
-          ctx.beginPath();
-          ctx.ellipse(o.x + o.w / 2, o.y - o.h - 5, 7, 10, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      });
-
-      // player
-      if (!dead || performance.now() < flashUntil) {
-        const ph = player.ducking && player.onGround ? 20 : player.h;
-        ctx.fillStyle = t.ink;
-        roundRect(player.x, player.y - ph, player.w, ph, 7);
-        ctx.fill();
-        // goggles
-        ctx.fillStyle = t.b;
-        ctx.fillRect(player.x + player.w - 13, player.y - ph + 7, 9, 6);
-      }
-
-      // debris
-      particles.forEach(p => {
-        ctx.globalAlpha = Math.max(0, p.life / 60);
-        ctx.fillStyle = t.bad;
-        ctx.fillRect(p.x, p.y, 4, 4);
-        ctx.globalAlpha = 1;
-      });
-
-      // distance readout
-      ctx.fillStyle = t.dim;
-      ctx.font = "600 14px system-ui, sans-serif";
-      ctx.textAlign = "right";
-      ctx.fillText(Math.floor(distance) + " m", W - 14, 26);
-
-      if (dead) {
-        ctx.fillStyle = "rgba(0,0,0,0.45)";
-        ctx.fillRect(0, 0, W, H);
-        ctx.fillStyle = t.ink;
-        ctx.font = "800 26px system-ui, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("Crashed", W / 2, H / 2 - 4);
-        ctx.font = "500 14px system-ui, sans-serif";
-        ctx.fillStyle = t.dim;
-        ctx.fillText("Tap or press space to run again", W / 2, H / 2 + 22);
-      }
-    }
-
-    function roundRect(x, y, w, h, r) {
+      ctx.fillStyle = P.accent;
+      ctx.fillRect(60, py - rh, 24, rh);
+      // A little velocity arrow, because it is Vector Runner.
+      ctx.strokeStyle = P.good;
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.arcTo(x + w, y, x + w, y + h, r);
-      ctx.arcTo(x + w, y + h, x, y + h, r);
-      ctx.arcTo(x, y + h, x, y, r);
-      ctx.arcTo(x, y, x + w, y, r);
-      ctx.closePath();
+      ctx.moveTo(86, py - rh / 2);
+      ctx.lineTo(106, py - rh / 2 - vy * 0.9);
+      ctx.stroke();
     }
 
-    reset();
-    raf = requestAnimationFrame(step);
+    function stop(reason) {
+      if (raf) cancelAnimationFrame(raf);
+      raf = null;
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("keyup", onKeyUp);
+      cab.stop(reason || "Ticket expired");
+    }
 
-    return {
-      destroy() {
-        destroyed = true;
-        cancelAnimationFrame(raf);
-        document.removeEventListener("keydown", onKeyDown);
-        document.removeEventListener("keyup", onKeyUp);
-        window.removeEventListener("resize", resize);
-      }
-    };
+    cab.onEnd(reason => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = null;
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("keyup", onKeyUp);
+      cab.gameOver(score, reason);
+    });
+
+    UI.onLeave(() => {
+      if (raf) cancelAnimationFrame(raf);
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("keyup", onKeyUp);
+    });
+
+    raf = requestAnimationFrame(loop);
   }
 
   return { start };

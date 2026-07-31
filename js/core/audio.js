@@ -1,9 +1,11 @@
-/* Synthesised sound effects — no audio assets, everything is generated on the fly.
-   The context is created lazily on first user gesture to satisfy autoplay policies.
-   Every cue routes through a master gain so the settings volume slider works. */
-window.CHEM = window.CHEM || {};
+/* Synthesised sound effects. No audio files: nothing to download, nothing to
+   precache, nothing to license, and the whole vocabulary costs zero bytes
+   offline. The context is created lazily on the first user gesture to satisfy
+   autoplay policies, and everything routes through one gain + limiter so the
+   volume slider works and stacked cues don't clip. */
+window.MQ = window.MQ || {};
 
-CHEM.Sound = (function () {
+MQ.Sound = (function () {
   let ctx = null, master = null, comp = null;
   let enabled = true;
   let volume = 0.8;
@@ -14,7 +16,6 @@ CHEM.Sound = (function () {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return null;
       ctx = new AC();
-      // A limiter keeps stacked cues (combo + coin + level-up) from clipping.
       comp = ctx.createDynamicsCompressor();
       comp.threshold.value = -12;
       comp.ratio.value = 12;
@@ -28,7 +29,7 @@ CHEM.Sound = (function () {
     return ctx;
   }
 
-  /** One shaped oscillator note. opts: {type, gain, delay, slideTo, attack, detune, pan} */
+  /** One shaped oscillator note. opts: {type, gain, delay, slideTo, attack, detune, filter} */
   function tone(freq, dur, opts) {
     const a = ac();
     if (!a || !enabled) return;
@@ -61,7 +62,7 @@ CHEM.Sound = (function () {
     osc.stop(t0 + dur + 0.04);
   }
 
-  /** Filtered noise burst — fizz, whoosh, impact. */
+  /** Filtered noise burst — whoosh, impact, chalk, static. */
   function noise(dur, opts) {
     const a = ac();
     if (!a || !enabled) return;
@@ -92,8 +93,8 @@ CHEM.Sound = (function () {
 
   /** Play a sequence of [freq, startOffset] notes. */
   function seq(notes, dur, opts) {
-    notes.forEach(([f, at], i) =>
-      tone(f, dur, Object.assign({}, opts, { delay: (opts && opts.delay || 0) + at })));
+    notes.forEach(([f, at]) =>
+      tone(f, dur, Object.assign({}, opts, { delay: ((opts && opts.delay) || 0) + at })));
   }
 
   /** Rate-limit chatty cues so rapid taps don't machine-gun. */
@@ -107,14 +108,14 @@ CHEM.Sound = (function () {
   }
 
   const MAJOR = [523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5];
+  /* A whole-tone run — deliberately unresolved. Used for anything "approaching
+     but not reaching" a value, which in this app is a running theme. */
+  const WHOLE = [523.25, 587.33, 659.25, 739.99, 830.61, 932.33];
 
   const api = {
     setEnabled(v) { enabled = !!v; },
     isEnabled() { return enabled; },
-    setVolume(v) {
-      volume = Math.max(0, Math.min(1, v));
-      if (master) master.gain.value = volume;
-    },
+    setVolume(v) { volume = Math.max(0, Math.min(1, v)); if (master) master.gain.value = volume; },
     getVolume() { return volume; },
 
     /* ── core feedback ─────────────────────────────────────── */
@@ -122,6 +123,8 @@ CHEM.Sound = (function () {
                  tone(987.77, 0.15, { type: "triangle", gain: 0.11, delay: 0.07 }); },
     wrong()    { tone(233, 0.16, { type: "sawtooth", gain: 0.09, filter: "lowpass", filterFreq: 1400 });
                  tone(155, 0.24, { type: "sawtooth", gain: 0.08, delay: 0.08, filter: "lowpass", filterFreq: 900 }); },
+    close()    { tone(494, 0.12, { type: "triangle", gain: 0.09 });
+                 tone(466, 0.16, { type: "triangle", gain: 0.07, delay: 0.09 }); },
     error()    { tone(180, 0.1, { type: "square", gain: 0.07 });
                  tone(140, 0.14, { type: "square", gain: 0.06, delay: 0.09 }); },
     click:     throttled(() => tone(560, 0.03, { type: "square", gain: 0.045 }), 30),
@@ -131,6 +134,9 @@ CHEM.Sound = (function () {
     type:      throttled(() => tone(320 + Math.random() * 80, 0.018, { type: "square", gain: 0.03 }), 20),
     flip()     { tone(420, 0.055, { type: "sine", gain: 0.06, slideTo: 760 });
                  noise(0.06, { freq: 2400, gain: 0.03 }); },
+    swipe()    { noise(0.12, { freq: 900, sweepTo: 3200, gain: 0.035 }); },
+    pop:       throttled(() => tone(880, 0.04, { type: "sine", gain: 0.06, slideTo: 1320 }), 25),
+    thud()     { tone(110, 0.12, { type: "sine", gain: 0.09, slideTo: 60 }); },
 
     /* ── streaks & scoring ─────────────────────────────────── */
     combo(n)   {
@@ -148,6 +154,7 @@ CHEM.Sound = (function () {
     coinPile() { for (let i = 0; i < 6; i++)
                    tone(1000 + Math.random() * 700, 0.06, { type: "square", gain: 0.035, delay: i * 0.045 }); },
     xp()       { tone(880, 0.06, { type: "sine", gain: 0.05, slideTo: 1320 }); },
+    tally:     throttled(() => tone(1320, 0.045, { type: "sine", gain: 0.045 }), 30),
 
     /* ── progression ───────────────────────────────────────── */
     levelUp()  {
@@ -170,6 +177,7 @@ CHEM.Sound = (function () {
                  tone(1400, 0.22, { type: "triangle", gain: 0.07, delay: 0.09 }); },
     quest()    { seq([[587, 0], [784, 0.09], [1175, 0.18]], 0.3, { type: "triangle", gain: 0.12 }); },
     daily()    { seq([[659, 0], [831, 0.08], [988, 0.16], [1319, 0.24]], 0.3, { type: "sine", gain: 0.11 }); },
+    mastery()  { seq([[523, 0], [784, 0.09], [1047, 0.18], [1568, 0.27]], 0.4, { type: "sine", gain: 0.11 }); },
 
     /* ── run outcomes ──────────────────────────────────────── */
     win()      { seq([[523, 0], [659, 0.1], [784, 0.2], [1047, 0.3], [1319, 0.4]], 0.36,
@@ -196,40 +204,66 @@ CHEM.Sound = (function () {
                  tone(880, 0.1, { type: "square", gain: 0.05, slideTo: 440 }); },
     puSkip()   { tone(660, 0.09, { type: "square", gain: 0.06, slideTo: 1320 });
                  tone(990, 0.08, { type: "square", gain: 0.05, delay: 0.07, slideTo: 1760 }); },
-    puFreeze() { seq([[1600, 0], [1400, 0.05], [1900, 0.1], [1500, 0.16]], 0.22,
-                     { type: "sine", gain: 0.06 });
+    puFreeze() { seq([[1600, 0], [1400, 0.05], [1900, 0.1], [1500, 0.16]], 0.22, { type: "sine", gain: 0.06 });
                  noise(0.4, { freq: 5000, sweepTo: 2000, gain: 0.03 }); },
     puShield() { tone(300, 0.2, { type: "sine", gain: 0.09, slideTo: 600 });
                  tone(600, 0.3, { type: "triangle", gain: 0.05, delay: 0.12 }); },
-    puCatalyst(){ seq([[784, 0], [1047, 0.06], [1319, 0.12], [1568, 0.18]], 0.28,
-                      { type: "triangle", gain: 0.1 });
-                  noise(0.5, { freq: 800, sweepTo: 6000, gain: 0.04, reverse: true }); },
+    puBoost()  { seq([[784, 0], [1047, 0.06], [1319, 0.12], [1568, 0.18]], 0.28, { type: "triangle", gain: 0.1 });
+                 noise(0.5, { freq: 800, sweepTo: 6000, gain: 0.04, reverse: true }); },
+    puInsight(){ tone(1046, 0.1, { type: "sine", gain: 0.07 });
+                 tone(1568, 0.24, { type: "sine", gain: 0.05, delay: 0.08 });
+                 noise(0.3, { freq: 3000, sweepTo: 7000, gain: 0.025, reverse: true }); },
+    puAdrenaline(){ tone(220, 0.3, { type: "sawtooth", gain: 0.08, slideTo: 660 });
+                    seq([[660, 0.2], [880, 0.3], [1320, 0.4]], 0.3, { type: "triangle", gain: 0.1 }); },
     shieldBlock(){ tone(420, 0.16, { type: "sine", gain: 0.11, slideTo: 240 });
                    noise(0.18, { freq: 900, gain: 0.06 }); },
 
-    /* ── lab / chemistry flavour ───────────────────────────── */
-    drop()     { noise(0.12, { freq: 900, gain: 0.06 }); },
-    drip()     { tone(1400, 0.045, { type: "sine", gain: 0.07, slideTo: 700 });
-                 noise(0.05, { freq: 2600, gain: 0.025 }); },
-    pour()     { noise(0.3, { freq: 700, sweepTo: 1600, gain: 0.045, q: 0.7 }); },
-    fizz()     { noise(0.6, { freq: 2600, sweepTo: 4200, gain: 0.045 }); },
-    bubble:    throttled(() => tone(500 + Math.random() * 500, 0.06,
-                    { type: "sine", gain: 0.045, slideTo: 1200 }), 45),
-    colourChange() { tone(660, 0.16, { type: "sine", gain: 0.08, slideTo: 1320 });
-                     tone(990, 0.3, { type: "triangle", gain: 0.05, delay: 0.1 }); },
-    endpoint() { seq([[880, 0], [1175, 0.09], [1568, 0.18]], 0.34, { type: "sine", gain: 0.11 });
-                 noise(0.5, { freq: 1200, sweepTo: 5000, gain: 0.035, reverse: true }); },
-    precipitate() { noise(0.35, { freq: 1800, sweepTo: 400, gain: 0.06 });
-                    tone(220, 0.3, { type: "sine", gain: 0.06 }); },
-    balanced() { seq([[784, 0], [1047, 0.07]], 0.24, { type: "triangle", gain: 0.11 });
-                 tone(1568, 0.35, { type: "sine", gain: 0.045, delay: 0.14 }); },
-    tallyPing(){ tone(1320, 0.05, { type: "sine", gain: 0.045 }); },
-    reaction() { noise(0.28, { freq: 400, sweepTo: 2400, gain: 0.05, reverse: true });
-                 tone(440, 0.2, { type: "triangle", gain: 0.07, slideTo: 880 }); },
-    noReaction(){ tone(200, 0.18, { type: "square", gain: 0.07, filter: "lowpass", filterFreq: 700 }); },
+    /* ── maths flavour ─────────────────────────────────────── */
+    /* A rising whole-tone run that never resolves — for the Asymptote and
+       for anything else that approaches a limit without reaching it. */
+    asymptote() { seq(WHOLE.map((f, i) => [f, i * 0.06]), 0.3, { type: "sine", gain: 0.07 }); },
+    chalk:     throttled(() => noise(0.05, { freq: 2800 + Math.random() * 1200, gain: 0.028 }), 35),
+    graph()    { noise(0.3, { freq: 400, sweepTo: 3600, gain: 0.04, reverse: true });
+                 tone(523, 0.2, { type: "sine", gain: 0.05, slideTo: 1047 }); },
+    dragStart(){ tone(440, 0.05, { type: "sine", gain: 0.05 }); },
+    dragTick:  throttled(() => tone(1200 + Math.random() * 300, 0.015, { type: "sine", gain: 0.022 }), 45),
+    snap()     { tone(1568, 0.05, { type: "square", gain: 0.055 });
+                 tone(2093, 0.07, { type: "sine", gain: 0.035, delay: 0.04 }); },
+    tangent()  { tone(784, 0.09, { type: "triangle", gain: 0.08 });
+                 tone(1175, 0.14, { type: "sine", gain: 0.06, delay: 0.06 }); },
+    integrate(){ noise(0.45, { freq: 200, sweepTo: 2200, gain: 0.045, reverse: true });
+                 seq([[262, 0], [392, 0.12], [523, 0.24]], 0.35, { type: "sine", gain: 0.08 }); },
+    /* Two notes a fifth apart, played together — "these are the same thing". */
+    equivalent(){ tone(523.25, 0.28, { type: "triangle", gain: 0.1 });
+                  tone(783.99, 0.28, { type: "triangle", gain: 0.08 });
+                  tone(1046.5, 0.4, { type: "sine", gain: 0.05, delay: 0.12 }); },
+    notEquivalent(){ tone(523.25, 0.26, { type: "triangle", gain: 0.09 });
+                     tone(554.37, 0.26, { type: "triangle", gain: 0.09 }); },   // a semitone — deliberately sour
     match()    { tone(880, 0.07, { type: "sine", gain: 0.09 });
                  tone(1320, 0.12, { type: "sine", gain: 0.07, delay: 0.06 }); },
     mismatch() { tone(330, 0.12, { type: "triangle", gain: 0.06, slideTo: 220 }); },
+    stepPlace(){ tone(660, 0.06, { type: "square", gain: 0.05 });
+                 noise(0.05, { freq: 1800, gain: 0.025 }); },
+    stepWrong(){ tone(196, 0.14, { type: "square", gain: 0.07, slideTo: 130 }); },
+    proofDone(){ seq([[392, 0], [523, 0.1], [659, 0.2], [784, 0.3], [1047, 0.42]], 0.42,
+                     { type: "triangle", gain: 0.11 });
+                 noise(0.7, { freq: 600, sweepTo: 5000, gain: 0.035, reverse: true }); },
+    /* Q.E.D. — a definitive, closed cadence. Induction gets its own. */
+    qed()      { seq([[784, 0], [659, 0.1], [523, 0.2]], 0.42, { type: "triangle", gain: 0.12 });
+                 tone(261.63, 0.7, { type: "sine", gain: 0.09, delay: 0.2 }); },
+    dominoes() { for (let i = 0; i < 7; i++)
+                   tone(300 + i * 90, 0.05, { type: "square", gain: 0.045, delay: i * 0.055 }); },
+    launch()   { tone(180, 0.35, { type: "sawtooth", gain: 0.09, slideTo: 900 });
+                 noise(0.4, { freq: 300, sweepTo: 3000, gain: 0.05, reverse: true }); },
+    hitTarget(){ seq([[1047, 0], [1319, 0.07], [1568, 0.14], [2093, 0.21]], 0.3,
+                     { type: "triangle", gain: 0.12 });
+                 noise(0.3, { freq: 2000, sweepTo: 500, gain: 0.06 }); },
+    missTarget(){ noise(0.25, { freq: 600, sweepTo: 140, gain: 0.07 });
+                  tone(150, 0.3, { type: "sine", gain: 0.06, slideTo: 80 }); },
+    dice()     { for (let i = 0; i < 5; i++)
+                   noise(0.05, { freq: 1600 + Math.random() * 900, gain: 0.045, delay: i * 0.06 }); },
+    gridFill:  throttled(() => tone(1046, 0.035, { type: "square", gain: 0.04 }), 25),
+    gridWrong(){ tone(260, 0.1, { type: "square", gain: 0.06, slideTo: 180 }); },
 
     /* ── combat ────────────────────────────────────────────── */
     hit()      { tone(190, 0.12, { type: "square", gain: 0.1, slideTo: 90 });
@@ -241,6 +275,8 @@ CHEM.Sound = (function () {
                   tone(120, 0.35, { type: "sawtooth", gain: 0.09, slideTo: 60 }); },
     bossHeal() { seq([[440, 0], [523, 0.08], [659, 0.16]], 0.3, { type: "sine", gain: 0.08 });
                  noise(0.4, { freq: 600, sweepTo: 2400, gain: 0.03, reverse: true }); },
+    bossRotate(){ noise(0.22, { freq: 800, sweepTo: 2400, gain: 0.045 });
+                  tone(660, 0.18, { type: "triangle", gain: 0.05, slideTo: 990 }); },
     bossDefeat(){
       noise(0.7, { freq: 900, sweepTo: 60, gain: 0.14 });
       seq([[262, 0.1], [330, 0.25], [392, 0.4], [523, 0.55]], 0.5, { type: "triangle", gain: 0.12 });
@@ -249,6 +285,7 @@ CHEM.Sound = (function () {
     bossIntro(){ tone(98, 0.9, { type: "sawtooth", gain: 0.1, filter: "lowpass", filterFreq: 500 });
                  tone(147, 0.7, { type: "sawtooth", gain: 0.07, delay: 0.1, filter: "lowpass", filterFreq: 600 });
                  noise(1.0, { freq: 120, sweepTo: 900, gain: 0.05, reverse: true }); },
+    phaseUp()  { seq([[330, 0], [415, 0.08], [494, 0.16], [659, 0.24]], 0.3, { type: "sawtooth", gain: 0.09 }); },
     lowHealth(){ tone(160, 0.5, { type: "sine", gain: 0.08 });
                  tone(120, 0.5, { type: "sine", gain: 0.07, delay: 0.28 }); },
     explode()  { noise(0.4, { freq: 400, sweepTo: 60, gain: 0.15 });
@@ -266,7 +303,20 @@ CHEM.Sound = (function () {
     rareDrop() {
       seq([[880, 0], [1175, 0.09], [1568, 0.18], [2093, 0.27]], 0.44, { type: "triangle", gain: 0.12 });
       noise(0.9, { freq: 1200, sweepTo: 7000, gain: 0.045, reverse: true });
-    }
+    },
+    ticket()   { noise(0.14, { freq: 2200, sweepTo: 900, gain: 0.05 });
+                 tone(988, 0.08, { type: "square", gain: 0.05, delay: 0.06 }); },
+
+    /* ── arcade ────────────────────────────────────────────── */
+    crush:     throttled(() => { tone(700 + Math.random() * 500, 0.05, { type: "square", gain: 0.05 });
+                                 noise(0.06, { freq: 2000, gain: 0.03 }); }, 30),
+    cascade(n) { tone(523 + Math.min(n, 8) * 60, 0.08, { type: "triangle", gain: 0.08 }); },
+    jump()     { tone(420, 0.09, { type: "square", gain: 0.06, slideTo: 880 }); },
+    duck()     { tone(600, 0.07, { type: "square", gain: 0.05, slideTo: 260 }); },
+    crash()    { noise(0.35, { freq: 700, sweepTo: 90, gain: 0.11 });
+                 tone(140, 0.3, { type: "sawtooth", gain: 0.08, slideTo: 60 }); },
+    merge(v)   { tone(330 * Math.pow(1.09, Math.log2(v || 2)), 0.09, { type: "triangle", gain: 0.08 }); },
+    slide:     throttled(() => noise(0.08, { freq: 1400, sweepTo: 600, gain: 0.03 }), 40)
   };
 
   return api;

@@ -1,37 +1,45 @@
-/* Persistent player state: XP, levels, coins, streaks, inventory, SRS and stats.
-   Everything is stored in one localStorage key and saved on a short debounce. */
-window.CHEM = window.CHEM || {};
+/* The save file: XP, levels, Primes, streaks, inventory, SRS, bookmarks,
+   achievements and stats. One localStorage key, written on a short debounce
+   with an explicit flush (see §9.4 of the brief — mobile browsers reclaim
+   backgrounded tabs without warning, and a 200 ms debounce with no flush
+   loses whatever was in flight). */
+window.MQ = window.MQ || {};
 
-CHEM.State = (function () {
-  const KEY = "molequest.save.v1";
-  const U = CHEM.U;
+MQ.State = (function () {
+  const KEY = "mathquest.save.v1";
+  const U = MQ.U;
 
   const DEFAULT = () => ({
     v: 1,
     createdAt: Date.now(),
-    profile: { name: "Chemist", avatar: "🧑‍🔬", theme: "lab" },
+    profile: { name: "Student", avatar: "🧮", theme: "graph" },
     xp: 0, level: 1, xpIntoLevel: 0, coins: 100, prestige: 0, lifetimeXp: 0,
     streak: { count: 0, lastDay: null, longest: 0 },
     stats: {
       answered: 0, correct: 0, bestStreak: 0, perfectRuns: 0,
-      equationsBalanced: 0, ionsMatched: 0, titrations: 0, perfectTitrations: 0,
-      pathways: 0, namingCorrect: 0, calcsCorrect: 0,
-      bossWins: 0, flawlessBoss: 0, clutchWins: 0, perfectPrecipitation: 0,
+      equivalences: 0, pairsMatched: 0, curvesRead: 0, calcsCorrect: 0,
+      tangentsPlaced: 0, perfectTangents: 0, areasFound: 0,
+      proofsSolved: 0, inductionsSolved: 0, gridsFilled: 0, perfectGrids: 0,
+      projectilesLanded: 0, bullseyes: 0,
+      bossWins: 0, flawlessBoss: 0, clutchWins: 0,
       mistakesFixed: 0, peakCoins: 100, nightOwl: false, earlyBird: false,
-      timePlayed: 0, survivalBest: 0, hardWins: 0, nightmareWins: 0, cardsMastered: 0
+      timePlayed: 0, survivalBest: 0, hardWins: 0, nightmareWins: 0,
+      cardsMastered: 0, questsDone: 0, extAnswered: 0, extCorrect: 0,
+      finalPaperBest: 0, referenceReads: 0
     },
-    modules: {},
+    topics: {},
     modesPlayed: {},
-    pathwaysSolved: {},
+    proofsSolved: {},
     bossesBeaten: {},
-    inventory: { fifty: 1, skip: 1, freeze: 0, shield: 0, double: 0 },
-    owned: { themes: ["lab"], avatars: ["🧑‍🔬", "⚗️"] },
+    inventory: { fifty: 1, skip: 1, freeze: 0, shield: 0, double: 0, insight: 0, revive: 0 },
+    owned: { themes: ["graph"], avatars: ["🧮", "📐"] },
     srs: {},
     mistakes: [],
+    bookmarks: [],
     achievements: {},
     history: {},
     scores: {},
-    settings: { sound: true, motion: true, volume: 0.8, difficulty: "standard" },
+    settings: { sound: true, motion: true, volume: 0.8, difficulty: "standard", radians: true },
     daily: { day: null, progress: 0, claimed: false, spec: null },
     weekly: { week: null, baseline: null, quests: [], claimed: [] },
     arcade: { tickets: {}, scores: {}, played: {} }
@@ -40,15 +48,15 @@ CHEM.State = (function () {
   let data = DEFAULT();
   const listeners = new Set();
   let saveTimer = null;
+  /* Set by replaceSave(). Once latched, NO further write can happen — see the
+     comment on replaceSave() for why this exists. */
+  let frozen = false;
 
   /* ── persistence ─────────────────────────────────────────── */
   function load() {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        data = deepMerge(DEFAULT(), parsed);
-      }
+      if (raw) data = deepMerge(DEFAULT(), JSON.parse(raw));
     } catch (e) {
       console.warn("Save file unreadable, starting fresh.", e);
       data = DEFAULT();
@@ -69,6 +77,7 @@ CHEM.State = (function () {
   }
 
   function write() {
+    if (frozen) return;
     try { localStorage.setItem(KEY, JSON.stringify(data)); }
     catch (e) { console.warn("Could not save progress.", e); }
   }
@@ -78,10 +87,9 @@ CHEM.State = (function () {
     saveTimer = setTimeout(write, 200);
   }
 
-  /** Write immediately, cancelling any pending debounce.
-      Mobile browsers can kill a backgrounded tab without warning, so the app
-      calls this on visibilitychange/pagehide — otherwise the last few seconds
-      of progress are lost whenever someone switches apps mid-question. */
+  /** Write immediately, cancelling any pending debounce. The app calls this on
+      visibilitychange and pagehide — visibilitychange is the only event mobile
+      browsers reliably fire before reclaiming a tab. */
   function flush() {
     clearTimeout(saveTimer);
     saveTimer = null;
@@ -91,32 +99,31 @@ CHEM.State = (function () {
   function emit() { listeners.forEach(fn => fn(data)); save(); }
   function onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); }
 
-  /* ── levelling ───────────────────────────────────────────── */
-  /* Polynomial curve: level 10 costs ~4,100 XP and level 40 ~32,900. Reaching
-     level 20 takes ~93,000 XP and level 60 about 1.45 million — a full-year
-     progression, not something you finish in a weekend. */
+  /* ── levelling ───────────────────────────────────────────────
+     Level 20 is ~87,000 XP and level 60 about 1.42 million: a whole-HSC-year
+     progression, deliberately. Do not soften this — the reference app's user
+     asked explicitly for it to be harder than the first tuning. */
   const xpNeeded = level => Math.round(130 * Math.pow(level, 1.5));
-
   const MAX_LEVEL = 60;
 
   function levelTitle(level) {
-    const t = CHEM.DATA.levelTitles;
+    const t = MQ.DATA.levelTitles;
     return t[Math.min(level - 1, t.length - 1)];
   }
 
   function difficulty() {
     const id = data.settings.difficulty || "standard";
-    return CHEM.DATA.difficulties.find(d => d.id === id) || CHEM.DATA.difficulties[0];
+    return MQ.DATA.difficulties.find(d => d.id === id) || MQ.DATA.difficulties[0];
   }
 
-  /** Difficulty bonus compounded with the permanent prestige bonus (+12% each). */
+  /** Difficulty bonus compounded with the permanent ascension bonus (+12% each). */
   function xpMultiplier() {
     return difficulty().xp * (1 + (data.prestige || 0) * 0.12);
   }
 
   const canPrestige = () => data.level >= MAX_LEVEL;
 
-  /** Ascend: reset level and XP, keep everything else, gain a permanent XP bonus. */
+  /** Ascend: reset level and XP, keep every unlock, gain a permanent XP bonus. */
   function doPrestige() {
     if (!canPrestige()) return false;
     data.prestige = (data.prestige || 0) + 1;
@@ -130,7 +137,7 @@ CHEM.State = (function () {
   }
 
   function masteryTier(pct) {
-    const tiers = CHEM.DATA.masteryTiers;
+    const tiers = MQ.DATA.masteryTiers;
     let out = tiers[0];
     for (const t of tiers) if (pct >= t.at) out = t;
     return out;
@@ -146,7 +153,6 @@ CHEM.State = (function () {
     data.history[today] = (data.history[today] || 0) + amount;
 
     let gained = 0;
-    // Level 60 is the ceiling — further XP banks toward a prestige instead.
     while (data.level < MAX_LEVEL && data.xpIntoLevel >= xpNeeded(data.level)) {
       data.xpIntoLevel -= xpNeeded(data.level);
       data.level++;
@@ -194,41 +200,39 @@ CHEM.State = (function () {
     return { changed: true, count: data.streak.count };
   }
 
-  /** Bonus for showing up: grows with streak length, capped so it stays sane. */
   const streakBonus = () => Math.min(5 + data.streak.count * 3, 60);
 
   /* ── answer recording ────────────────────────────────────── */
-  function recordAnswer(mod, isCorrect, questionId) {
+  function recordAnswer(topic, isCorrect, questionId) {
     data.stats.answered++;
     if (isCorrect) data.stats.correct++;
 
-    if (mod) {
-      const m = data.modules[mod] || (data.modules[mod] = { seen: 0, correct: 0 });
-      m.seen++;
-      if (isCorrect) m.correct++;
+    if (topic) {
+      const t = data.topics[topic] || (data.topics[topic] = { seen: 0, correct: 0 });
+      t.seen++;
+      if (isCorrect) t.correct++;
+      if (MQ.DATA.tierOf(topic) === "ME") {
+        data.stats.extAnswered = (data.stats.extAnswered || 0) + 1;
+        if (isCorrect) data.stats.extCorrect = (data.stats.extCorrect || 0) + 1;
+      }
     }
 
     if (questionId) {
       const idx = data.mistakes.findIndex(x => x.id === questionId);
       if (isCorrect) {
-        if (idx >= 0) {
-          data.mistakes.splice(idx, 1);
-          data.stats.mistakesFixed++;
-        }
+        if (idx >= 0) { data.mistakes.splice(idx, 1); data.stats.mistakesFixed++; }
       } else if (idx >= 0) {
         data.mistakes[idx].misses++;
         data.mistakes[idx].ts = Date.now();
       } else {
-        data.mistakes.unshift({ id: questionId, mod: mod, misses: 1, ts: Date.now() });
-        if (data.mistakes.length > 120) data.mistakes.pop();
+        data.mistakes.unshift({ id: questionId, topic, misses: 1, ts: Date.now() });
+        if (data.mistakes.length > 150) data.mistakes.pop();
       }
     }
     save();
   }
 
-  function noteStreak(n) {
-    if (n > data.stats.bestStreak) { data.stats.bestStreak = n; save(); }
-  }
+  function noteStreak(n) { if (n > data.stats.bestStreak) { data.stats.bestStreak = n; save(); } }
 
   function bump(statKey, by) {
     data.stats[statKey] = (data.stats[statKey] || 0) + (by === undefined ? 1 : by);
@@ -236,10 +240,7 @@ CHEM.State = (function () {
   }
 
   function markMode(modeId) {
-    if (!data.modesPlayed[modeId]) {
-      data.modesPlayed[modeId] = 0;
-    }
-    data.modesPlayed[modeId]++;
+    data.modesPlayed[modeId] = (data.modesPlayed[modeId] || 0) + 1;
     save();
   }
 
@@ -250,14 +251,25 @@ CHEM.State = (function () {
     return isBest;
   }
 
-  /* ── module mastery ──────────────────────────────────────── */
-  function mastery(mod) {
-    const m = data.modules[mod];
-    if (!m || !m.seen) return 0;
-    // Confidence-weighted: a 100% run over 3 questions shouldn't read as mastered.
-    const raw = m.correct / m.seen;
-    const confidence = Math.min(1, m.seen / 25);
-    return Math.round(raw * confidence * 100);
+  /* ── bookmarks ───────────────────────────────────────────────
+     Star a question mid-run and it lands in a review deck on the Study
+     screen. Deliberately unrewarded — it's a notebook, not a game mode. */
+  function toggleBookmark(id) {
+    const i = data.bookmarks.indexOf(id);
+    if (i >= 0) data.bookmarks.splice(i, 1);
+    else data.bookmarks.unshift(id);
+    if (data.bookmarks.length > 200) data.bookmarks.pop();
+    save();
+    return i < 0;
+  }
+  const isBookmarked = id => data.bookmarks.indexOf(id) >= 0;
+
+  /* ── topic mastery ───────────────────────────────────────── */
+  function mastery(topic) {
+    const t = data.topics[topic];
+    if (!t || !t.seen) return 0;
+    // Confidence-weighted: a perfect 3-question run shouldn't read as mastered.
+    return Math.round((t.correct / t.seen) * Math.min(1, t.seen / 25) * 100);
   }
 
   const overallAccuracy = () => U.pct(data.stats.correct, data.stats.answered);
@@ -274,8 +286,8 @@ CHEM.State = (function () {
     emit();
   }
 
-  function ownsTheme(id)  { return data.owned.themes.includes(id); }
-  function ownsAvatar(em) { return data.owned.avatars.includes(em); }
+  const ownsTheme = id => data.owned.themes.includes(id);
+  const ownsAvatar = em => data.owned.avatars.includes(em);
 
   /* ── spaced repetition (Leitner, 5 boxes) ────────────────── */
   const BOX_DAYS = [0, 1, 2, 4, 8, 16];
@@ -284,18 +296,14 @@ CHEM.State = (function () {
     return data.srs[id] || (data.srs[id] = { box: 1, due: U.dayKey(), reps: 0, lapses: 0 });
   }
 
-  /* Flashcards are self-graded, so nothing stops someone clicking "Got it" on
-     every card forever. XP is therefore payable only once per card per day, which
-     caps the honest maximum at roughly the number of cards actually due. */
+  /* Flashcards are self-graded, so "Did you get it?" → "Yes" → XP is an
+     infinite loop. A card therefore pays at most once per day, and only if
+     it was genuinely due (see §9.8). */
   function cardXpEligible(id) {
     const c = data.srs[id];
     return !c || c.xpDay !== U.dayKey();
   }
-  function markCardXp(id) {
-    const c = cardState(id);
-    c.xpDay = U.dayKey();
-    save();
-  }
+  function markCardXp(id) { cardState(id).xpDay = U.dayKey(); save(); }
 
   function reviewCard(id, gotIt) {
     const c = cardState(id);
@@ -310,9 +318,10 @@ CHEM.State = (function () {
     return c;
   }
 
-  function dueCards() {
+  /** Cards due today, tier-filtered so an Advanced-only build never shows ME cards. */
+  function dueCards(deck) {
     const today = U.dayKey();
-    return CHEM.DATA.flashcards.filter(card => {
+    return (deck || MQ.Cards.all()).filter(card => {
       const c = data.srs[card.id];
       return !c || U.daysBetween(c.due, today) >= 0;
     });
@@ -323,25 +332,27 @@ CHEM.State = (function () {
     return Object.assign({}, data.stats, {
       level: data.level,
       longestDayStreak: data.streak.longest,
-      modules: data.modules,
+      topics: data.topics,
       modesPlayed: data.modesPlayed,
       themesOwned: data.owned.themes.length,
       avatarsOwned: data.owned.avatars.length,
-      pathwaysSolvedUnique: Object.keys(data.pathwaysSolved).length,
+      proofsSolvedUnique: Object.keys(data.proofsSolved).length,
+      inductionsSolvedUnique: MQ.Proofs.inductions().filter(p => data.proofsSolved[p.id]).length,
       bossesBeaten: Object.keys(data.bossesBeaten).length,
       cardsMastered: Object.values(data.srs).filter(x => x.box >= 5).length,
+      bookmarks: data.bookmarks.length,
       prestige: data.prestige || 0,
       questsDone: data.stats.questsDone || 0,
-      // Exposed as a function so mastery achievements use the same weighting as the UI.
+      // Exposed as a function so mastery achievements use the UI's weighting.
       masteryOf: mastery
     });
   }
 
-  /** Evaluate every achievement; returns any that were newly unlocked. */
+  /** Evaluate every enabled achievement; returns any newly unlocked. */
   function checkAchievements() {
     const s = achievementStats();
     const unlocked = [];
-    for (const a of CHEM.DATA.achievements) {
+    for (const a of MQ.DATA.enabledAchievements()) {
       if (data.achievements[a.id]) continue;
       let ok = false;
       try { ok = !!a.check(s); } catch (e) { ok = false; }
@@ -355,16 +366,17 @@ CHEM.State = (function () {
     return unlocked;
   }
 
-  /* ── daily challenge ─────────────────────────────────────── */
-  /** The spec is derived from the date, so everyone sees the same challenge all day. */
+  /* ── daily challenge ─────────────────────────────────────────
+     Derived from the date, so it's stable all day and identical for
+     everyone. */
   function dailySpec() {
     const day = U.dayKey();
-    const seed = U.hash("molequest-" + day);
-    const rng = U.seededRandom(seed);
-    const modes = ["quiz", "balance", "ionmatch", "naming", "calc", "precipitate", "titration", "pathway"];
+    const rng = U.seededRandom(U.hash("mathquest-" + day));
+    const modes = ["rapid", "equiv", "match", "curve", "crunch", "panic", "lab", "proof"]
+      .concat(MQ.DATA.hasExt() ? ["vector"] : []);
     const mode = modes[Math.floor(rng() * modes.length)];
-    const targets = { quiz: 12, balance: 6, ionmatch: 1, naming: 10, calc: 8,
-                      precipitate: 1, titration: 2, pathway: 3 };
+    const targets = { rapid: 14, equiv: 6, match: 1, curve: 10, crunch: 8,
+                      panic: 1, lab: 3, proof: 3, vector: 3 };
     return { day, mode, target: targets[mode] || 10, reward: 120, xp: 150 };
   }
 
@@ -373,9 +385,7 @@ CHEM.State = (function () {
     if (data.daily.day !== spec.day) {
       data.daily = { day: spec.day, progress: 0, claimed: false, spec };
       save();
-    } else {
-      data.daily.spec = spec;
-    }
+    } else data.daily.spec = spec;
     return data.daily;
   }
 
@@ -396,41 +406,40 @@ CHEM.State = (function () {
     return true;
   }
 
-  /* ── weekly quests ───────────────────────────────────────
-     Each quest names a cumulative stat. Progress is that stat minus a snapshot
-     taken when the week rolled over, so no per-event plumbing is needed. */
+  /* ── weekly quests ───────────────────────────────────────────
+     Each quest names a cumulative stat; progress is that stat minus a
+     snapshot taken at week rollover, so no per-event plumbing is needed. */
   const QUEST_POOL = [
-    { id:"q_answer",  stat:"answered",          target:180, xp:1400, coins:700, icon:"📝",
-      name:"Grind it out", desc:"Answer 180 questions" },
-    { id:"q_correct", stat:"correct",           target:120, xp:1600, coins:800, icon:"🎯",
-      name:"On target", desc:"Get 120 questions right" },
-    { id:"q_balance", stat:"equationsBalanced", target:30,  xp:1300, coins:650, icon:"⚖️",
-      name:"Conservation duty", desc:"Balance 30 equations" },
-    { id:"q_ions",    stat:"ionsMatched",       target:60,  xp:1100, coins:550, icon:"🧩",
-      name:"Ion sweep", desc:"Match 60 ion pairs" },
-    { id:"q_titrate", stat:"titrations",        target:10,  xp:1500, coins:750, icon:"🧪",
-      name:"Volumetric week", desc:"Complete 10 titrations" },
-    { id:"q_path",    stat:"pathways",          target:12,  xp:1400, coins:700, icon:"🔗",
-      name:"Synthesis sprint", desc:"Solve 12 pathway puzzles" },
-    { id:"q_calc",    stat:"calcsCorrect",      target:45,  xp:1400, coins:700, icon:"🔢",
-      name:"Number crunch", desc:"Solve 45 calculations" },
-    { id:"q_name",    stat:"namingCorrect",     target:45,  xp:1300, coins:650, icon:"🏷️",
-      name:"Nomenclature drill", desc:"Name 45 compounds correctly" },
-    { id:"q_boss",    stat:"bossWins",          target:3,   xp:2200, coins:1100, icon:"⚔️",
-      name:"Boss hunter", desc:"Defeat 3 Exam Bosses" },
-    { id:"q_perfect", stat:"perfectRuns",       target:5,   xp:2000, coins:1000, icon:"✨",
-      name:"Flawless five", desc:"Finish 5 perfect runs" },
-    { id:"q_cards",   stat:"cardsMastered",     target:20,  xp:1500, coins:750, icon:"🃏",
-      name:"Deck builder", desc:"Have 20 flashcards mastered" },
-    { id:"q_survive", stat:"survivalBest",      target:25,  xp:1800, coins:900, icon:"💀",
-      name:"Last stand", desc:"Reach a 25-question Survival run" }
+    { id:"q_answer",  stat:"answered",     target:180, xp:1400, coins:700, icon:"📝",
+      name:"Grind it out",      desc:"Answer 180 questions" },
+    { id:"q_correct", stat:"correct",      target:120, xp:1600, coins:800, icon:"🎯",
+      name:"On target",         desc:"Get 120 questions right" },
+    { id:"q_equiv",   stat:"equivalences", target:30,  xp:1300, coins:650, icon:"🔁",
+      name:"Same thing twice",  desc:"Verify 30 equivalences" },
+    { id:"q_pairs",   stat:"pairsMatched", target:60,  xp:1100, coins:550, icon:"🃏",
+      name:"Pair sweep",        desc:"Match 60 pairs" },
+    { id:"q_lab",     stat:"tangentsPlaced", target:20, xp:1500, coins:750, icon:"📐",
+      name:"Gradient week",     desc:"Place 20 tangents in the Calculus Lab" },
+    { id:"q_proof",   stat:"proofsSolved", target:12,  xp:1400, coins:700, icon:"🪜",
+      name:"Proof sprint",      desc:"Assemble 12 proofs" },
+    { id:"q_calc",    stat:"calcsCorrect", target:45,  xp:1400, coins:700, icon:"🔢",
+      name:"Number crunch",     desc:"Solve 45 calculations" },
+    { id:"q_curve",   stat:"curvesRead",   target:45,  xp:1300, coins:650, icon:"📈",
+      name:"Curve literacy",    desc:"Read 45 graphs correctly" },
+    { id:"q_boss",    stat:"bossWins",     target:3,   xp:2200, coins:1100, icon:"⚔️",
+      name:"Boss hunter",       desc:"Defeat 3 Exam Bosses" },
+    { id:"q_perfect", stat:"perfectRuns",  target:5,   xp:2000, coins:1000, icon:"✨",
+      name:"Flawless five",     desc:"Finish 5 perfect runs" },
+    { id:"q_cards",   stat:"cardsMastered",target:20,  xp:1500, coins:750, icon:"🗂️",
+      name:"Deck builder",      desc:"Have 20 flashcards mastered" },
+    { id:"q_survive", stat:"survivalBest", target:25,  xp:1800, coins:900, icon:"💀",
+      name:"Last stand",        desc:"Reach a 25-question Survival run" }
   ];
 
   /** ISO-ish week key, e.g. "2026-W31". */
   function weekKey(d) {
     const t = d || new Date();
     const target = new Date(t.getFullYear(), t.getMonth(), t.getDate());
-    // Thursday of the current week determines the ISO year/week.
     target.setDate(target.getDate() + 3 - ((target.getDay() + 6) % 7));
     const firstThursday = new Date(target.getFullYear(), 0, 4);
     firstThursday.setDate(firstThursday.getDate() + 3 - ((firstThursday.getDay() + 6) % 7));
@@ -446,7 +455,7 @@ CHEM.State = (function () {
   function weekly() {
     const wk = weekKey();
     if (data.weekly.week !== wk) {
-      const rng = U.seededRandom(U.hash("molequest-week-" + wk));
+      const rng = U.seededRandom(U.hash("mathquest-week-" + wk));
       const picked = U.seededShuffle(QUEST_POOL, rng).slice(0, 3).map(q => q.id);
       const baseline = {};
       QUEST_POOL.forEach(q => (baseline[q.stat] = statFor(q.stat)));
@@ -456,7 +465,6 @@ CHEM.State = (function () {
     return data.weekly;
   }
 
-  /** [{ quest, done, target, complete, claimed }] for the current week. */
   function weeklyQuests() {
     const w = weekly();
     return w.quests.map(id => {
@@ -479,6 +487,46 @@ CHEM.State = (function () {
     return true;
   }
 
+  /* ── export / import ─────────────────────────────────────────
+     localStorage is per-device, and students change phones. */
+  function exportSave() { return JSON.stringify(data, null, 2); }
+
+  /**
+   * Replace the save file and freeze all further writes.
+   *
+   * The naive version of this — write, then location.reload() — destroys the
+   * import. The reload fires `pagehide`, `pagehide` fires the debounced-save
+   * flush, and the flush writes the OLD in-memory state straight back over the
+   * file that was just imported. From the outside the import silently does
+   * nothing at all.
+   *
+   * So: merge against the current DEFAULT shape (a save from an older version
+   * gains new fields rather than blanking them), write once, and latch `frozen`
+   * so nothing — not pagehide, not a debounce already in flight — can write
+   * again before the reload lands.
+   */
+  function replaceSave(obj) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+    data = deepMerge(DEFAULT(), obj);
+    try { localStorage.setItem(KEY, JSON.stringify(data)); }
+    catch (e) { return { ok: false, error: "Could not write the save file." }; }
+    frozen = true;
+    return { ok: true };
+  }
+
+  function importSave(json) {
+    let parsed;
+    try { parsed = JSON.parse(json); }
+    catch (e) { return { ok: false, error: "Couldn't read that file — is it valid JSON?" }; }
+    if (!parsed || typeof parsed !== "object" || typeof parsed.xp !== "number") {
+      return { ok: false, error: "That doesn't look like a MathQuest save file." };
+    }
+    return replaceSave(parsed);
+  }
+
+  const isFrozen = () => frozen;
+
   function reset() {
     data = DEFAULT();
     try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ }
@@ -490,14 +538,15 @@ CHEM.State = (function () {
     get data() { return data; },
     xpNeeded, levelTitle, addXP, addCoins, spendCoins, MAX_LEVEL,
     difficulty, xpMultiplier, canPrestige, doPrestige, masteryTier,
-    weekly, weeklyQuests, claimQuest, weekKey,
+    weekly, weeklyQuests, claimQuest, weekKey, QUEST_POOL,
     touchStreak, streakBonus,
     recordAnswer, noteStreak, bump, markMode, recordScore,
+    toggleBookmark, isBookmarked,
     mastery, overallAccuracy,
     usePowerup, grantPowerup, ownsTheme, ownsAvatar,
     cardState, reviewCard, dueCards, cardXpEligible, markCardXp,
     checkAchievements, achievementStats,
     daily, dailySpec, progressDaily, claimDaily,
-    reset
+    exportSave, importSave, replaceSave, isFrozen, reset
   };
 })();

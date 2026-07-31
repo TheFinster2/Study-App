@@ -1,25 +1,43 @@
-/* Quiz engine — powers Rapid Fire, Module Drill, Mistake Rehab and the daily challenge.
-   Also exports QuizCore.buildCard, reused by the Exam Boss fight. */
-window.CHEM = window.CHEM || {};
-CHEM.Games = CHEM.Games || {};
+/* The quiz engine — powers Rapid Fire, Topic Drill, Mistake Rehab, the
+   bookmark deck, the daily challenge and The Final Paper. Also exports
+   QuizCore.buildCard, which the boss fights reuse. */
+window.MQ = window.MQ || {};
+MQ.Games = MQ.Games || {};
 
-/* ── shared question card ──────────────────────────────────── */
-CHEM.QuizCore = (function () {
-  const U = CHEM.U;
+/* ── the shared question card ──────────────────────────────── */
+MQ.QuizCore = (function () {
+  const U = MQ.U, S = MQ.State;
   const KEYS = ["A", "B", "C", "D", "E", "F"];
 
   /**
-   * Build a question card.
-   * opts: { onAnswer(index, isCorrect, buttonEl), showTags, index, total }
-   * Returns { node, reveal(chosen), buttons, disable() }
+   * opts: { onAnswer(index, isCorrect, buttonEl), showTags, index, total, hideTopic }
+   * Returns { node, reveal(chosen), buttons, disable(), fiftyFifty() }
    */
   function buildCard(q, opts) {
     const o = opts || {};
+
+    const star = U.el("button", {
+      class: "bookmark-btn" + (S.isBookmarked(q.id) ? " on" : ""),
+      type: "button", title: "Star this question for review",
+      text: S.isBookmarked(q.id) ? "★" : "☆"
+    });
+    star.addEventListener("click", e => {
+      e.stopPropagation();
+      const on = S.toggleBookmark(q.id);
+      star.classList.toggle("on", on);
+      star.textContent = on ? "★" : "☆";
+      MQ.Sound.tap();
+    });
+
     const tags = U.el("div", { class: "qtag" }, [
       o.total ? U.el("span", { class: "chip", text: `Q${o.index + 1} / ${o.total}` }) : null,
-      U.el("span", { class: "chip", text: CHEM.Bank.moduleName(q.mod) }),
-      U.el("span", { class: "chip", text: q.topic }),
-      U.el("span", { class: "chip", text: "★".repeat(q.diff || 1) })
+      // The Integrator boss hides the topic label — that is its whole gimmick.
+      o.hideTopic ? U.el("span", { class: "chip", text: "???" })
+                  : U.el("span", { class: "chip", text: MQ.Bank.topicName(q.topic) }),
+      o.hideTopic ? null : MQ.UI.tierChip(q.topic),
+      o.hideTopic ? null : U.el("span", { class: "chip", text: q.sub || "" }),
+      U.el("span", { class: "chip", text: "★".repeat(q.diff || 1) }),
+      star
     ]);
 
     const buttons = [];
@@ -28,7 +46,7 @@ CHEM.QuizCore = (function () {
     q.choices.forEach((text, i) => {
       const btn = U.el("button", { class: "choice", type: "button" }, [
         U.el("span", { class: "choice-key", text: KEYS[i] }),
-        U.el("span", { html: U.formula(text) })
+        U.el("span", { class: "math", html: U.math(text) })
       ]);
       btn.addEventListener("click", () => {
         if (btn.disabled) return;
@@ -38,9 +56,11 @@ CHEM.QuizCore = (function () {
       choiceWrap.appendChild(btn);
     });
 
+    // See the test hook note in js/core/ui.js.
+    MQ.__current = { kind: "quiz", answer: q.a, id: q.id };
     const node = U.el("div", { class: "qcard" }, [
       o.showTags === false ? null : tags,
-      U.el("div", { class: "qtext", html: U.formula(q.q) }),
+      U.el("div", { class: "qtext math", html: U.math(q.q) }),
       choiceWrap
     ]);
 
@@ -55,13 +75,14 @@ CHEM.QuizCore = (function () {
       });
       const ok = chosen === q.a;
       const fb = U.el("div", { class: "feedback " + (ok ? "ok" : "no") }, [
-        U.el("span", { html: `<b>${ok ? "Correct." : "Not quite."}</b> ${U.formula(q.why)}` })
+        U.el("span", { class: "math",
+          html: `<b>${ok ? "Correct." : "Not quite."}</b> ` + U.math(q.why) })
       ]);
       node.appendChild(fb);
       return fb;
     }
 
-    /** 50/50 power-up: dim two wrong options. */
+    /** 50/50: dim two wrong options. */
     function fiftyFifty() {
       const wrong = buttons.map((b, i) => i).filter(i => i !== q.a && !buttons[i].disabled);
       U.shuffle(wrong).slice(0, Math.min(2, wrong.length)).forEach(i => {
@@ -77,11 +98,12 @@ CHEM.QuizCore = (function () {
 })();
 
 /* ── the quiz mode ─────────────────────────────────────────── */
-CHEM.Games.quiz = (function () {
-  const U = CHEM.U, S = CHEM.State, UI = CHEM.UI;
+MQ.Games.quiz = (function () {
+  const U = MQ.U, S = MQ.State, UI = MQ.UI;
 
   /**
-   * cfg: { modeId, title, questions | mods, count, totalTime, lives, adaptive, dailyMode }
+   * cfg: { modeId, title, questions | topics | group, count, totalTime, lives,
+   *        adaptive, dailyMode, hideTopic, onFinish, statKey }
    */
   function start(root, cfg) {
     const c = Object.assign({
@@ -90,7 +112,7 @@ CHEM.Games.quiz = (function () {
 
     const questions = c.questions && c.questions.length
       ? c.questions
-      : CHEM.Bank.draw(c.count, { mods: c.mods, adaptive: c.adaptive });
+      : MQ.Bank.draw(c.count, { topics: c.topics, group: c.group, adaptive: c.adaptive });
 
     if (!questions.length) {
       root.appendChild(U.el("div", { class: "empty" }, [
@@ -104,14 +126,17 @@ CHEM.Games.quiz = (function () {
     S.touchStreak();
     const diffMode = S.difficulty();
     if (c.totalTime) c.totalTime = Math.round(c.totalTime * diffMode.timeScale);
-    CHEM.Sound.gameStart();
+    MQ.Sound.gameStart();
 
     let idx = 0, correct = 0, streak = 0, bestStreak = 0;
     let xpEarned = 0, coinsEarned = 0, lives = c.lives, doubled = false;
-    let penalty = 0, shownAt = 0, rushed = 0;
+    let penalty = 0, shownAt = 0, rushed = 0, insightUsed = false;
     let timeLeft = c.totalTime, timerId = null, finished = false;
 
-    const shell = UI.gameShell(c.title, { confirmExit: true });
+    const shell = UI.gameShell(c.title, { confirmExit: true,
+      help: "Answer as many as you can. Wrong answers subtract XP, and answers " +
+            "faster than 1.2 seconds pay nothing — the completion bonus is gated on accuracy, " +
+            "so guessing through a run earns nothing at all." });
     root.appendChild(shell.root);
 
     const scoreChip  = UI.chip("0 XP");
@@ -132,9 +157,9 @@ CHEM.Games.quiz = (function () {
         timeLeft--;
         timerChip.textContent = U.fmtTime(Math.max(0, timeLeft));
         timerChip.classList.toggle("low", timeLeft <= 10);
-        if (timeLeft <= 10 && timeLeft > 5) CHEM.Sound.tick();
-        if (timeLeft <= 5 && timeLeft > 0) CHEM.Sound.tickUrgent();
-        if (timeLeft <= 0) { CHEM.Sound.timeout(); finish("Time!"); }
+        if (timeLeft <= 10 && timeLeft > 5) MQ.Sound.tick();
+        if (timeLeft <= 5 && timeLeft > 0) MQ.Sound.tickUrgent();
+        if (timeLeft <= 0) { MQ.Sound.timeout(); finish("Time!"); }
       }, 1000);
     }
     UI.onLeave(() => { clearInterval(timerId); document.removeEventListener("keydown", onKey); });
@@ -155,8 +180,9 @@ CHEM.Games.quiz = (function () {
     function renderQuestion() {
       stage.innerHTML = "";
       const q = questions[idx];
-      card = CHEM.QuizCore.buildCard(q, {
+      card = MQ.QuizCore.buildCard(q, {
         index: idx, total: c.totalTime ? 0 : questions.length,
+        hideTopic: c.hideTopic,
         onAnswer: (chosen, isCorrect, btn) => answer(q, chosen, isCorrect, btn)
       });
       stage.appendChild(card.node);
@@ -166,7 +192,7 @@ CHEM.Games.quiz = (function () {
 
     function answer(q, chosen, isCorrect, btn) {
       const fb = card.reveal(chosen);
-      S.recordAnswer(q.mod, isCorrect, q.id);
+      S.recordAnswer(q.topic, isCorrect, q.id);
 
       // Answering faster than a human could read the question earns nothing.
       const tooFast = performance.now() - shownAt < UI.MIN_READ_MS;
@@ -181,26 +207,25 @@ CHEM.Games.quiz = (function () {
         if (tooFast) rushed++;
         xpEarned += gain;
         coinsEarned += tooFast ? 0 : 2 + (q.diff || 1);
-        CHEM.Sound.correct();
+        MQ.Sound.correct();
         if (tooFast) UI.toast({ icon: "⏱️", kind: "bad", text: "Too fast to have read that — no XP awarded." });
         if (streak > 1 && streak % 5 === 0) {
-          CHEM.Sound.multiplier(Math.floor(streak / 5));
+          MQ.Sound.multiplier(Math.floor(streak / 5));
           UI.toast({ icon: "⚡", kind: "xp", text: `<b>${streak} streak!</b> ×${multiplier()} XP` });
           streakChip.classList.add("combo-flash");
           setTimeout(() => streakChip.classList.remove("combo-flash"), 420);
         }
         const r = btn.getBoundingClientRect();
-        CHEM.FX.pop(r.right - 24, r.top + r.height / 2);
-        if (gain) CHEM.FX.floatText(r.right - 60, r.top - 4, "+" + gain);
+        MQ.FX.pop(r.right - 24, r.top + r.height / 2);
+        if (gain) MQ.FX.floatText(r.right - 60, r.top - 4, "+" + gain);
         if (c.dailyMode) S.progressDaily(c.dailyMode, 1);
       } else {
         if (S.data.inventory.shield > 0 && streak >= 3) {
-          // Buffer absorbs the hit automatically when a streak is at stake.
           S.usePowerup("shield");
-          CHEM.Sound.shieldBlock();
+          MQ.Sound.shieldBlock();
           UI.toast({ icon: "🛡️", text: "<b>Buffer</b> absorbed that — streak saved." });
         } else {
-          if (streak >= 5) CHEM.Sound.comboBreak();
+          if (streak >= 5) MQ.Sound.comboBreak();
           streak = 0;
           // A wrong answer costs XP, so guessing through a run nets nothing.
           penalty += 6 * (q.diff || 1);
@@ -209,8 +234,8 @@ CHEM.Games.quiz = (function () {
             livesChip.textContent = "❤️".repeat(lives) || "💀";
           }
         }
-        CHEM.Sound.wrong();
-        CHEM.FX.shake();
+        MQ.Sound.wrong();
+        MQ.FX.shake();
       }
 
       scoreChip.textContent = Math.max(0, xpEarned - penalty) + " XP";
@@ -226,7 +251,7 @@ CHEM.Games.quiz = (function () {
           idx++;
           if (idx >= questions.length) {
             // Endless (timed) modes top up the pool rather than ending early.
-            questions.push(...CHEM.Bank.draw(10, { mods: c.mods, adaptive: c.adaptive }));
+            questions.push(...MQ.Bank.draw(10, { topics: c.topics, group: c.group, adaptive: c.adaptive }));
           }
           renderQuestion();
         } }
@@ -239,7 +264,7 @@ CHEM.Games.quiz = (function () {
       const node = U.el("div", { class: "powerups" });
       // Nightmare locks out the two power-ups that remove difficulty outright.
       const banned = diffMode.id === "nightmare" ? ["fifty", "skip"] : [];
-      const defs = CHEM.DATA.shop.powerups
+      const defs = MQ.DATA.shop.powerups
         .filter(p => p.id !== "freeze" || c.totalTime)
         .filter(p => p.id !== "revive")
         .filter(p => !banned.includes(p.id));
@@ -258,44 +283,49 @@ CHEM.Games.quiz = (function () {
       function refresh() {
         defs.forEach(p => {
           const n = S.data.inventory[p.id] || 0;
+          btns[p.id].b.disabled = n <= 0 || (p.id === "double" && doubled);
           btns[p.id].count.textContent = "×" + n;
-          const unusable = n <= 0 || (p.id === "double" && doubled);
-          btns[p.id].b.disabled = unusable;
         });
       }
 
       function use(id, btn) {
         if (!S.usePowerup(id)) return;
-        if (id === "fifty") { CHEM.Sound.puFifty(); card && card.fiftyFifty();
-          UI.toast({ icon: "✂️", text: "Two wrong options removed." }); }
+        if (id === "fifty") {
+          MQ.Sound.puFifty();
+          card && card.fiftyFifty();
+          UI.toast({ icon: "✂️", text: "Two wrong options removed." });
+        }
         if (id === "insight") {
-          CHEM.Sound.unlock();
+          MQ.Sound.puInsight();
+          insightUsed = true;
           const q = questions[idx];
-          UI.toast({ icon: "🔍", ms: 6000, text: "<b>Insight:</b> " + U.escapeHtml(q.topic) +
-            " — think about " + U.escapeHtml(CHEM.Bank.moduleName(q.mod)) + "." });
+          UI.toast({ icon: "🔍", ms: 6000, text: "<b>Insight:</b> " +
+            U.escapeHtml(q.sub || "") + " — " + U.escapeHtml(MQ.Bank.topicFull(q.topic)) + "." });
         }
         if (id === "skip") {
-          CHEM.Sound.puSkip();
+          MQ.Sound.puSkip();
           UI.toast({ icon: "⏭️", text: "Skipped — streak preserved." });
           idx++;
           if (idx >= questions.length) return finish();
           renderQuestion();
         }
         if (id === "freeze") {
-          CHEM.Sound.puFreeze();
+          MQ.Sound.puFreeze();
           timeLeft += 20;
           timerChip.textContent = U.fmtTime(timeLeft);
           UI.toast({ icon: "🧊", text: "+20 seconds." });
         }
-        if (id === "shield") { CHEM.Sound.puShield();
-          UI.toast({ icon: "🛡️", text: "Buffer ready — it will absorb your next slip." }); }
+        if (id === "shield") {
+          MQ.Sound.puShield();
+          UI.toast({ icon: "🛡️", text: "Buffer ready — it will absorb your next slip." });
+        }
         if (id === "double") {
-          CHEM.Sound.puCatalyst();
+          MQ.Sound.puBoost();
           doubled = true;
-          UI.toast({ icon: "✨", kind: "xp", text: "<b>Catalyst active</b> — double XP for this run." });
+          UI.toast({ icon: "✨", kind: "xp", text: "<b>Boost active</b> — double XP for this run." });
         }
         refresh();
-        CHEM.FX.burstAt(btn, { count: 14, speed: 4, size: 3, shape: "circle" });
+        MQ.FX.burstAt(btn, { count: 14, speed: 4, size: 3, shape: "circle" });
       }
 
       return { node, refresh };
@@ -307,11 +337,13 @@ CHEM.Games.quiz = (function () {
       clearInterval(timerId);
       document.removeEventListener("keydown", onKey);
 
-      // In timed modes the run ends mid-pool, so score against what was actually shown.
+      // In timed modes the run ends mid-pool, so score against what was shown.
       const seen = c.totalTime ? Math.max(1, idx + 1) : Math.min(questions.length, idx + 1);
-
       const perfect = correct === seen && seen >= 5;
-      if (perfect) { S.bump("perfectRuns"); CHEM.Sound.perfect(); }
+      if (perfect) { S.bump("perfectRuns"); MQ.Sound.perfect(); }
+      if (diffMode.id === "hard") S.bump("hardWins");
+      if (diffMode.id === "nightmare") S.bump("nightmareWins");
+      if (c.statKey) S.bump(c.statKey, correct);
 
       const accuracy = seen ? correct / seen : 0;
       const netXp = Math.max(0, xpEarned - penalty);
@@ -322,14 +354,15 @@ CHEM.Games.quiz = (function () {
         coins: coinsEarned + (perfect ? 30 : 0)
       });
 
+      if (c.onFinish) c.onFinish({ correct, seen, accuracy, xp: got.xp });
+
       UI.results({
-        title: reason ? reason : "Run complete",
-        correct, total: seen, xp: got.xp, coins: got.coins,
-        newBest,
+        title: reason || "Run complete",
+        correct, total: seen, xp: got.xp, coins: got.coins, newBest,
         extraStats: [
           ["Best streak", bestStreak],
           ["Wrong", `−${penalty} XP`],
-          rushed ? ["Rushed", rushed] : ["Multiplier", "×" + multiplier()]
+          insightUsed ? ["Insight", "used"] : (rushed ? ["Rushed", rushed] : ["Multiplier", "×" + multiplier()])
         ],
         onAgain: () => UI.handleRoute()
       });

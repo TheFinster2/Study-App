@@ -1,149 +1,138 @@
-/* Survival — one life, no second chances. The clock tightens and the questions
-   get harder the longer you last. Ends the moment you get one wrong. */
-window.CHEM = window.CHEM || {};
-CHEM.Games = CHEM.Games || {};
+/* 💀 Survival — one life, a tightening clock, escalating difficulty.
+   How deep can you go? */
+window.MQ = window.MQ || {};
+MQ.Games = MQ.Games || {};
 
-CHEM.Games.survival = (function () {
-  const U = CHEM.U, S = CHEM.State, UI = CHEM.UI;
-
-  /** Seconds allowed at a given depth — starts generous, floors at 6s. */
-  function timeFor(depth, scale) {
-    return Math.max(6, Math.round((20 - Math.floor(depth / 4)) * scale));
-  }
-
-  /** Difficulty ceiling rises with depth: 1★ early, all 3★ past question 20. */
-  function maxDiffFor(depth) {
-    if (depth < 6) return 1;
-    if (depth < 12) return 2;
-    return 3;
-  }
+MQ.Games.survival = (function () {
+  const U = MQ.U, S = MQ.State, UI = MQ.UI;
 
   function start(root) {
     S.markMode("survival");
     S.touchStreak();
+    const diffMode = S.difficulty();
+    MQ.Sound.gameStart();
 
-    const diff = S.difficulty();
-    let depth = 0, xpEarned = 0, coins = 0, finished = false;
-    let timerId = null, timeLeft = 0, card = null;
-    let pool = [];
+    let depth = 0, correct = 0, xpEarned = 0, coinsEarned = 0;
+    let finished = false, shownAt = 0, card = null, question = null;
+    let perQuestion = 30 * diffMode.timeScale;
+    let timeLeft = perQuestion, timerId = null;
 
-    const shell = UI.gameShell("Survival", { confirmExit: true });
+    const shell = UI.gameShell("💀 Survival", { confirmExit: true,
+      help: "One life. The clock shortens and the questions get harder with every correct answer. " +
+            "One wrong answer or one timeout ends the run." });
     root.appendChild(shell.root);
-    const depthChip = UI.chip("Q0");
-    const bestChip = UI.chip("Best " + (S.data.stats.survivalBest || 0));
-    const timerChip = U.el("span", { class: "timer-ring", text: "—" });
-    [depthChip, bestChip, timerChip].forEach(n => shell.meta.appendChild(n));
 
-    shell.body.appendChild(U.el("div", { class: "qcard" }, [
-      U.el("div", { class: "qtag" }, [
-        UI.chip("All modules"), UI.chip(diff.icon + " " + diff.name), UI.chip("One life")
-      ]),
-      U.el("p", { style: "margin:0", html:
-        "One wrong answer ends the run. The clock tightens every four questions and the " +
-        "difficulty climbs as you go. How deep can you get?" })
-    ]));
+    const depthChip = UI.chip("Depth 0");
+    const scoreChip = UI.chip("0 XP");
+    const timerChip = U.el("span", { class: "timer-ring", text: U.fmtTime(timeLeft) });
+    [depthChip, scoreChip, timerChip].forEach(n => shell.meta.appendChild(n));
 
     const stage = U.el("div");
     shell.body.appendChild(stage);
 
-    CHEM.Sound.gameStart();
-    UI.onLeave(() => clearInterval(timerId));
+    UI.onLeave(() => { clearInterval(timerId); document.removeEventListener("keydown", onKey); });
+    document.addEventListener("keydown", onKey);
+    function onKey(e) {
+      if (!card || finished) return;
+      const n = "1234".indexOf(e.key);
+      if (n >= 0 && card.buttons[n] && !card.buttons[n].disabled) card.buttons[n].click();
+    }
 
-    function nextQuestion() {
-      if (finished) return;
-      if (!pool.length) {
-        pool = CHEM.Bank.draw(15, { maxDiff: maxDiffFor(depth), adaptive: false });
-      }
-      const q = pool.shift();
-      depth++;
-      depthChip.textContent = "Q" + depth;
-      stage.innerHTML = "";
-
-      card = CHEM.QuizCore.buildCard(q, {
-        index: depth - 1,
-        onAnswer: (chosen, ok, btn) => resolve(q, chosen, ok, btn)
-      });
-      stage.appendChild(card.node);
-
+    function startClock() {
       clearInterval(timerId);
-      timeLeft = timeFor(depth, diff.timeScale);
-      timerChip.textContent = String(timeLeft);
+      timeLeft = perQuestion;
+      timerChip.textContent = U.fmtTime(Math.ceil(timeLeft));
       timerChip.classList.remove("low");
       timerId = setInterval(() => {
         timeLeft--;
-        timerChip.textContent = String(Math.max(0, timeLeft));
-        const low = timeLeft <= 4;
-        timerChip.classList.toggle("low", low);
-        if (low && timeLeft > 0) CHEM.Sound.tickUrgent();
-        if (timeLeft <= 0) {
-          clearInterval(timerId);
-          CHEM.Sound.timeout();
-          resolve(q, -1, false, null, true);
-        }
+        timerChip.textContent = U.fmtTime(Math.max(0, Math.ceil(timeLeft)));
+        timerChip.classList.toggle("low", timeLeft <= 5);
+        if (timeLeft <= 5 && timeLeft > 0) MQ.Sound.tickUrgent();
+        if (timeLeft <= 0) { MQ.Sound.timeout(); finish("Out of time"); }
       }, 1000);
     }
 
-    function resolve(q, chosen, ok, btn, timedOut) {
-      clearInterval(timerId);
-      const fb = card.reveal(chosen);
-      S.recordAnswer(q.mod, ok, q.id);
+    function render() {
+      stage.innerHTML = "";
+      // Difficulty climbs with depth: easy questions first, then anything.
+      const maxDiff = depth < 5 ? 1 : depth < 12 ? 2 : 3;
+      const minDiff = depth < 12 ? 1 : 2;
+      question = MQ.Bank.draw(1, { maxDiff, minDiff, adaptive: false })[0]
+              || MQ.Bank.draw(1, { adaptive: false })[0];
 
-      if (ok) {
-        // Deeper questions pay exponentially more — the risk/reward of pushing on.
-        const gain = Math.round(12 * (q.diff || 1) * (1 + depth * 0.09));
-        xpEarned += gain;
-        coins += 2 + Math.floor(depth / 5);
-        CHEM.Sound.correct();
-        if (depth % 5 === 0) { CHEM.Sound.combo(depth); CHEM.FX.confetti(30); }
-        if (btn) {
-          const r = btn.getBoundingClientRect();
-          CHEM.FX.pop(r.right - 24, r.top + r.height / 2);
-          CHEM.FX.floatText(r.right - 60, r.top - 4, "+" + gain);
-        }
-        const next = U.el("button", {
-          class: "btn btn-primary js-next", text: "Push on →",
-          on: { click: nextQuestion }
-        });
-        fb.appendChild(U.el("div", { class: "row", style: "margin-top:12px" }, [next]));
-        next.focus();
-      } else {
-        CHEM.Sound.playerHurt();
-        CHEM.FX.shake();
-        fb.appendChild(U.el("div", { class: "tiny", style: "margin-top:8px; color:var(--bad)",
-          text: timedOut ? "Out of time. The run ends here." : "Wrong answer. The run ends here." }));
-        setTimeout(() => end(), 900);
-      }
+      card = MQ.QuizCore.buildCard(question, {
+        onAnswer: (chosen, ok) => answer(chosen, ok)
+      });
+      stage.appendChild(card.node);
+      shownAt = performance.now();
+      startClock();
     }
 
-    function end() {
+    function answer(chosen, ok) {
+      clearInterval(timerId);
+      card.reveal(chosen);
+      S.recordAnswer(question.topic, ok, question.id);
+
+      if (!ok) {
+        MQ.Sound.wrong();
+        MQ.FX.shake();
+        setTimeout(() => finish("Wrong answer"), 900);
+        return;
+      }
+
+      const tooFast = performance.now() - shownAt < UI.MIN_READ_MS;
+      depth++;
+      correct++;
+      // XP per question grows with depth, so the deep runs are where the value is.
+      xpEarned += tooFast ? 0 : Math.round(8 + depth * 2.5);
+      coinsEarned += tooFast ? 0 : 2;
+      // The clock tightens, with a hard floor so it stays humanly possible.
+      perQuestion = Math.max(8 * diffMode.timeScale, perQuestion - 1.2);
+
+      depthChip.textContent = "Depth " + depth;
+      scoreChip.textContent = xpEarned + " XP";
+      MQ.Sound.correct();
+      if (depth % 10 === 0) {
+        MQ.Sound.rankUp();
+        UI.toast({ icon: "💀", kind: "xp", text: `<b>Depth ${depth}.</b> Still standing.` });
+      }
+      setTimeout(render, 700);
+    }
+
+    function finish(reason) {
       if (finished) return;
       finished = true;
       clearInterval(timerId);
+      document.removeEventListener("keydown", onKey);
 
-      const survived = Math.max(0, depth - 1);
-      const isBest = survived > (S.data.stats.survivalBest || 0);
-      if (isBest) { S.data.stats.survivalBest = survived; S.save(); }
-      S.recordScore("survival", survived);
-      if (survived >= 20) S.bump("perfectRuns");
+      if (depth > (S.data.stats.survivalBest || 0)) {
+        S.data.stats.survivalBest = depth;
+        S.save();
+      }
+      const newBest = S.recordScore("survival", depth);
+      /* Survival ends on the first mistake, so "accuracy" here is depth-based:
+         a run that ends at depth 0 gets no completion bonus at all. */
+      const accuracy = U.clamp(depth / 15, 0, 1);
+      const got = UI.award({
+        xp: xpEarned, bonus: depth >= 10 ? S.streakBonus() : 0, accuracy,
+        coins: coinsEarned + (depth >= 20 ? 50 : 0)
+      });
 
-      // Survival ends on the first wrong answer, so accuracy is depth/(depth+1).
-      const got = UI.award({ xp: xpEarned, coins, bonus: S.streakBonus(),
-                             accuracy: depth ? survived / depth : 0 });
       UI.results({
-        title: isBest ? "New survival record!" : "Run over",
-        correct: survived, total: depth, xp: got.xp, coins: got.coins, newBest: isBest,
-        bonus: Math.min(20, survived),
+        title: reason,
+        correct: depth, total: Math.max(depth + 1, 1), xp: got.xp, coins: got.coins, newBest,
         extraStats: [
-          ["Depth", "Q" + survived],
+          ["Depth", depth],
           ["Best ever", S.data.stats.survivalBest],
-          ["Mode", diff.name]
+          ["Final clock", Math.round(perQuestion) + "s"]
         ],
         onAgain: () => UI.handleRoute()
       });
     }
 
-    nextQuestion();
+    render();
+    return () => clearInterval(timerId);
   }
 
-  return { start, timeFor };
+  return { start };
 })();

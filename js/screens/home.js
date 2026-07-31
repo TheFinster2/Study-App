@@ -1,192 +1,156 @@
-/* Home ("The Lab") — greeting, daily challenge, quick stats and module mastery. */
-window.CHEM = window.CHEM || {};
-CHEM.Screens = CHEM.Screens || {};
+/* Home — the dashboard: hero, daily challenge, weekly quests, mastery, streak. */
+window.MQ = window.MQ || {};
+MQ.Screens = MQ.Screens || {};
 
-CHEM.Screens.home = function (view) {
-  const U = CHEM.U, S = CHEM.State, UI = CHEM.UI;
+MQ.Screens.home = function (view) {
+  const U = MQ.U, S = MQ.State, UI = MQ.UI;
   const d = S.data;
 
-  const hour = new Date().getHours();
-  const greet = hour < 5 ? "Still up?" : hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-
-  /* hero */
-  const hero = U.el("div", { class: "hero" }, [
-    U.el("h1", { text: `${greet}, ${d.profile.name}` }),
-    U.el("p", { html: d.streak.count > 0
-      ? `You're on a <b>${d.streak.count}-day</b> streak. Keep the reaction going.`
-      : "Answer one question today to start a streak." }),
+  /* ── hero ── */
+  const weak = MQ.Bank.weakestTopic();
+  view.appendChild(U.el("div", { class: "hero" }, [
+    U.el("h1", { text: greeting() }),
+    U.el("p", { html: d.stats.answered
+      ? `You have answered <b>${d.stats.answered.toLocaleString()}</b> questions at ` +
+        `<b>${S.overallAccuracy()}%</b> accuracy. ` +
+        (weak ? `Weakest topic right now: <b>${U.escapeHtml(weak.short)}</b>.` : "")
+      : "A game-based trainer for HSC Mathematics. Start anywhere — the app will work out what you need." }),
     U.el("div", { class: "row" }, [
-      U.el("button", {
-        class: "btn btn-primary", text: "⚡ Quick session",
-        on: { click: () => UI.go("/game/rapid") }
-      }),
-      U.el("button", {
-        class: "btn", text: "🃏 Review due cards",
-        on: { click: () => UI.go("/study") }
-      })
+      U.el("button", { class: "btn btn-primary", text: "⚡ Rapid Fire",
+        on: { click: () => UI.go("/game/rapid") } }),
+      weak
+        ? U.el("button", { class: "btn", text: "🎯 Drill " + weak.short,
+            on: { click: () => UI.go("/game/drill/" + weak.id) } })
+        : U.el("button", { class: "btn", text: "🎮 All games", on: { click: () => UI.go("/play") } }),
+      U.el("button", { class: "btn btn-ghost", text: "🗂️ Study", on: { click: () => UI.go("/study") } })
     ])
-  ]);
-  view.appendChild(hero);
-
-  /* daily challenge */
-  const daily = S.daily();
-  const spec = daily.spec;
-  const modeNames = {
-    quiz: "Rapid Fire", balance: "Balance Blitz", ionmatch: "Ion Memory",
-    naming: "Name That Compound", calc: "Calculation Crunch",
-    precipitate: "Precipitation Panic", titration: "Titration Lab", pathway: "Pathway Puzzle"
-  };
-  const complete = daily.progress >= spec.target;
-
-  view.appendChild(U.el("h2", {}, [
-    document.createTextNode("Daily challenge"),
-    U.el("span", { class: "h2-sub", text: "resets at midnight" })
   ]));
 
-  const dailyCard = U.el("div", { class: "card daily" }, [
-    U.el("div", { class: "daily-ico", text: daily.claimed ? "✅" : complete ? "🎁" : "🎯" }),
-    U.el("div", { class: "daily-body" }, [
-      U.el("h3", { text: `${modeNames[spec.mode]} — reach ${spec.target}` }),
-      U.el("div", { class: "bar", style: "margin:8px 0 6px" }, [
-        U.el("i", { style: `width:${U.clamp((daily.progress / spec.target) * 100, 0, 100)}%` })
-      ]),
-      U.el("div", { class: "tiny muted", text:
-        `${daily.progress} / ${spec.target} · reward ${spec.reward} 🪙 + ${spec.xp} XP` })
-    ]),
-    daily.claimed
-      ? U.el("span", { class: "chip on", text: "Claimed" })
-      : complete
-        ? U.el("button", {
-            class: "btn btn-primary", text: "Claim",
-            on: { click: e => {
-              if (S.claimDaily()) {
-                CHEM.Sound.win();
-                CHEM.FX.burstAt(e.target, { count: 40, speed: 7 });
-                UI.toast({ icon: "🎁", kind: "good", text: `<b>Daily complete!</b> +${spec.reward} 🪙 +${spec.xp} XP` });
-                S.checkAchievements();
-                UI.handleRoute();
-              }
-            } }
-          })
-        : U.el("button", {
-            class: "btn", text: "Play",
-            on: { click: () => UI.go("/game/" + dailyRoute(spec.mode)) }
-          })
-  ]);
-  view.appendChild(dailyCard);
-
-  function dailyRoute(mode) {
-    return mode === "quiz" ? "rapid" : mode;
-  }
-
-  /* weekly quests */
-  const quests = S.weeklyQuests();
-  view.appendChild(U.el("h2", {}, [
-    document.createTextNode("Weekly quests"),
-    U.el("span", { class: "h2-sub", text: "resets Monday" })
-  ]));
-  view.appendChild(U.el("div", { class: "grid" }, quests.map(entry => {
-    const q = entry.quest;
-    return U.el("div", { class: "card daily" }, [
-      U.el("div", { class: "daily-ico", text: entry.claimed ? "✅" : q.icon }),
-      U.el("div", { class: "daily-body" }, [
-        U.el("h3", { text: q.name }),
-        U.el("div", { class: "bar", style: "margin:8px 0 6px" }, [
-          U.el("i", { style: `width:${U.clamp((entry.done / entry.target) * 100, 0, 100)}%` })
-        ]),
-        U.el("div", { class: "tiny muted", text:
-          `${q.desc} — ${entry.done} / ${entry.target} · ${q.coins} 🪙 + ${q.xp} XP` })
-      ]),
-      entry.claimed
-        ? U.el("span", { class: "chip on", text: "Claimed" })
-        : entry.complete
-          ? U.el("button", {
-              class: "btn btn-sm btn-primary", text: "Claim",
-              on: { click: e => {
-                if (S.claimQuest(q.id)) {
-                  CHEM.Sound.quest();
-                  CHEM.FX.burstAt(e.target, { count: 40, speed: 7 });
-                  UI.toast({ icon: q.icon, kind: "good",
-                    text: `<b>${U.escapeHtml(q.name)}</b> complete! +${q.coins} 🪙` });
-                  S.checkAchievements();
-                  UI.handleRoute();
-                }
-              } }
-            })
-          : U.el("span", { class: "chip", text: Math.round((entry.done / entry.target) * 100) + "%" })
-    ]);
-  })));
-
-  /* stats */
-  const acc = S.overallAccuracy();
+  /* ── quick stats ── */
   const due = S.dueCards().length;
-  view.appendChild(U.el("h2", { text: "At a glance" }));
-  view.appendChild(U.el("div", { class: "grid g4" }, [
-    tile(d.stats.answered, "Questions"),
-    tile(acc + "%", "Accuracy"),
-    tile(d.stats.bestStreak, "Best streak"),
+  view.appendChild(U.el("div", { class: "grid g4", style: "margin-top:16px" }, [
+    tile(d.level, "Level"),
+    tile(d.streak.count, "Day streak"),
+    tile(S.overallAccuracy() + "%", "Accuracy"),
     tile(due, "Cards due")
   ]));
 
-  function tile(num, lbl) {
+  /* ── daily challenge ── */
+  const daily = S.daily();
+  const spec = daily.spec;
+  const modeName = {
+    rapid: "Rapid Fire", equiv: "Equivalence Engine", match: "Match Pairs",
+    curve: "Read the Curve", crunch: "Calculation Crunch", panic: "Table Panic",
+    lab: "Calculus Lab", proof: "Proof Builder", vector: "Vector Lab"
+  }[spec.mode] || spec.mode;
+
+  view.appendChild(U.el("h2", {}, [
+    document.createTextNode("Daily challenge"),
+    U.el("span", { class: "h2-sub", text: "same for everyone, all day" })
+  ]));
+  view.appendChild(U.el("div", { class: "card daily" }, [
+    U.el("div", { class: "daily-ico", text: daily.claimed ? "✅" : "🎯" }),
+    U.el("div", { class: "daily-body" }, [
+      U.el("div", { style: "font-weight:800; font-size:14.5px",
+        text: `${modeName} — ${spec.target} to complete` }),
+      U.el("div", { class: "bar", style: "margin:8px 0 6px" },
+        [U.el("i", { style: `width:${U.clamp((daily.progress / spec.target) * 100, 0, 100)}%` })]),
+      U.el("div", { class: "tiny muted",
+        text: `${daily.progress} / ${spec.target}  ·  reward ${spec.xp} XP + ${spec.reward} 🔢` })
+    ]),
+    daily.claimed
+      ? U.el("span", { class: "chip on", text: "Claimed" })
+      : daily.progress >= spec.target
+        ? U.el("button", { class: "btn btn-primary btn-sm", text: "Claim", on: { click: () => {
+            if (!S.claimDaily()) return;
+            MQ.Sound.daily();
+            MQ.FX.confetti(110);
+            UI.toast({ icon: "🎁", kind: "good", text: `<b>Daily claimed</b> · +${spec.xp} XP` });
+            UI.handleRoute();
+          } } })
+        : U.el("button", { class: "btn btn-sm", text: "Play", on: { click: () => UI.go("/game/" + spec.mode) } })
+  ]));
+
+  /* ── weekly quests ── */
+  view.appendChild(U.el("h2", {}, [
+    document.createTextNode("Weekly quests"),
+    U.el("span", { class: "h2-sub", text: S.weekKey() })
+  ]));
+  const qGrid = U.el("div", { class: "grid g3" });
+  S.weeklyQuests().forEach(e => {
+    qGrid.appendChild(U.el("div", { class: "card" }, [
+      U.el("div", { class: "row" }, [
+        U.el("div", { style: "font-size:22px", text: e.quest.icon }),
+        U.el("div", { style: "flex:1; min-width:0" }, [
+          U.el("div", { style: "font-weight:800; font-size:13.5px", text: e.quest.name }),
+          U.el("div", { class: "tiny muted", text: e.quest.desc })
+        ])
+      ]),
+      U.el("div", { class: "bar", style: "margin:10px 0 6px" },
+        [U.el("i", { style: `width:${U.clamp((e.done / e.target) * 100, 0, 100)}%` })]),
+      U.el("div", { class: "row" }, [
+        U.el("span", { class: "tiny muted", text: `${e.done} / ${e.target}` }),
+        U.el("div", { class: "spacer" }),
+        e.claimed
+          ? U.el("span", { class: "chip on", text: "Claimed" })
+          : e.complete
+            ? U.el("button", { class: "btn btn-sm btn-primary", text: `+${e.quest.xp} XP`, on: { click: () => {
+                if (!S.claimQuest(e.quest.id)) return;
+                MQ.Sound.quest();
+                MQ.FX.confetti(90);
+                UI.toast({ icon: e.quest.icon, kind: "good", text: `<b>${U.escapeHtml(e.quest.name)}</b> claimed.` });
+                UI.handleRoute();
+              } } })
+            : U.el("span", { class: "chip", text: `+${e.quest.xp} XP` })
+      ])
+    ]));
+  });
+  view.appendChild(qGrid);
+
+  /* ── topic mastery ── */
+  const stats = MQ.Bank.statsByTopic();
+  view.appendChild(U.el("h2", {}, [
+    document.createTextNode("Topic mastery"),
+    U.el("span", { class: "h2-sub", text: "confidence-weighted" })
+  ]));
+  const card = U.el("div", { class: "card" });
+  stats.slice().sort((a, b) => b.mastery - a.mastery).slice(0, 8).forEach(t => {
+    const tier = S.masteryTier(t.mastery);
+    card.appendChild(U.el("div", { class: "mastery-item" }, [
+      U.el("div", { class: "mastery-badge", style: `color:${tier.colour}`, text: tier.icon }),
+      U.el("div", { class: "mastery-body" }, [
+        U.el("div", { class: "mastery-name", text: t.id + " · " + t.short }),
+        U.el("div", { class: "bar" }, [U.el("i", { style: `width:${t.mastery}%` })])
+      ]),
+      U.el("div", { class: "mastery-pct", text: t.mastery + "%" })
+    ]));
+  });
+  card.appendChild(U.el("button", {
+    class: "btn btn-ghost btn-block btn-sm", style: "margin-top:12px",
+    text: "See every topic", on: { click: () => UI.go("/progress") }
+  }));
+  view.appendChild(card);
+
+  /* ── the reference library, one tap away ── */
+  view.appendChild(U.el("h2", { text: "Need a formula?" }));
+  view.appendChild(U.el("button", {
+    class: "btn btn-ghost btn-block", text: "📖 Open the Reference Library",
+    on: { click: () => UI.go("/reference") }
+  }));
+
+  function tile(num, label) {
     return U.el("div", { class: "card stat-tile" }, [
       U.el("div", { class: "stat-num", text: String(num) }),
-      U.el("div", { class: "stat-lbl", text: lbl })
+      U.el("div", { class: "stat-lbl", text: label })
     ]);
   }
 
-  /* module mastery */
-  const stats = CHEM.Bank.statsByModule();
-  const y12 = stats.filter(m => m.year === 12);
-  const y11 = stats.filter(m => m.year === 11);
-
-  view.appendChild(U.el("h2", {}, [
-    document.createTextNode("Module mastery"),
-    U.el("span", { class: "h2-sub", text: "Year 12 focus" })
-  ]));
-
-  const masteryCard = U.el("div", { class: "card" });
-  y12.concat(y11).forEach(m => {
-    masteryCard.appendChild(U.el("div", { class: "mastery-item" }, [
-      U.el("div", { class: "mastery-badge", text: m.id }),
-      U.el("div", { class: "mastery-body" }, [
-        U.el("div", { class: "mastery-name", text: m.short }),
-        U.el("div", { class: "bar" }, [U.el("i", { style: `width:${m.mastery}%` })])
-      ]),
-      U.el("div", { class: "mastery-pct", text: m.mastery + "%" }),
-      U.el("button", {
-        class: "chip chip-btn", text: "Drill",
-        on: { click: () => UI.go("/game/drill/" + m.id) }
-      })
-    ]));
-  });
-  view.appendChild(masteryCard);
-
-  /* weak spots */
-  const weak = stats.filter(m => m.seen >= 5).sort((a, b) => a.accuracy - b.accuracy)[0];
-  if (weak && weak.accuracy < 75) {
-    view.appendChild(U.el("h2", { text: "Suggested next" }));
-    view.appendChild(U.el("div", { class: "card daily" }, [
-      U.el("div", { class: "daily-ico", text: "🎯" }),
-      U.el("div", { class: "daily-body" }, [
-        U.el("h3", { text: weak.short }),
-        U.el("p", { class: "tiny muted", style: "margin:0",
-          text: `Your weakest module right now at ${weak.accuracy}% accuracy over ${weak.seen} questions.` })
-      ]),
-      U.el("button", { class: "btn btn-sm btn-primary", text: "Practise",
-        on: { click: () => UI.go("/game/drill/" + weak.id) } })
-    ]));
-  }
-
-  if (d.mistakes.length) {
-    view.appendChild(U.el("div", { class: "card daily", style: "margin-top:12px" }, [
-      U.el("div", { class: "daily-ico", text: "🩹" }),
-      U.el("div", { class: "daily-body" }, [
-        U.el("h3", { text: `${d.mistakes.length} question${d.mistakes.length === 1 ? "" : "s"} to fix` }),
-        U.el("p", { class: "tiny muted", style: "margin:0",
-          text: "Questions you've missed come back until you get them right." })
-      ]),
-      U.el("button", { class: "btn btn-sm", text: "Rehab", on: { click: () => UI.go("/game/mistakes") } })
-    ]));
+  function greeting() {
+    const h = new Date().getHours();
+    const who = S.levelTitle(d.level);
+    if (h < 5) return "Still up, " + who + "?";
+    if (h < 12) return "Morning, " + who;
+    if (h < 18) return "Afternoon, " + who;
+    return "Evening, " + who;
   }
 };
