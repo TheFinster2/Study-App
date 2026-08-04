@@ -1,0 +1,128 @@
+<!doctype html>
+<!-- Reference for PHYSICS-BRIEF.md section 6. Open this file in a browser.
+
+     The first row is what the maths briefs specified and is deliberately WRONG: the
+     fraction bar lands 13.7px below the maths axis at 17px text, about 1.5x the
+     x-height. Everything below it is the fixed version, measured at 0.01px off.
+
+     This page is the fixture for the notation alignment test described in section 6.4.
+-->
+<meta charset="utf-8">
+<title>notation alignment probe</title>
+<style>
+  body{ background:#0a0f1c; color:#eef3ff; font-family:"Segoe UI",system-ui,sans-serif;
+        font-size:17px; line-height:1.65; padding:28px; max-width:760px; }
+  h3{ color:#39d6c8; font-size:13px; text-transform:uppercase; letter-spacing:.08em; margin:26px 0 8px; }
+  .row{ padding:7px 0; border-bottom:1px dashed rgba(255,255,255,.10); }
+
+  /* ---------- BAD: what the maths brief told them to build ---------- */
+  .bad-frac{ display:inline-flex; flex-direction:column; text-align:center; }
+  .bad-frac > span:last-child{ border-top:1px solid currentColor; }
+
+  /* ---------- GOOD ---------- */
+
+  /* A fraction is a two-row inline-grid whose vertical midpoint IS the bar, so
+     `vertical-align: middle` lands the bar on the maths axis of the surrounding
+     text. CSS defines `middle` as (baseline + half the parent's x-height), which is
+     the maths axis by definition — so this stays correct at any font size, in any
+     font, without a magic offset. */
+  .frac{
+    display:inline-grid;
+    grid-template-rows:1fr 1fr;
+    justify-items:center;
+    vertical-align:middle;
+    font-size:.94em;
+    line-height:1.12;
+    /* Keep the two halves symmetric about the bar, or the midpoint drifts off it. */
+    text-align:center;
+  }
+  .frac > .num{ padding:0 .22em .06em; }
+  .frac > .den{ padding:.06em .22em 0; border-top:.075em solid currentColor; }
+
+  /* Superscript and subscript with `position:relative`, NOT `vertical-align:super`.
+     The vertical-align keywords grow the line box, so a line containing v² sits
+     further from its neighbours than one that doesn't — ragged paragraphs and a
+     jumping question card. `position:relative` shifts the glyph and leaves the line
+     box alone. */
+  .sup, .sub{ font-size:.72em; position:relative; line-height:0; }
+  .sup{ top:-.46em; }
+  .sub{ top: .26em; }
+
+  /* Simultaneous superscript + subscript, e.g. nuclear notation. Two rows, right
+     aligned against the symbol, and the same `vertical-align:middle` trick so the
+     pair straddles the maths axis. */
+  .updown{
+    display:inline-grid; grid-template-rows:1fr 1fr; justify-items:end;
+    vertical-align:middle; font-size:.7em; line-height:1.05; margin-right:.06em;
+  }
+
+  /* Vector: an overbar arrow that scales with the glyph and never collides with it. */
+  .vec{ position:relative; white-space:nowrap; }
+  .vec::after{
+    content:"→"; position:absolute; left:50%; transform:translateX(-50%);
+    top:-.72em; font-size:.62em; line-height:1; pointer-events:none;
+  }
+
+  /* Square root. The body must be its own BOX, not a run of inline text, or the
+     overline is drawn at the line-box top and slices through anything tall inside it
+     (a fraction under the radical gets a strikethrough). inline-flex + align-items:
+     stretch also lets the radical grow to match, which it must for v = sqrt(2GM/r). */
+  .sqrt{ display:inline-flex; align-items:stretch; vertical-align:middle; white-space:nowrap; }
+  /* The radical is an SVG, not the U+221A glyph. A glyph is a fixed size, so over a
+     fraction it sits at the bottom and the overline starts in mid-air above it. With
+     preserveAspectRatio="none" the SVG stretches to whatever height the flex line is,
+     so the hook always meets the bar. */
+  /* The svg is absolutely positioned inside the stretched box. `height:100%` on it
+     directly resolves against an AUTO height, which is indeterminate — Chromium then
+     falls back to the SVG default of 150px and the radical towers over the line. */
+  .sqrt > .rad{ position:relative; width:.6em; align-self:stretch; }
+  .sqrt > .rad svg{ position:absolute; inset:0; width:100%; height:100%; }
+  .sqrt > .body{
+    border-top:.07em solid currentColor;
+    padding:.14em .2em 0 .08em;
+    display:flex; align-items:center;
+  }
+
+  .unit{ white-space:nowrap; }
+  .probe{ display:inline-block; width:0; height:1ex; vertical-align:baseline; }
+</style>
+
+<h3>The problem — inline-flex column (what the maths brief specified)</h3>
+<div class="row" id="bad">
+  Average velocity is <span class="bad-frac"><span>&Delta;x</span><span>&Delta;t</span></span>
+  and the bar sits below the baseline.
+</div>
+
+<h3>Fixed — inline-grid + vertical-align:middle</h3>
+<div class="row" id="good">
+  Average velocity is <span class="frac" id="f1"><span class="num">&Delta;x</span><span class="den">&Delta;t</span></span>
+  and the bar sits on the maths axis.
+</div>
+<div class="row">
+  Bigger numerator: <span class="frac"><span class="num">m<span class="sub">1</span>m<span class="sub">2</span></span><span class="den">r<span class="sup">2</span></span></span>
+  &nbsp;·&nbsp; nested: <span class="frac"><span class="num">1</span><span class="den"><span class="frac"><span class="num">1</span><span class="den">u</span></span> + <span class="frac"><span class="num">1</span><span class="den">v</span></span></span></span>
+</div>
+
+<h3>Superscript / subscript do not disturb the line box</h3>
+<div class="row" id="plain">A line with no superscripts at all, for comparison of height.</div>
+<div class="row" id="withsup">A line with E<span class="sub">k</span> = &frac12;mv<span class="sup">2</span> and v<span class="sup">2</span> = u<span class="sup">2</span> + 2as in it.</div>
+
+<h3>Simultaneous sub + superscript</h3>
+<div class="row">
+  <span class="updown"><span>235</span><span>92</span></span>U &rarr;
+  <span class="updown"><span>231</span><span>90</span></span>Th +
+  <span class="updown"><span>4</span><span>2</span></span>He
+</div>
+
+<h3>Vectors, roots, units, scientific notation</h3>
+<div class="row">
+  <span class="vec">F</span> = m<span class="vec">a</span> &nbsp;·&nbsp;
+  <span class="sqrt"><span class="rad"><svg viewBox="0 0 12 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0.5,62 L4,56 L7,95 L11.5,3" fill="none" stroke="currentColor" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="body">u<span class="sup">2</span> + 2as</span></span> &nbsp;·&nbsp;
+  <span class="unit">m s<span class="sup">&minus;2</span></span> &nbsp;·&nbsp;
+  <span class="unit">N m<span class="sup">2</span> kg<span class="sup">&minus;2</span></span> &nbsp;·&nbsp;
+  3.00 &times; 10<span class="sup">8</span> <span class="unit">m s<span class="sup">&minus;1</span></span>
+</div>
+<div class="row">
+  In a sentence: the escape velocity is <span class="sqrt"><span class="rad"><svg viewBox="0 0 12 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0.5,62 L4,56 L7,95 L11.5,3" fill="none" stroke="currentColor" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="body"><span class="frac"><span class="num">2GM</span><span class="den">r</span></span></span></span>
+  which for Earth is 1.12 &times; 10<span class="sup">4</span> <span class="unit">m s<span class="sup">&minus;1</span></span>.
+</div>
