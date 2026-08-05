@@ -193,13 +193,18 @@ CHEM.Screens.play = (function () {
     view.appendChild(U.el("h1", { text: "Pick a module" }));
     view.appendChild(U.el("p", { text: "15 adaptive questions — the app favours topics you've missed before." }));
 
-    const stats = CHEM.Bank.statsByModule();
+    /* A module switched off in Settings has nothing to draw, so don't offer it —
+       and drop its year heading too rather than leaving an empty section. */
+    const live = new Set(CHEM.Bank.activeModules().map(m => m.id));
+    const stats = CHEM.Bank.statsByModule().filter(m => live.has(m.id));
     const grid = U.el("div", { class: "grid g2", style: "margin-top:14px" });
 
     [12, 11].forEach(year => {
+      const inYear = stats.filter(m => m.year === year);
+      if (!inYear.length) return;
       grid.appendChild(U.el("div", { class: "muted tiny", style: "grid-column:1/-1; margin-top:6px",
         text: year === 12 ? "YEAR 12 — HSC MODULES" : "YEAR 11 — FOUNDATION MODULES" }));
-      stats.filter(m => m.year === year).forEach(m => {
+      inYear.forEach(m => {
         const card = U.el("button", { class: "game-card", style: "--gc:var(--glow-a)" }, [
           U.el("div", { class: "game-name", text: `${m.id} · ${m.short}` }),
           U.el("div", { class: "game-desc", text: m.name }),

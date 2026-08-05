@@ -24,6 +24,57 @@ CHEM.Bank = (function () {
 
   const byId = id => { all(); return INDEX.get(id); };
 
+  /* ── course coverage ─────────────────────────────────────────
+     `all()` stays the complete bank — achievement targets, module totals and the
+     content validator all measure against everything, so switching a topic off can
+     never shorten a collection. `active()` is what actually gets asked.
+
+     Cached against the set of hidden ids rather than recomputed per draw: a drill
+     filters the bank several times per question. */
+  let ACTIVE = null, ACTIVE_CARDS = null, COVER_KEY = null;
+
+  function coverageKey() {
+    const h = (CHEM.State.data.settings || {}).hidden || {};
+    return Object.keys(h).filter(k => h[k]).sort().join(",");
+  }
+
+  function hiddenSets() {
+    const hid = CHEM.State.hiddenTags();
+    const mods = new Set(), topics = new Set(), cards = new Set(), naming = new Set();
+    (CHEM.DATA.coverage || []).forEach(p => {
+      if (!hid.has(p.id)) return;
+      (p.mods || []).forEach(m => mods.add(m));
+      (p.topics || []).forEach(t => topics.add(t));
+      (p.cards || []).forEach(c => cards.add(c));
+      (p.naming || []).forEach(f => naming.add(f));
+    });
+    return { mods, topics, cards, naming };
+  }
+
+  function refreshCoverage() {
+    const key = coverageKey();
+    if (COVER_KEY === key && ACTIVE) return;
+    COVER_KEY = key;
+    const h = hiddenSets();
+    ACTIVE = all().filter(q => !h.mods.has(q.mod) && !h.topics.has(q.topic));
+    ACTIVE_CARDS = cards().filter(c => !h.mods.has(c.mod) && !h.cards.has(c.id));
+  }
+
+  /** The questions currently being asked, after Settings → Course coverage. */
+  function active() { refreshCoverage(); return ACTIVE; }
+  /** The flashcards currently in the deck. */
+  function activeCards() { refreshCoverage(); return ACTIVE_CARDS; }
+  /** Naming entries currently being asked. */
+  function activeNaming() {
+    const h = hiddenSets();
+    return CHEM.DATA.naming.filter(n => !h.naming.has(n.family));
+  }
+  /** Modules that still have something to ask. */
+  function activeModules() {
+    const on = active();
+    return MODULES.filter(m => on.some(q => q.mod === m.id));
+  }
+
   /* The flashcard deck, gathered the same way and for the same reason: every
      CHEM.DATA key named `flashcards…` is folded into one deck. Discovery rather than
      concatenation keeps it independent of script order — appending inside a data file
@@ -55,7 +106,7 @@ CHEM.Bank = (function () {
 
   function filter(opts) {
     const o = opts || {};
-    let pool = all();
+    let pool = active();
     if (o.mods && o.mods.length) pool = pool.filter(q => o.mods.includes(q.mod));
     if (o.maxDiff) pool = pool.filter(q => q.diff <= o.maxDiff);
     if (o.minDiff) pool = pool.filter(q => q.diff >= o.minDiff);
@@ -80,7 +131,8 @@ CHEM.Bank = (function () {
   function draw(n, opts) {
     const o = opts || {};
     let pool = filter(o);
-    if (!pool.length) pool = all();
+    // Falling back to all() here would put hidden content straight back in play.
+    if (!pool.length) pool = active();
 
     let chosen;
     if (o.adaptive === false) {
@@ -134,5 +186,7 @@ CHEM.Bank = (function () {
     });
   }
 
-  return { all, byId, cards, MODULES, moduleName, filter, draw, shuffleChoices, mistakeQuestions, statsByModule };
+  return { all, byId, cards, MODULES, moduleName, filter, draw, shuffleChoices,
+           mistakeQuestions, statsByModule,
+           active, activeCards, activeNaming, activeModules };
 })();

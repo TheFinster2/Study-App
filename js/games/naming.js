@@ -34,7 +34,7 @@ CHEM.Games.naming = (function () {
     S.markMode("naming");
     S.touchStreak();
 
-    const all = CHEM.DATA.naming;
+    const all = CHEM.Bank.activeNaming();
     const items = U.sample(all, c.count);
     let idx = 0, correct = 0, streak = 0, best = 0, xpEarned = 0, coins = 0, finished = false;
     let penalty = 0, shownAt = 0;

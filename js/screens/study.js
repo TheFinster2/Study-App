@@ -30,7 +30,7 @@ CHEM.Screens.study = (function () {
   /* ── flashcards ─────────────────────────────────────────── */
   function cards(view) {
     const due = S.dueCards();
-    const total = CHEM.Bank.cards().length;
+    const total = CHEM.Bank.activeCards().length;
     const mastered = Object.values(S.data.srs).filter(c => c.box >= 5).length;
 
     view.appendChild(U.el("div", { class: "grid g3" }, [
@@ -44,7 +44,7 @@ CHEM.Screens.study = (function () {
         U.el("p", { text: "No cards are due. Spaced repetition brings them back automatically — come back tomorrow, or drill the full deck anyway." }),
         U.el("button", {
           class: "btn btn-primary", text: "Review the whole deck",
-          on: { click: () => session(view, U.shuffle(CHEM.Bank.cards()).slice(0, 20), true) }
+          on: { click: () => session(view, U.shuffle(CHEM.Bank.activeCards()).slice(0, 20), true) }
         })
       ]));
       return;
@@ -63,7 +63,7 @@ CHEM.Screens.study = (function () {
 
     /* deck breakdown by module */
     const byMod = {};
-    CHEM.Bank.cards().forEach(c => {
+    CHEM.Bank.activeCards().forEach(c => {
       const b = (S.data.srs[c.id] || {}).box || 0;
       const m = byMod[c.mod] || (byMod[c.mod] = { total: 0, done: 0 });
       m.total++;

@@ -127,10 +127,14 @@ over the explanation you were mid-way through reading, and the results screen ha
 can re-read the solution without quitting the run and throwing it away.
 
 **Course coverage.** Schools finish modules at different times, so a trial exam may not
-include everything the syllabus does. Settings → *Course coverage* switches off topics your
-class hasn't reached, and they stop being asked. In Pathway Puzzle a switched-off topic is
-removed from the reaction graph itself, not just from the puzzle list — so no route is
-plotted through chemistry you haven't been taught, and its reagent cards aren't dealt.
+include everything the syllabus does. Settings → *Course coverage* has **eleven** switches —
+the whole of Year 11, plus the topics most often still untaught at trials: polymers and
+polyesters, soaps and detergents, biofuels, amines and amides, NMR, mass spectrometry and
+infrared, AAS and colorimetry, organic analysis and synthesis, buffers, and ocean
+acidification. Switching one off removes its questions, its flashcards and its naming
+entries, and drops any module left empty from the picker. In Pathway Puzzle a switched-off
+topic is removed from the reaction graph itself, not just from the puzzle list — so no route
+is plotted through chemistry you haven't been taught, and its reagent cards aren't dealt.
 Hiding a topic never raises what the remaining questions pay, and achievement targets still
 count the whole bank, so it can't be used to shortcut a collection.
 
@@ -143,7 +147,7 @@ button and is never cleared for the rest of the run, so peeking is a one-way doo
 **No length tells.** Options are deliberately length-matched. Question banks are written
 with mini-explanation keys by default, which makes the correct answer the longest option
 and lets a student score ~64% by always picking it. Every option was rewritten until the
-key is strictly longest in **22.9%** of questions — *below* the 25% you'd get by chance —
+key is strictly longest in **24.9%** of questions — *below* the 25% you'd get by chance —
 and the validator fails the build if that climbs past 32% overall or **36% in any single
 module**. The per-module limit matters: a healthy 24% bank average once hid one module
 sitting at 38%.
@@ -189,8 +193,8 @@ all day and identical for everyone.
 
 Everything lives in `js/data/` as plain JS — edit it without touching the engine.
 
-- **944** multiple-choice questions across all 8 modules, each with a worked explanation
-  (M1 110 · M2 112 · M3 85 · M4 75 · M5 139 · M6 141 · M7 141 · M8 141)
+- **1,091** multiple-choice questions across all 8 modules, each with a worked explanation
+  (M1 110 · M2 112 · M3 85 · M4 75 · M5 175 · M6 176 · M7 177 · M8 181)
 - **36** balancing equations (all verified to balance in lowest terms)
 - **263** flashcards across all 8 modules
   (M1 34 · M2 24 · M3 22 · M4 18 · M5 32 · M6 42 · M7 43 · M8 48)
@@ -291,7 +295,7 @@ save, the service worker's precache list is diffed against the files on disk, an
 answer-length distribution is checked per module so the correct option never becomes
 guessable. Question stems are also compared pairwise within each topic — bigram Jaccard
 above 0.75, or an identical stem — which caught 22 accidental restatements while the bank
-grew from 374 to 944. Bigrams rather than single words, because "ΔH < 0 and ΔS > 0" and
+grew from 374 to 1,091. Bigrams rather than single words, because "ΔH < 0 and ΔS > 0" and
 "ΔH > 0 and ΔS < 0" share every token and are opposite questions. A
 Playwright script drives all ten modes, a boss fight, a shop purchase, a crate opening, a
 theme switch and a reload-persistence check, plus horizontal-overflow checks across 17

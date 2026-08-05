@@ -119,8 +119,8 @@ CHEM.DATA.pathwayNodes = {
   ethanoate:    { label:"Sodium ethanoate",    sub:"CH₃COONa" },
   ethanediol:   { label:"Ethane-1,2-diol",     sub:"HOCH₂CH₂OH" },
   pet:          { label:"Polyester (PET)",     sub:"-(OCH₂CH₂OOC…)ₙ-", tag:"polymers" },
-  ethanamine:   { label:"Ethanamine",          sub:"CH₃CH₂NH₂" },
-  ethanamide:   { label:"Ethanamide",          sub:"CH₃CONH₂" },
+  ethanamine:   { label:"Ethanamine",          sub:"CH₃CH₂NH₂", tag:"aminesamides" },
+  ethanamide:   { label:"Ethanamide",          sub:"CH₃CONH₂", tag:"aminesamides" },
 
   /* C₃ family. Note that propan-1-ol cannot be reached from propene — hydration
      is Markovnikov, so it gives propan-2-ol — which is exactly the point of
@@ -164,7 +164,7 @@ CHEM.DATA.reagents = [
      ester is named. */
   { id:"esterify_acid", label:"Ethanoic acid + conc. H₂SO₄", sub:"esterify — alcohol side" },
   { id:"hcl_add",    label:"HCl(g)",                      sub:"addition across C=C" },
-  { id:"nh3_excess", label:"Excess NH₃, heat",            sub:"ammonia as a nucleophile" },
+  { id:"nh3_excess", label:"Excess NH₃, heat",            sub:"ammonia as a nucleophile", tag:"aminesamides" },
   { id:"terephthalic", label:"Benzene-1,4-dicarboxylic acid, heat", sub:"condensation polymerisation", tag:"polymers" }
 ];
 
