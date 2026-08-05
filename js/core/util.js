@@ -108,14 +108,67 @@ CHEM.U = (function () {
     return Math.round(x * factor) / factor;
   }
 
+  const SUPER = { "⁰":"0","¹":"1","²":"2","³":"3","⁴":"4","⁵":"5","⁶":"6","⁷":"7","⁸":"8","⁹":"9","⁻":"-","⁺":"+" };
+
+  /**
+   * Read a number the way a student might actually write it. Accepts 3.2e-4, 3.2E-4,
+   * 3.2 × 10^-4, 3.2x10-4, 3.2*10^-4, 3.2 × 10⁻⁴, a bare 10^-4, a Unicode minus sign,
+   * thousands separators, and a trailing unit. Returns NaN if there is no number.
+   *
+   * The exponent marker must be explicit — an × or x or * before the 10, or a caret
+   * after it. Matching a bare "10" would turn 310 into 3e0.
+   */
+  function parseNum(raw) {
+    if (raw === null || raw === undefined) return NaN;
+    let s = String(raw)
+      .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]/g, ch => SUPER[ch])   // 10⁻⁴ → 10-4
+      .replace(/[−–—]/g, "-")           // − – — → -
+      .replace(/[\s,]/g, "");
+    s = s.replace(/^10\^/, "1e");                      // 10^-4, no mantissa
+    s = s.replace(/[×x*]10\^?/gi, "e");                // 3.2×10^-4 / 3.2x10-4 / 3.2*10^-4
+    const v = parseFloat(s);                           // also handles a trailing unit
+    return isFinite(v) ? v : NaN;
+  }
+
+  const SUP_DIGITS = { "-": "⁻", "0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹" };
+
+  /**
+   * Format in proper scientific notation — 3.2 × 10⁻⁴, not "3.2e-4". Used to echo back
+   * what the app understood the student to have typed, and to show the expected answer.
+   * Numbers comfortably inside everyday range are left alone.
+   */
+  function sci(x, figs) {
+    if (!isFinite(x)) return "—";
+    if (x === 0) return "0";
+    const mag = Math.floor(Math.log10(Math.abs(x)));
+    if (mag >= -3 && mag < 5) return String(sigFig(x, figs || 4));
+    const mant = sigFig(x / Math.pow(10, mag), figs || 3);
+    return mant + " × 10" + String(mag).replace(/[-\d]/g, ch => SUP_DIGITS[ch]);
+  }
+
   /** Compare a typed numeric answer to the expected value within a relative tolerance. */
   function numClose(input, expected, tolRel) {
-    const v = parseFloat(String(input).replace(/[, ]/g, "").replace(/×10\^?/i, "e").replace(/x10\^?/i, "e"));
+    const v = parseNum(input);
     if (!isFinite(v)) return false;
     const tol = Math.abs(expected * (tolRel === undefined ? 0.02 : tolRel));
     return Math.abs(v - expected) <= Math.max(tol, 1e-12);
   }
 
+  /**
+   * Is this answer the right digits with the wrong power of ten? Worth saying so
+   * explicitly: before the answer pad existed, a phone keypad could not type an
+   * exponent at all, so "the mantissa on its own" was the natural thing to enter.
+   */
+  function wrongPowerOfTen(input, expected) {
+    const v = parseNum(input);
+    if (!isFinite(v) || v === 0 || expected === 0) return 0;
+    if (Math.sign(v) !== Math.sign(expected)) return 0;
+    const e = Math.log10(Math.abs(expected / v));
+    const n = Math.round(e);
+    return n !== 0 && Math.abs(e - n) < 0.02 ? n : 0;
+  }
+
   return { $, $$, el, clamp, randInt, pick, shuffle, sample, escapeHtml, formula, toSub,
-           dayKey, daysBetween, hash, seededRandom, seededShuffle, fmtTime, pct, sigFig, numClose };
+           dayKey, daysBetween, hash, seededRandom, seededShuffle, fmtTime, pct, sigFig,
+           parseNum, numClose, wrongPowerOfTen, sci };
 })();

@@ -205,6 +205,7 @@ CHEM.Games.titration = (function () {
           `Now calculate: using <b>your</b> titre of ${vb.toFixed(2)} mL of ${cb.toFixed(4)} mol L⁻¹ ${sc.titrant}, ` +
           `what is the concentration of the ${va.toFixed(2)} mL ${sc.analyte} aliquot? (1 : 1 stoichiometry)` }),
         U.el("div", { style: "margin-top:16px" }, [input]),
+        UI.answerPad(input),
         U.el("div", { class: "unit-hint", text: "Answer in mol L⁻¹, 4 significant figures" })
       ]);
       const submit = U.el("button", { class: "btn btn-primary btn-block", text: "Submit calculation" });

@@ -391,6 +391,12 @@ code,.mono{ font-family:"Cascadia Code",ui-monospace,"SF Mono",Menlo,Consolas,mo
 .numin:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent); }
 .unit-hint{ text-align:center; color:var(--ink-faint); font-size:12.5px; margin-top:6px; }
 
+/* Keys a phone's decimal keypad doesn't have, plus a live reading of what we parsed. */
+.pad{ display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap; }
+.pad-key{ min-width:56px; font-variant-numeric:tabular-nums; }
+.pad-echo{ text-align:right; flex:1; min-width:0; }
+.pad-echo.bad{ color:var(--warn); }
+
 /* balancer */
 .eqline{ display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; margin:18px 0; }
 .eqterm{ display:flex; align-items:center; gap:3px; }

@@ -112,6 +112,15 @@ end point more than 0.5 mL out pays nothing. Flashcards are self-graded, so a ca
 only once per day, only if it was genuinely due, and only if it stayed on screen long
 enough to read. A bot spamming every mode earns **0 XP**; it used to earn 35,000 XP/hour.
 
+**Answers you can actually type.** A phone's decimal keypad offers digits and a decimal
+point and nothing else — no minus sign, no exponent — so a question asking for an answer in
+scientific notation was unanswerable on the device most of them are answered on. Numeric
+inputs carry a **×10ⁿ** and **−** key and echo back the value they parsed
+(*"reading this as 1.5 × 10⁻⁴"*), so a wrong mark can never be the parser's fault without you
+knowing. Answers are accepted in any equivalent form — `3.2e-4`, `3.2 × 10^-4`, `3.2 × 10⁻⁴`
+or `0.00032` — and a reply with the right digits but the wrong power of ten is told exactly
+that rather than just marked wrong.
+
 **The working stays readable.** A run's results open only when you ask for them, never
 over the explanation you were mid-way through reading, and the results screen has a
 *Review the working* button that dismisses itself and leaves a floating way back — so you

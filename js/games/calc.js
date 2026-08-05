@@ -71,9 +71,9 @@ CHEM.Games.calc = (function () {
       const c = parseFloat((Math.pow(10, -U.randInt(1, 5)) * U.randInt(1, 9)).toPrecision(2));
       return {
         topic: "pH", diff: 2,
-        q: `A strong monoprotic acid has [H₃O⁺] = ${c.toExponential(1)} mol L⁻¹. What is the pH? (2 d.p.)`,
+        q: `A strong monoprotic acid has [H₃O⁺] = ${U.sci(c, 2)} mol L⁻¹. What is the pH? (2 d.p.)`,
         answer: -Math.log10(c), unit: "", tol: 0.01,
-        why: `pH = −log₁₀(${c.toExponential(1)}) = ${(-Math.log10(c)).toFixed(2)}.`
+        why: `pH = −log₁₀(${U.sci(c, 2)}) = ${(-Math.log10(c)).toFixed(2)}.`
       };
     },
 
@@ -81,9 +81,9 @@ CHEM.Games.calc = (function () {
       const pH = r(1.5, 5.5, 2);
       return {
         topic: "pH", diff: 2,
-        q: `A solution has pH = ${pH}. What is [H₃O⁺] in mol L⁻¹? (use scientific notation, e.g. 3.2e-4)`,
+        q: `A solution has pH = ${pH}. What is [H₃O⁺] in mol L⁻¹?`,
         answer: Math.pow(10, -pH), unit: "mol L⁻¹", tol: 0.03,
-        why: `[H₃O⁺] = 10^(−pH) = 10^(−${pH}) = ${Math.pow(10, -pH).toExponential(2)} mol L⁻¹.`
+        why: `[H₃O⁺] = 10^(−pH) = 10^(−${pH}) = ${U.sci(Math.pow(10, -pH), 3)} mol L⁻¹.`
       };
     },
 
@@ -108,9 +108,9 @@ CHEM.Games.calc = (function () {
       const h = Math.sqrt(acid.ka * c);
       return {
         topic: "Weak acids", diff: 3,
-        q: `What is the pH of a ${c} mol L⁻¹ solution of ${acid.name} (Ka = ${acid.ka.toExponential(1)})? (2 d.p.)`,
+        q: `What is the pH of a ${c} mol L⁻¹ solution of ${acid.name} (Ka = ${U.sci(acid.ka, 2)})? (2 d.p.)`,
         answer: -Math.log10(h), unit: "", tol: 0.02,
-        why: `[H₃O⁺] = √(Ka × c) = √(${acid.ka.toExponential(1)} × ${c}) = ${h.toExponential(2)}; pH = ${(-Math.log10(h)).toFixed(2)}.`
+        why: `[H₃O⁺] = √(Ka × c) = √(${U.sci(acid.ka, 2)} × ${c}) = ${U.sci(h, 3)}; pH = ${(-Math.log10(h)).toFixed(2)}.`
       };
     },
 
@@ -145,7 +145,7 @@ CHEM.Games.calc = (function () {
         topic: "Titration", diff: 3,
         q: `${vBase} mL of NaOH required ${vAcid} mL of ${cAcid} mol L⁻¹ HCl to reach the end point. What is [NaOH] in mol L⁻¹? (1:1 ratio)`,
         answer: cBase, unit: "mol L⁻¹",
-        why: `n(HCl) = ${(vAcid / 1000).toFixed(5)} × ${cAcid} = ${(cAcid * vAcid / 1000).toExponential(3)} mol. Same moles of NaOH in 0.02500 L → c = ${U.sigFig(cBase, 4)} mol L⁻¹.`
+        why: `n(HCl) = ${(vAcid / 1000).toFixed(5)} × ${cAcid} = ${U.sci(cAcid * vAcid / 1000, 4)} mol. Same moles of NaOH in 0.02500 L → c = ${U.sigFig(cBase, 4)} mol L⁻¹.`
       };
     },
 
@@ -206,9 +206,9 @@ CHEM.Games.calc = (function () {
       ]);
       return {
         topic: "Solubility", diff: 3,
-        q: `${salt.f} has Ksp = ${salt.ksp.toExponential(1)}. What is its molar solubility in pure water, in mol L⁻¹? (1:1 salt, use scientific notation)`,
+        q: `${salt.f} has Ksp = ${U.sci(salt.ksp, 2)}. What is its molar solubility in pure water, in mol L⁻¹? (1:1 salt)`,
         answer: Math.sqrt(salt.ksp), unit: "mol L⁻¹", tol: 0.03,
-        why: `Ksp = s² for a 1:1 salt, so s = √(${salt.ksp.toExponential(1)}) = ${Math.sqrt(salt.ksp).toExponential(2)} mol L⁻¹.`
+        why: `Ksp = s² for a 1:1 salt, so s = √(${U.sci(salt.ksp, 2)}) = ${U.sci(Math.sqrt(salt.ksp), 3)} mol L⁻¹.`
       };
     },
 
@@ -233,9 +233,9 @@ CHEM.Games.calc = (function () {
       const n = r(0.1, 2.5, 2);
       return {
         topic: "The mole", diff: 2,
-        q: `How many formula units are in ${n} mol of ${cpd.f}? (Nₐ = 6.022 × 10²³, use scientific notation)`,
+        q: `How many formula units are in ${n} mol of ${cpd.f}? (Nₐ = 6.022 × 10²³)`,
         answer: n * 6.022e23, unit: "particles", tol: 0.02,
-        why: `N = n × Nₐ = ${n} × 6.022 × 10²³ = ${(n * 6.022e23).toExponential(2)}.`
+        why: `N = n × Nₐ = ${n} × 6.022 × 10²³ = ${U.sci(n * 6.022e23, 3)}.`
       };
     }
   ];
@@ -273,7 +273,9 @@ CHEM.Games.calc = (function () {
         ]),
         U.el("div", { class: "qtext", html: U.formula(prob.q) }),
         U.el("div", { style: "margin-top:18px" }, [input]),
-        U.el("div", { class: "unit-hint", text: prob.unit ? "Answer in " + prob.unit : "Answer as a number" })
+        UI.answerPad(input),
+        U.el("div", { class: "unit-hint", text:
+          (prob.unit ? "Answer in " + prob.unit : "Answer as a number") + " · use ×10ⁿ for powers of ten" })
       ]);
 
       const submit = U.el("button", { class: "btn btn-primary btn-block", text: "Submit", on: { click: check } });
@@ -313,11 +315,17 @@ CHEM.Games.calc = (function () {
         streakChip.textContent = "Streak " + streak;
         xpChip.textContent = Math.max(0, xpEarned - penalty) + " XP";
 
-        const shown = Math.abs(prob.answer) < 0.001 || Math.abs(prob.answer) > 1e5
-          ? prob.answer.toExponential(3)
-          : U.sigFig(prob.answer, 4);
+        const shown = U.sci(prob.answer, 4);
+        /* Say so when the digits are right and only the power of ten is wrong — that is
+           what a student ends up entering when they can't type an exponent, and being
+           told only "wrong" hides that they had the chemistry. */
+        const pow = ok ? 0 : U.wrongPowerOfTen(input.value, prob.answer);
+        const note = pow
+          ? `<br><b>Right digits, wrong power of ten</b> — you were out by a factor of 10${pow > 0 ? "" : "⁻"}` +
+            `${String(Math.abs(pow)).replace(/\d/g, d => "⁰¹²³⁴⁵⁶⁷⁸⁹"[+d])}. Use the ×10ⁿ key.`
+          : "";
         const fb = U.el("div", { class: "feedback " + (ok ? "ok" : "no"), html:
-          `<b>${ok ? "Correct." : `Answer: ${shown} ${U.escapeHtml(prob.unit)}`}</b><br>${U.formula(prob.why)}` });
+          `<b>${ok ? "Correct." : `Answer: ${shown} ${U.escapeHtml(prob.unit)}`}</b>${note}<br>${U.formula(prob.why)}` });
 
         const next = U.el("button", {
           class: "btn btn-primary",

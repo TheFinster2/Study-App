@@ -332,6 +332,58 @@ CHEM.UI = (function () {
     modal(box, { sticky: true });
   }
 
+  /**
+   * Keys a phone keypad doesn't have, plus a live reading of what we understood.
+   *
+   * `inputmode="decimal"` gets you digits and a decimal point and nothing else — no
+   * minus sign, no "e", no "^". Every question asking for an answer in scientific
+   * notation was therefore unanswerable on a phone: the app demanded a format its own
+   * input could not express, and marked the student wrong for it. Reported by a player,
+   * not by any test.
+   *
+   * The echo matters as much as the buttons. Typing "3.2e-4" into a box and being told
+   * you are wrong gives you no way to tell whether the physics or the parsing failed;
+   * seeing "reading this as 3.2 × 10⁻⁴" settles it before you commit.
+   */
+  function answerPad(input) {
+    const echo = U.el("div", { class: "pad-echo tiny muted" });
+
+    function insert(text) {
+      const start = input.selectionStart === null ? input.value.length : input.selectionStart;
+      const end = input.selectionEnd === null ? start : input.selectionEnd;
+      input.value = input.value.slice(0, start) + text + input.value.slice(end);
+      const at = start + text.length;
+      input.focus();
+      try { input.setSelectionRange(at, at); } catch (e) { /* not all inputs support it */ }
+      update();
+      CHEM.Sound.type();
+    }
+
+    function update() {
+      const raw = input.value.trim();
+      if (!raw) { echo.textContent = ""; return; }
+      const v = U.parseNum(raw);
+      echo.textContent = isFinite(v)
+        ? "reading this as " + U.sci(v)
+        : "can't read that as a number yet";
+      echo.classList.toggle("bad", !isFinite(v));
+    }
+
+    const key = (label, text, title) => U.el("button", {
+      class: "btn btn-sm pad-key", type: "button", text: label, title: title,
+      on: { click: () => insert(text) }
+    });
+
+    const row = U.el("div", { class: "pad" }, [
+      key("×10ⁿ", "e", "Times ten to the power of — type the exponent after it"),
+      key("−", "-", "Minus"),
+      U.el("div", { class: "spacer" }),
+      echo
+    ]);
+    input.addEventListener("input", update);
+    return row;
+  }
+
   /** Standard chip row used by games to show score / lives / timer. */
   function chip(text, cls) { return U.el("span", { class: "chip " + (cls || ""), text }); }
 
@@ -344,6 +396,6 @@ CHEM.UI = (function () {
   }
 
   return { route, go, init, handleRoute, syncHeader, applyTheme, toast, modal, closeModal,
-           confirmDialog, award, gameShell, results, rank, chip, onLeave, pulse,
+           confirmDialog, award, gameShell, results, rank, chip, onLeave, pulse, answerPad,
            MIN_BONUS_ACCURACY, MIN_READ_MS };
 })();
