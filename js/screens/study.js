@@ -188,10 +188,11 @@ CHEM.Screens.study = (function () {
   }
 
   /* ── reference sheet ────────────────────────────────────── */
-  function reference(view) {
+  function reference(view, opts) {
     const D = CHEM.DATA;
 
-    view.appendChild(U.el("p", { text:
+    // Also rendered inside the in-game tool tray, where the intro line is just noise.
+    if (!(opts && opts.compact)) view.appendChild(U.el("p", { text:
       "The tables you're expected to know or be handed. Skim these before a boss fight." }));
 
     view.appendChild(section("🔥 Flame test colours", table(
@@ -282,5 +283,5 @@ CHEM.Screens.study = (function () {
     return t;
   }
 
-  return { screen };
+  return { screen, reference };
 })();

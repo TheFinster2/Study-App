@@ -177,7 +177,13 @@ CHEM.UI = (function () {
     // mode gets them consistently. Coins stay scarcer than XP, but at 0.75 rather
     // than the original 0.6 — a 25% pay rise. Arcade ticket prices went up by the
     // same 25% in the same change, so the play time a run buys is unchanged.
-    const mult = o.raw ? 1 : S.xpMultiplier();
+    /* The data sheet is a crutch, so it is charged for in one place rather than in
+       each game — same reasoning as the payout rate above, and the same latch as the
+       atom tally: the flag is set when the sheet is opened and is not cleared by
+       closing it. The calculator and the working space cost nothing; a student sits
+       the exam with both. */
+    const refPenalty = (!o.raw && CHEM.Tools.referenceUsed()) ? CHEM.Tools.REFERENCE_PENALTY : 1;
+    const mult = (o.raw ? 1 : S.xpMultiplier()) * refPenalty;
     const xp = Math.round((Math.max(0, o.xp || 0) + bonus) * mult);
     const coins = Math.round((o.coins || 0) * (o.raw ? 1 : 0.75));
 
@@ -247,7 +253,15 @@ CHEM.UI = (function () {
       U.el("div", { class: "ghead" }, [back, U.el("div", { class: "gtitle", text: title }), meta]),
       body
     ]);
-    return { root, body, meta };
+    const shell = { root, body, meta };
+
+    /* Tools are attached here rather than by each game, so "every game has a
+       calculator" is structural rather than eleven separate remembering-to-do-its.
+       `tools: false` opts out — the arcade has nothing to calculate. */
+    CHEM.Tools.close();
+    CHEM.Tools.resetRun();
+    if (o.tools !== false) CHEM.Tools.attach(shell, o.tools || {});
+    return shell;
   }
 
   /** Grade a run. Returns { rank, cls, blurb }. */

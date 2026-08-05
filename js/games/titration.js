@@ -80,7 +80,7 @@ CHEM.Games.titration = (function () {
     let vb = 0, meterOn = false, ended = false, finished = false;
     let usedMeter = false;
 
-    const shell = UI.gameShell("Titration Lab", { confirmExit: true });
+    const shell = UI.gameShell("Titration Lab", { tools: { notes: true, reference: true },  confirmExit: true });
     root.appendChild(shell.root);
     const volChip = UI.chip("0.00 mL");
     shell.meta.appendChild(volChip);

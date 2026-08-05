@@ -111,7 +111,7 @@ CHEM.Games.quiz = (function () {
     let penalty = 0, shownAt = 0, rushed = 0;
     let timeLeft = c.totalTime, timerId = null, finished = false;
 
-    const shell = UI.gameShell(c.title, { confirmExit: true });
+    const shell = UI.gameShell(c.title, { tools: { notes: true, reference: true },  confirmExit: true });
     root.appendChild(shell.root);
 
     const scoreChip  = UI.chip("0 XP");

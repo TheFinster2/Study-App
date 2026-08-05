@@ -69,7 +69,7 @@ CHEM.Games.pathway = (function () {
        and then walk the route cleanly for full marks. */
     const wastedByRound = [];
 
-    const shell = UI.gameShell("Pathway Puzzle", { confirmExit: true });
+    const shell = UI.gameShell("Pathway Puzzle", { tools: { notes: true, reference: true },  confirmExit: true });
     root.appendChild(shell.root);
     const progChip = UI.chip("1 / " + puzzles.length);
     const stepChip = UI.chip("0 steps");

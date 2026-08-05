@@ -38,7 +38,7 @@ CHEM.Games.precipitate = (function () {
 
     let timeLeft = c.timeLimit, timerId = null, checked = false, finished = false;
 
-    const shell = UI.gameShell("Precipitation Panic", { confirmExit: true });
+    const shell = UI.gameShell("Precipitation Panic", { tools: { notes: true },  confirmExit: true });
     root.appendChild(shell.root);
     const filledChip = UI.chip(`0 / ${c.rows * c.cols} filled`);
     const timerChip = U.el("span", { class: "timer-ring", text: U.fmtTime(timeLeft) });

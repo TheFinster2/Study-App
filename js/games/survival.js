@@ -27,7 +27,7 @@ CHEM.Games.survival = (function () {
     let timerId = null, timeLeft = 0, card = null;
     let pool = [];
 
-    const shell = UI.gameShell("Survival", { confirmExit: true });
+    const shell = UI.gameShell("Survival", { tools: { notes: true, reference: true },  confirmExit: true });
     root.appendChild(shell.root);
     const depthChip = UI.chip("Q0");
     const bestChip = UI.chip("Best " + (S.data.stats.survivalBest || 0));

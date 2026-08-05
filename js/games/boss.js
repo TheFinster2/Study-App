@@ -60,7 +60,7 @@ CHEM.Games.boss = (function () {
     let questions = CHEM.Bank.draw(40, { mods: boss.mods, adaptive: false });
     let qIndex = 0, timeLeft = boss.seconds, finished = false, tookDamage = false;
 
-    const shell = UI.gameShell("Boss: " + boss.name, { confirmExit: true });
+    const shell = UI.gameShell("Boss: " + boss.name, { tools: { notes: true, reference: true },  confirmExit: true });
     root.appendChild(shell.root);
     const timerChip = U.el("span", { class: "timer-ring", text: String(timeLeft) });
     shell.meta.appendChild(timerChip);

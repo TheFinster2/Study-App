@@ -39,7 +39,7 @@ CHEM.Games.naming = (function () {
     let idx = 0, correct = 0, streak = 0, best = 0, xpEarned = 0, coins = 0, finished = false;
     let penalty = 0, shownAt = 0;
 
-    const shell = UI.gameShell("Name That Compound", { confirmExit: true });
+    const shell = UI.gameShell("Name That Compound", { tools: { notes: true },  confirmExit: true });
     root.appendChild(shell.root);
     const progChip = UI.chip("1 / " + items.length);
     const streakChip = UI.chip("Streak 0");

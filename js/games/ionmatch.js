@@ -21,7 +21,7 @@ CHEM.Games.ionmatch = (function () {
     let flipped = [], matched = 0, moves = 0, misses = 0, locked = false;
     let seconds = 0, timerId = null, finished = false;
 
-    const shell = UI.gameShell("Ion Memory", { confirmExit: true });
+    const shell = UI.gameShell("Ion Memory", { tools: {},  confirmExit: true });
     root.appendChild(shell.root);
 
     const pairChip = UI.chip(`0 / ${c.pairs} pairs`);

@@ -248,7 +248,7 @@ CHEM.Games.calc = (function () {
     let idx = 0, correct = 0, streak = 0, best = 0, xpEarned = 0, coins = 0, finished = false;
     let penalty = 0;
 
-    const shell = UI.gameShell("Calculation Crunch", { confirmExit: true });
+    const shell = UI.gameShell("Calculation Crunch", { tools: { notes: true, reference: true },  confirmExit: true });
     root.appendChild(shell.root);
     const progChip = UI.chip("1 / " + c.count);
     const streakChip = UI.chip("Streak 0");

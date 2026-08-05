@@ -67,7 +67,7 @@ CHEM.Games.balance = (function () {
     let tallyOn = false, usedTally = false;
     let timeLeft = c.totalTime, timerId = null, finished = false;
 
-    const shell = UI.gameShell("Balance Blitz", { confirmExit: true });
+    const shell = UI.gameShell("Balance Blitz", { tools: { notes: true, reference: true },  confirmExit: true });
     root.appendChild(shell.root);
 
     const progChip = UI.chip("1 / " + set.length);

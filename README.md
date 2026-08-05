@@ -138,6 +138,19 @@ is plotted through chemistry you haven't been taught, and its reagent cards aren
 Hiding a topic never raises what the remaining questions pay, and achievement targets still
 count the whole bank, so it can't be used to shortcut a collection.
 
+**Tools in every game.** A tool tray docks to the bottom of the screen in all eleven
+modes: a **scientific calculator** (log, ln, √, powers, brackets, ×10ⁿ, π and Ans, with a
+keypad or typed directly), a **working space** for scratch calculations that is never marked
+or submitted, and the **data sheet** without leaving the run. It docks to the bottom rather
+than floating over the middle so the question stays readable — the view reserves the space
+the tray covers, and opening it scrolls the question into the gap. A test measures that the
+question, the answer box and the Submit button all sit clear of the tray rather than trusting
+the layout.
+
+The calculator and the working space are **free** — you sit the HSC with a calculator and
+scrap paper, so neither is a crutch. The data sheet is one, and is charged for like the
+others below: −20% XP, latched on opening.
+
 **Crutches are opt-in and cost you.** Balance Blitz's per-element atom tally and Titration
 Lab's digital pH meter both turn a chemistry problem into arithmetic, so both start off and
 cost XP once used — 25% for the tally, 30% for the meter. Switching one back off before you
