@@ -92,6 +92,10 @@ CHEM.DATA.naming = [
     why:"The monomer of PVC — a chlorine substituted onto ethene." }
 ];
 
+/* `tag` marks content a school may not have taught yet, so it can be switched off in
+   Settings → Course coverage. A tagged node is not drawn, not reachable, and no puzzle
+   that starts or ends on one is offered; a tagged reagent card is not dealt. */
+
 /* ── Reaction pathway graph (used by "Pathway Puzzle") ──────────
    Each edge: from → to, triggered by a reagent card.
 
@@ -111,10 +115,10 @@ CHEM.DATA.pathwayNodes = {
   ethanoic:     { label:"Ethanoic acid",       sub:"CH₃COOH" },
   ester:        { label:"Ethyl ethanoate",     sub:"CH₃COOCH₂CH₃" },
   dibromo:      { label:"1,2-dibromoethane",   sub:"CH₂BrCH₂Br" },
-  polyethene:   { label:"Polyethene",          sub:"-(CH₂CH₂)ₙ-" },
+  polyethene:   { label:"Polyethene",          sub:"-(CH₂CH₂)ₙ-", tag:"polymers" },
   ethanoate:    { label:"Sodium ethanoate",    sub:"CH₃COONa" },
   ethanediol:   { label:"Ethane-1,2-diol",     sub:"HOCH₂CH₂OH" },
-  pet:          { label:"Polyester (PET)",     sub:"-(OCH₂CH₂OOC…)ₙ-" },
+  pet:          { label:"Polyester (PET)",     sub:"-(OCH₂CH₂OOC…)ₙ-", tag:"polymers" },
   ethanamine:   { label:"Ethanamine",          sub:"CH₃CH₂NH₂" },
   ethanamide:   { label:"Ethanamide",          sub:"CH₃CONH₂" },
 
@@ -132,7 +136,7 @@ CHEM.DATA.pathwayNodes = {
   chloroprop1:  { label:"1-chloropropane",     sub:"CH₃CH₂CH₂Cl" },
   chloroprop2:  { label:"2-chloropropane",     sub:"CH₃CHClCH₃" },
   dibromoprop:  { label:"1,2-dibromopropane",  sub:"CH₃CHBrCH₂Br" },
-  polypropene:  { label:"Polypropene",         sub:"-(CH₂CH(CH₃))ₙ-" },
+  polypropene:  { label:"Polypropene",         sub:"-(CH₂CH(CH₃))ₙ-", tag:"polymers" },
   propylethanoate: { label:"Propyl ethanoate", sub:"CH₃COOCH₂CH₂CH₃" },
   ethylpropanoate: { label:"Ethyl propanoate", sub:"CH₃CH₂COOCH₂CH₃" },
   propanoate:   { label:"Sodium propanoate",   sub:"CH₃CH₂COONa" }
@@ -146,7 +150,7 @@ CHEM.DATA.reagents = [
   { id:"steam_h3po4",label:"Steam, H₃PO₄ catalyst",       sub:"hydration" },
   { id:"h2_ni",      label:"H₂, Ni catalyst",             sub:"addition / hydrogenation" },
   { id:"br2",        label:"Br₂(aq)",                     sub:"addition across C=C" },
-  { id:"polymerise", label:"High pressure + initiator",   sub:"addition polymerisation" },
+  { id:"polymerise", label:"High pressure + initiator",   sub:"addition polymerisation", tag:"polymers" },
   { id:"conc_h2so4_hot", label:"Conc. H₂SO₄, 170 °C",     sub:"dehydration" },
   { id:"hcl_pcl5",   label:"PCl₅ (or conc. HCl)",         sub:"substitution of -OH" },
   { id:"oxid_distil",label:"K₂Cr₂O₇/H⁺, distil off",      sub:"partial oxidation" },
@@ -161,7 +165,7 @@ CHEM.DATA.reagents = [
   { id:"esterify_acid", label:"Ethanoic acid + conc. H₂SO₄", sub:"esterify — alcohol side" },
   { id:"hcl_add",    label:"HCl(g)",                      sub:"addition across C=C" },
   { id:"nh3_excess", label:"Excess NH₃, heat",            sub:"ammonia as a nucleophile" },
-  { id:"terephthalic", label:"Benzene-1,4-dicarboxylic acid, heat", sub:"condensation polymerisation" }
+  { id:"terephthalic", label:"Benzene-1,4-dicarboxylic acid, heat", sub:"condensation polymerisation", tag:"polymers" }
 ];
 
 CHEM.DATA.pathwayEdges = [

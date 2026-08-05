@@ -197,6 +197,24 @@ CHEM.Screens.settings = function (view) {
     ]);
   }
 
+  /* course coverage */
+  view.appendChild(U.el("h2", { text: "Course coverage" }));
+  view.appendChild(U.el("p", { class: "tiny muted", text:
+    "Schools finish modules at different times, so a trial exam may not include everything the " +
+    "syllabus does. Switch off anything your class hasn't covered and it stops being asked. " +
+    "Turning a topic off never changes what the rest is worth, and achievement targets still " +
+    "count the whole bank." }));
+  const cov = U.el("div", { class: "card" });
+  CHEM.DATA.coverage.forEach(pack => {
+    cov.appendChild(toggleRow(
+      `${pack.name}  ·  ${pack.mod}`,
+      pack.desc,
+      !S.tagHidden(pack.id),
+      on => S.setTagHidden(pack.id, !on)
+    ));
+  });
+  view.appendChild(cov);
+
   /* app version */
   view.appendChild(U.el("h2", { text: "App version" }));
   const verNote = U.el("p", { class: "tiny muted", text:

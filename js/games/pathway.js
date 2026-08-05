@@ -6,8 +6,24 @@ CHEM.Games.pathway = (function () {
   const U = CHEM.U, S = CHEM.State, UI = CHEM.UI;
 
   const nodes = () => CHEM.DATA.pathwayNodes;
-  const edges = () => CHEM.DATA.pathwayEdges;
   const reagentById = id => CHEM.DATA.reagents.find(r => r.id === id);
+
+  /* Switching a coverage pack off in Settings has to remove its chemistry from the
+     graph, not just from the puzzle list: otherwise `shortest` still routes through a
+     compound the student was never taught, and the "target: N steps" chip promises a
+     route they cannot see. Rebuilt at the start of every run, since the setting can
+     change between runs. */
+  let EDGES = null;
+  const nodeOn = id => S.tagOn((nodes()[id] || {}).tag);
+  const reagentOn = id => S.tagOn((reagentById(id) || {}).tag);
+
+  function edges() {
+    if (!EDGES) {
+      EDGES = CHEM.DATA.pathwayEdges.filter(e =>
+        nodeOn(e.from) && nodeOn(e.to) && reagentOn(e.via));
+    }
+    return EDGES;
+  }
 
   function edgeFrom(from, via) {
     return edges().find(e => e.from === from && e.via === via);
@@ -37,7 +53,10 @@ CHEM.Games.pathway = (function () {
     S.markMode("pathway");
     S.touchStreak();
 
-    const puzzles = U.sample(CHEM.DATA.pathwayPuzzles, c.rounds);
+    EDGES = null;                                   // coverage may have changed
+    const available = CHEM.DATA.pathwayPuzzles.filter(p => nodeOn(p.start) && nodeOn(p.target));
+    // Fewer puzzles than rounds is a shorter run, not a repeated one.
+    const puzzles = U.sample(available, Math.min(c.rounds, available.length));
     let round = 0, solved = 0, xpEarned = 0, coins = 0, totalWasted = 0, finished = false;
     /* Route quality, tracked across the whole run: the ideal step count against what
        it actually took, wasted reagents included. Clicking every card until something
@@ -118,7 +137,7 @@ CHEM.Games.pathway = (function () {
 
       function drawPool() {
         pool.innerHTML = "";
-        CHEM.DATA.reagents.forEach(rg => {
+        CHEM.DATA.reagents.filter(rg => reagentOn(rg.id)).forEach(rg => {
           const b = U.el("button", { class: "reagent", type: "button", disabled: done }, [
             U.el("span", { html: U.formula(rg.label) }),
             U.el("small", { text: rg.sub })

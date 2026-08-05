@@ -31,7 +31,7 @@ CHEM.State = (function () {
     achievements: {},
     history: {},
     scores: {},
-    settings: { sound: true, motion: true, volume: 0.8, difficulty: "standard" },
+    settings: { sound: true, motion: true, volume: 0.8, difficulty: "standard", hidden: {} },
     daily: { day: null, progress: 0, claimed: false, spec: null },
     weekly: { week: null, baseline: null, quests: [], claimed: [] },
     arcade: { tickets: {}, scores: {}, played: {} }
@@ -337,6 +337,31 @@ CHEM.State = (function () {
     });
   }
 
+  /* ── course coverage ─────────────────────────────────────────
+     Schools reach the end of a module at different times, so a trial exam may not
+     include everything the syllabus does. Any pack listed in DATA.coverage can be
+     switched off, and content tagged with its id then stops being asked.
+
+     Only the *hidden* ids are stored, so the default stays "everything on" and an
+     existing save needs no migration. Hiding is deliberately not a shortcut: it
+     never raises what the remaining questions pay, and achievement targets still
+     count the full bank — otherwise switching topics off would be the cheapest way
+     to finish a collection. */
+  function hiddenTags() {
+    const h = data.settings.hidden || {};
+    return new Set(Object.keys(h).filter(k => h[k]));
+  }
+  function tagHidden(id) { return !!(data.settings.hidden && data.settings.hidden[id]); }
+  function setTagHidden(id, hidden) {
+    data.settings.hidden = data.settings.hidden || {};
+    if (hidden) data.settings.hidden[id] = true;
+    else delete data.settings.hidden[id];
+    save();
+    emit();
+  }
+  /** True when this piece of content is currently being asked. Untagged is always on. */
+  function tagOn(tag) { return !tag || !tagHidden(tag); }
+
   /* ── achievements ────────────────────────────────────────── */
   function achievementStats() {
     return Object.assign({}, data.stats, {
@@ -513,6 +538,7 @@ CHEM.State = (function () {
     touchStreak, streakBonus,
     recordAnswer, noteStreak, bump, markMode, recordScore,
     mastery, overallAccuracy,
+    hiddenTags, tagHidden, setTagHidden, tagOn,
     usePowerup, grantPowerup, ownsTheme, ownsAvatar,
     cardState, reviewCard, dueCards, cardXpEligible, markCardXp,
     checkAchievements, achievementStats,

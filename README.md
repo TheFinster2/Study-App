@@ -126,6 +126,14 @@ over the explanation you were mid-way through reading, and the results screen ha
 *Review the working* button that dismisses itself and leaves a floating way back — so you
 can re-read the solution without quitting the run and throwing it away.
 
+**Course coverage.** Schools finish modules at different times, so a trial exam may not
+include everything the syllabus does. Settings → *Course coverage* switches off topics your
+class hasn't reached, and they stop being asked. In Pathway Puzzle a switched-off topic is
+removed from the reaction graph itself, not just from the puzzle list — so no route is
+plotted through chemistry you haven't been taught, and its reagent cards aren't dealt.
+Hiding a topic never raises what the remaining questions pay, and achievement targets still
+count the whole bank, so it can't be used to shortcut a collection.
+
 **Crutches are opt-in and cost you.** Balance Blitz's per-element atom tally and Titration
 Lab's digital pH meter both turn a chemistry problem into arithmetic, so both start off and
 cost XP once used — 25% for the tally, 30% for the meter. Switching one back off before you
