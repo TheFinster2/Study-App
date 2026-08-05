@@ -786,9 +786,12 @@ body.tray-open .navbar{ display:none; }
 body.tray-open #view{ padding-bottom:calc(var(--tray-h,300px) + 16px); }
 
 /* calculator */
-.calc-out{ background:var(--bg-0); border:1px solid var(--line); border-radius:12px;
-  padding:8px 10px; margin-bottom:10px; }
-.calc-line{ width:100%; border:0; background:none; color:var(--ink); font:inherit;
+.calc-out{ position:relative; background:var(--bg-0); border:1px solid var(--line);
+  border-radius:12px; padding:8px 10px; margin-bottom:10px; }
+.calc-kbd{ position:absolute; left:8px; bottom:6px; padding:3px 8px; font-size:13px;
+  opacity:.55; }
+.calc-kbd.on{ opacity:1; color:var(--accent); border-color:var(--accent); }
+.calc-line{ width:100%; caret-color:var(--accent); border:0; background:none; color:var(--ink); font:inherit;
   font-size:19px; font-weight:700; text-align:right; padding:2px 0;
   font-variant-numeric:tabular-nums; }
 .calc-line:focus{ outline:none; }

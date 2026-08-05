@@ -161,8 +161,14 @@ CHEM.Tools = (function () {
 
   function buildCalc(body) {
     const out = U.el("div", { class: "calc-out" });
+    /* `inputmode="none"` keeps the OS keyboard away while leaving the field focusable,
+       editable and caret-aware. Tapping the display used to raise the phone keyboard
+       over the very calculator you were trying to use — and the keypad itself made it
+       worse by re-focusing the field after every single key. A hardware keyboard still
+       types into it, so nothing is lost on a laptop, and ⌨ below opens the OS keyboard
+       for anyone who would rather type on a phone. */
     const line = U.el("input", {
-      class: "calc-line", type: "text", inputmode: "text", spellcheck: "false",
+      class: "calc-line", type: "text", inputmode: "none", spellcheck: "false",
       autocomplete: "off", "aria-label": "Calculator expression", value: calcExpr
     });
     const result = U.el("div", { class: "calc-result", text: calcAns === null ? "" : U.sci(calcAns, 8) });
@@ -178,6 +184,9 @@ CHEM.Tools = (function () {
       result.classList.remove("bad");
     }
 
+    /* Never call focus() from a key press. setSelectionRange works on an unfocused
+       input and the caret is remembered for the next time it is focused, so insertion
+       still lands in the right place without summoning a keyboard. */
     function insert(text) {
       const start = line.selectionStart === null ? line.value.length : line.selectionStart;
       const end = line.selectionEnd === null ? start : line.selectionEnd;
@@ -210,7 +219,6 @@ CHEM.Tools = (function () {
           result.classList.remove("bad");
           CHEM.Sound.correct();
         } else insert(label);
-        line.focus({ preventScroll: true });
       });
       pad.appendChild(k);
     });
@@ -224,10 +232,24 @@ CHEM.Tools = (function () {
       show();
     });
 
+    /* Opt back in to the OS keyboard. Two-way, because the point is that the phone
+       keyboard should only ever appear because someone asked for it. */
+    const kbd = U.el("button", {
+      class: "btn btn-sm btn-ghost calc-kbd", type: "button", text: "⌨",
+      title: "Type with the keyboard", "aria-label": "Use the device keyboard"
+    });
+    kbd.addEventListener("click", () => {
+      const on = line.getAttribute("inputmode") === "none";
+      line.setAttribute("inputmode", on ? "text" : "none");
+      kbd.classList.toggle("on", on);
+      if (on) line.focus(); else line.blur();
+    });
+    out.appendChild(kbd);
+
     body.appendChild(out);
     body.appendChild(pad);
     body.appendChild(U.el("div", { class: "tiny muted", style: "margin-top:8px; text-align:center",
-      text: "EE gives ×10ⁿ · Ans reuses the last result · type directly if you prefer" }));
+      text: "EE gives ×10ⁿ · Ans reuses the last result · ⌨ to type instead" }));
     show();
   }
 
