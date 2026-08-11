@@ -23,7 +23,13 @@ CHEM.DATA.shop = {
     { id:"obsidian",    name:"Obsidian",       cost:3600, desc:"Monochrome. For people who find colour distracting.",
       dots:["#d8dee9","#8892a4","#050506"], minLevel:30 },
     { id:"radium",      name:"Radium Glow",    cost:5000, desc:"Luminous green on black. Handle with care.",
-      dots:["#b6ff2e","#6fdc00","#060a02"], minLevel:40 }
+      dots:["#b6ff2e","#6fdc00","#060a02"], minLevel:40 },
+    { id:"cryo",        name:"Cryo Condensate",cost:3200, desc:"Pale blue on deep frost. Enthalpy of fusion, made aesthetic.",
+      dots:["#8fe3ff","#c7f5ff","#05141c"], minLevel:34 },
+    { id:"quantum",     name:"Quantum Foam",   cost:4600, desc:"Indigo static that shouldn't exist and definitely won't sit still.",
+      dots:["#7a5cff","#c9a8ff","#07040f"], minLevel:46 },
+    { id:"supernova",   name:"Supernova",      cost:6400, desc:"Every colour there is, briefly, right before it all goes dark.",
+      dots:["#ffdf6b","#ff5e3a","#0a0203"], minLevel:55 }
   ],
 
   avatars: [
@@ -33,8 +39,10 @@ CHEM.DATA.shop = {
     { emoji:"🔬",  name:"Microscope",     cost:300 },
     { emoji:"💧",  name:"Droplet",        cost:450 },
     { emoji:"🔥",  name:"Bunsen",         cost:450 },
+    { emoji:"🧯",  name:"Fire Extinguisher",cost:550 },
     { emoji:"❄️",  name:"Endotherm",      cost:600 },
     { emoji:"🧫",  name:"Petri Dish",     cost:600 },
+    { emoji:"🥽",  name:"Safety Goggles", cost:750 },
     { emoji:"🌡️",  name:"Thermometer",    cost:750 },
     { emoji:"🦠",  name:"Culture",        cost:750 },
     { emoji:"🧲",  name:"Magnet",         cost:900,  minLevel:8 },
@@ -43,8 +51,11 @@ CHEM.DATA.shop = {
     { emoji:"🎈",  name:"Ideal Gas",      cost:1400, minLevel:14 },
     { emoji:"🌈",  name:"Emission Line",  cost:1800, minLevel:16 },
     { emoji:"🐐",  name:"GOAT",           cost:2400, minLevel:18, note:"Reserved for the truly unhinged." },
+    { emoji:"🌋",  name:"Volcanic",       cost:2800, minLevel:20 },
     { emoji:"👑",  name:"Nobel Laureate", cost:3200, minLevel:24 },
+    { emoji:"🦉",  name:"Wise Owl",       cost:3600, minLevel:27, note:"Knows the answer. Won't tell you." },
     { emoji:"🧠",  name:"Big Brain",      cost:4000, minLevel:30 },
+    { emoji:"🎇",  name:"Chemiluminescence",cost:4600, minLevel:33 },
     { emoji:"🦾",  name:"Autotitrator",   cost:5200, minLevel:36 },
     { emoji:"🛸",  name:"Noble Gas",      cost:6800, minLevel:42 },
     { emoji:"🌌",  name:"Stellar Fusion", cost:9000, minLevel:50 },
@@ -65,7 +76,11 @@ CHEM.DATA.shop = {
     { id:"insight",icon:"🔍", name:"Insight",    cost:320,
       desc:"Reveals a hint for the current question without breaking your streak." },
     { id:"revive", icon:"💉", name:"Adrenaline", cost:750,
-      desc:"Restores 40% health when you fall in a boss fight. Consumed automatically." }
+      desc:"Restores 40% health when you fall in a boss fight. Consumed automatically." },
+    { id:"vitality",icon:"❤️", name:"Vitality",  cost:340,
+      desc:"Instantly grants one extra life in any lives-based round." },
+    { id:"windfall",icon:"🪙", name:"Windfall",   cost:220,
+      desc:"Instantly cashes in a burst of bonus Moles." }
   ],
 
   crates: [
@@ -73,6 +88,8 @@ CHEM.DATA.shop = {
       desc:"A small pouch. Contains 1–2 power-ups and a handful of Moles." },
     { id:"crate_l", name:"Supply Crate",  cost:1500, icon:"🎁",
       desc:"3–5 power-ups, a bigger payout, and a chance of a bonus avatar." },
+    { id:"crate_m", name:"Isotope Cache", cost:2500, icon:"🧬",
+      desc:"4–6 power-ups and a solid payout — the middle ground.", minLevel:12 },
     { id:"crate_x", name:"Fume Cupboard", cost:4000, icon:"🗄️",
       desc:"6–9 power-ups, a large payout, and a good chance at a locked avatar.",
       minLevel:20 }

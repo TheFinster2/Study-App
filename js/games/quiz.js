@@ -241,6 +241,7 @@ CHEM.Games.quiz = (function () {
       const banned = diffMode.id === "nightmare" ? ["fifty", "skip"] : [];
       const defs = CHEM.DATA.shop.powerups
         .filter(p => p.id !== "freeze" || c.totalTime)
+        .filter(p => p.id !== "vitality" || c.lives)
         .filter(p => p.id !== "revive")
         .filter(p => !banned.includes(p.id));
       const btns = {};
@@ -293,6 +294,18 @@ CHEM.Games.quiz = (function () {
           CHEM.Sound.puCatalyst();
           doubled = true;
           UI.toast({ icon: "✨", kind: "xp", text: "<b>Catalyst active</b> — double XP for this run." });
+        }
+        if (id === "vitality") {
+          CHEM.Sound.puVitality();
+          lives++;
+          livesChip.textContent = "❤️".repeat(lives);
+          UI.toast({ icon: "❤️", text: "+1 life." });
+        }
+        if (id === "windfall") {
+          CHEM.Sound.puWindfall();
+          const bonus = U.randInt(40, 90);
+          S.addCoins(bonus, true);
+          UI.toast({ icon: "🪙", kind: "xp", text: `+${bonus} Moles.` });
         }
         refresh();
         CHEM.FX.burstAt(btn, { count: 14, speed: 4, size: 3, shape: "circle" });

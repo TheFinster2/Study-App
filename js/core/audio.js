@@ -206,6 +206,9 @@ CHEM.Sound = (function () {
                   noise(0.5, { freq: 800, sweepTo: 6000, gain: 0.04, reverse: true }); },
     shieldBlock(){ tone(420, 0.16, { type: "sine", gain: 0.11, slideTo: 240 });
                    noise(0.18, { freq: 900, gain: 0.06 }); },
+    puVitality(){ seq([[523, 0], [659, 0.1], [784, 0.2]], 0.3, { type: "sine", gain: 0.09 }); },
+    puWindfall(){ tone(1047, 0.1, { type: "square", gain: 0.06, slideTo: 1568 });
+                  noise(0.3, { freq: 2000, sweepTo: 4000, gain: 0.035 }); },
 
     /* ── lab / chemistry flavour ───────────────────────────── */
     drop()     { noise(0.12, { freq: 900, gain: 0.06 }); },

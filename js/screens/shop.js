@@ -139,10 +139,10 @@ CHEM.Screens.shop = function (view) {
     CHEM.Sound.open();
     if (node) CHEM.FX.burstAt(node, { count: 50, speed: 8, size: 5 });
 
-    const tier = { crate_s: 0, crate_l: 1, crate_x: 2 }[crate.id] || 0;
-    const counts = [[1, 2], [3, 5], [6, 9]][tier];
-    const payout = [[80, 340], [260, 900], [900, 2600]][tier];
-    const avatarChance = [0, 0.22, 0.55][tier];
+    const tier = { crate_s: 0, crate_l: 1, crate_m: 2, crate_x: 3 }[crate.id] || 0;
+    const counts = [[1, 2], [3, 5], [4, 6], [6, 9]][tier];
+    const payout = [[80, 340], [260, 900], [500, 1400], [900, 2600]][tier];
+    const avatarChance = [0, 0.22, 0.35, 0.55][tier];
 
     const drops = [];
     for (let i = 0; i < U.randInt(counts[0], counts[1]); i++) {
