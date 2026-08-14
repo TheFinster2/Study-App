@@ -93,6 +93,18 @@
       navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(reg => {
         swReg = reg;
 
+        /* Attached before anything else touches the registration, so no install can
+           start and finish unnoticed. */
+        reg.addEventListener("updatefound", () => {
+          const incoming = reg.installing;
+          if (!incoming) return;
+          incoming.addEventListener("statechange", () => {
+            // "installed" with an existing controller means an update is waiting,
+            // rather than the very first install.
+            if (incoming.state === "installed" && navigator.serviceWorker.controller) offerUpdate();
+          });
+        });
+
         /* A new worker may already be installed and waiting from a previous visit.
            `updatefound` fires once, when installation *starts* — it will never fire
            again for a worker that is already sitting in `waiting`, so without this
@@ -116,30 +128,25 @@
         const claimDeadline = Date.now() + 2000;
         (function claimWaitingWorker() {
           if (reg.waiting && navigator.serviceWorker.controller) {
-            applying = true;
-            reg.waiting.postMessage("SKIP_WAITING");
-            return;                       // controllerchange reloads the page
+            /* Never hand over twice in a row. If this page load is itself the result
+               of an update, applying whatever is waiting now would reload it again
+               immediately — that is the flicker-then-double-refresh. Offer it instead:
+               a second hand-over then needs a deliberate tap and cannot run away. */
+            if (justUpdated()) offerUpdate();
+            else applyUpdate(reg.waiting);
+            return;
           }
           if (Date.now() < claimDeadline) { setTimeout(claimWaitingWorker, 200); return; }
           /* Nothing was pending from a previous visit. Only now go looking for a new
              version — anything found from here on arrives mid-session and gets the
              reload prompt rather than yanking the page out from under the player.
              Don't wait for the browser's own schedule: it only checks on a real
-             navigation, and reopening an installed PWA usually just resumes the page. */
-          checkForUpdate(true);
+             navigation, and reopening an installed PWA usually just resumes the page.
+             The exception is a page that has just applied an update: it is by
+             definition current, so leave the network alone for a throttle window. */
+          if (justUpdated()) lastCheck = Date.now();
+          else checkForUpdate(true);
         })();
-
-        reg.addEventListener("updatefound", () => {
-          const incoming = reg.installing;
-          if (!incoming) return;
-          incoming.addEventListener("statechange", () => {
-            // "installed" with an existing controller means an update is waiting,
-            // rather than the very first install.
-            if (incoming.state === "installed" && navigator.serviceWorker.controller && !applying) {
-              offerUpdate(incoming);
-            }
-          });
-        });
       }).catch(err => console.warn("Offline support unavailable:", err));
 
       // Coming back to the app is the natural moment to look for a new version.
@@ -151,6 +158,7 @@
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (!hadController || reloading) return;
         reloading = true;
+        markUpdated();
         location.reload();
       });
     });
@@ -163,10 +171,41 @@
   // Set once a waiting worker has been told to take over, so the reload prompt does
   // not also appear for an update that is already being applied.
   let applying = false;
+  // Set when the player dismisses the prompt, so it stays dismissed for this session
+  // instead of coming back on the next update check.
+  let dismissed = false;
+
+  /* An update-driven reload is recorded here so the page that comes back can tell
+     itself apart from an ordinary launch. sessionStorage is exactly the right
+     lifetime: it survives the reload and dies with the tab. The window is short —
+     it only has to cover the boot sequence of the page that follows. */
+  const UPDATED_KEY = "molequest:justUpdated";
+  function markUpdated() {
+    try { sessionStorage.setItem(UPDATED_KEY, String(Date.now())); } catch (e) {}
+  }
+  function justUpdated() {
+    let t = 0;
+    try { t = +sessionStorage.getItem(UPDATED_KEY) || 0; } catch (e) { return false; }
+    return t > 0 && Date.now() - t < 30000;
+  }
 
   /** Ask the server whether sw.js has changed. Throttled, since it is a network hit. */
   function checkForUpdate(force) {
     if (!swReg) return Promise.resolve("unsupported");
+    if (applying) return Promise.resolve("found");
+    if (force) dismissed = false;          // an explicit check wants to hear the answer
+
+    /* A worker that is already installing or waiting IS the answer to "is there a new
+       version?", and asking again is actively harmful: update() on a registration with
+       a waiting worker makes Chromium install the very same script a second time. The
+       worker the prompt is pointing at is left redundant — postMessage to it is
+       discarded silently, so the Reload button stops doing anything — and the fresh
+       one that replaces it can be claimed at the next boot, reloading a page that had
+       only just reloaded. Since this runs on every visibilitychange, that churn
+       repeated for as long as the app was open. Surface what is already there. */
+    if (swReg.waiting) { offerUpdate(); return Promise.resolve("found"); }
+    if (swReg.installing) return Promise.resolve("found");
+
     const t = Date.now();
     if (!force && t - lastCheck < 60000) return Promise.resolve("throttled");
     lastCheck = t;
@@ -176,15 +215,52 @@
   }
   CHEM.checkForUpdate = checkForUpdate;
 
-  function offerUpdate(worker) {
-    if (updateBar) return;                 // never stack two prompts
+  /* Hand the page over to a waiting worker. Its activation fires controllerchange,
+     which is what actually reloads us. The timer is the backstop: a worker can be
+     made redundant by a later install, and a redundant worker swallows the message
+     without ever activating, so the tap has to lead somewhere regardless. */
+  function applyUpdate(worker) {
+    if (applying) return;
+    applying = true;
+    const before = navigator.serviceWorker.controller;
+    try { worker.postMessage("SKIP_WAITING"); }
+    catch (e) { markUpdated(); location.reload(); return; }
+    setTimeout(() => {
+      // Still the same controller: the hand-over never happened. Reload anyway rather
+      // than leaving the player looking at a prompt that did nothing.
+      if (navigator.serviceWorker.controller === before) { markUpdated(); location.reload(); }
+    }, 4000);
+  }
+
+  /* The prompt deliberately holds no reference to a worker. The one that was waiting
+     when the bar appeared can be superseded by a later install, and a stale reference
+     is indistinguishable from a broken button. Resolve the current waiting worker at
+     tap time instead, and fall back to a plain reload if there is nothing to hand
+     over to. */
+  function offerUpdate() {
+    if (updateBar || dismissed || applying) return;   // never stack two prompts
+    const btn = U.el("button", {
+      class: "btn btn-sm btn-primary", style: "margin-left:8px",
+      text: "Reload"
+    });
+    btn.addEventListener("click", () => {
+      btn.disabled = true;
+      btn.textContent = "Updating…";
+      const worker = swReg && swReg.waiting;
+      if (worker) applyUpdate(worker);
+      else { markUpdated(); location.reload(); }
+    });
     updateBar = U.el("div", { class: "toast xp", style: "pointer-events:auto" }, [
       U.el("span", { class: "toast-ico", text: "⬆️" }),
       U.el("span", { text: "New version ready" }),
+      btn,
       U.el("button", {
-        class: "btn btn-sm btn-primary", style: "margin-left:8px",
-        text: "Reload",
-        on: { click: () => worker.postMessage("SKIP_WAITING") }
+        class: "btn btn-sm btn-ghost", style: "margin-left:4px",
+        text: "Later",
+        on: { click: () => {
+          dismissed = true;
+          if (updateBar) { updateBar.remove(); updateBar = null; }
+        } }
       })
     ]);
     U.$("#toasts").appendChild(updateBar);
