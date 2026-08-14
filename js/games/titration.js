@@ -80,10 +80,21 @@ CHEM.Games.titration = (function () {
     let vb = 0, meterOn = false, ended = false, finished = false;
     let usedMeter = false;
 
+    /* A volumetric analysis is a rough run and then an accurate one. The trial
+       brackets the end point so the accurate run can be walked in dropwise instead
+       of hunting for it 0.05 mL at a time from zero. It only offers the coarse taps,
+       so it narrows the end point to a millilitre and no further — landing on the
+       drop is still the accurate run's job. */
+    let phase = "trial";              // "trial" → "accurate"
+    let trialTitre = null;            // the trial's declared volume, once it has one
+    let turnedAt = null, lastBelow = 0;  // brackets the colour change within a run
+
     const shell = UI.gameShell("Titration Lab", { tools: { notes: true, reference: true },  confirmExit: true });
     root.appendChild(shell.root);
     const volChip = UI.chip("0.00 mL");
     shell.meta.appendChild(volChip);
+    const runChip = UI.chip("Trial run");
+    shell.meta.appendChild(runChip);
 
     const brief = U.el("div", { class: "qcard" }, [
       U.el("div", { class: "qtag" }, [
@@ -92,7 +103,8 @@ CHEM.Games.titration = (function () {
       U.el("p", { html:
         `A <b>${va.toFixed(2)} mL</b> aliquot of ${sc.analyte} of <b>unknown</b> concentration is in the conical flask with ` +
         `${sc.indicator} indicator. The burette contains standardised <b>${cb.toFixed(4)} mol L⁻¹ ${sc.titrant}</b>. ` +
-        `Add titrant until the indicator changes colour permanently, then declare the end point.` }),
+        `Run a <b>rough trial</b> first to find roughly where the end point sits, then a fresh <b>accurate run</b> — ` +
+        `only the accurate run is marked.` }),
       U.el("p", { class: "tiny muted", text: sc.note })
     ]);
     shell.body.appendChild(brief);
@@ -114,13 +126,26 @@ CHEM.Games.titration = (function () {
     ]);
     shell.body.appendChild(lab);
 
-    const controls = U.el("div", { class: "row" }, [
+    const coarseTaps = [
       U.el("button", { class: "btn", text: "+5.00 mL", on: { click: () => add(5) } }),
-      U.el("button", { class: "btn", text: "+1.00 mL", on: { click: () => add(1) } }),
+      U.el("button", { class: "btn", text: "+1.00 mL", on: { click: () => add(1) } })
+    ];
+    const fineTaps = [
       U.el("button", { class: "btn", text: "+0.10 mL", on: { click: () => add(0.1) } }),
       U.el("button", { class: "btn", text: "+1 drop (0.05 mL)", on: { click: () => add(0.05) } })
-    ]);
+    ];
+    const controls = U.el("div", { class: "row" }, coarseTaps.concat(fineTaps));
+    const runNote = U.el("div", { class: "tiny muted", style: "margin-top:6px", text:
+      "Trial run — coarse additions only. Find the millilitre the colour turns on." });
     shell.body.appendChild(controls);
+    shell.body.appendChild(runNote);
+    fineTaps.forEach(b => (b.disabled = true));
+
+    /** Enable/disable the taps the current phase allows. */
+    function setTaps(on) {
+      coarseTaps.forEach(b => (b.disabled = !on));
+      fineTaps.forEach(b => (b.disabled = !on || phase === "trial"));
+    }
 
     const meterBtn = U.el("button", {
       class: "btn btn-sm btn-ghost", text: "🔌 Connect pH meter (−30% XP)",
@@ -132,10 +157,16 @@ CHEM.Games.titration = (function () {
       } }
     });
     const endBtn = U.el("button", {
-      class: "btn btn-primary", text: "Declare end point",
+      class: "btn btn-primary", text: "Declare trial end point",
       on: { click: declare }
     });
-    shell.body.appendChild(U.el("div", { class: "row" }, [meterBtn, U.el("div", { class: "spacer" }), endBtn]));
+    // For players who would rather go straight at it: the accurate run alone is the
+    // mode as it was, so the trial is offered rather than imposed.
+    const skipBtn = U.el("button", {
+      class: "btn btn-sm btn-ghost", text: "Skip trial →",
+      on: { click: () => startAccurate() }
+    });
+    shell.body.appendChild(U.el("div", { class: "row" }, [meterBtn, U.el("div", { class: "spacer" }), skipBtn, endBtn]));
 
     const resultSlot = U.el("div");
     shell.body.appendChild(resultSlot);
@@ -161,6 +192,10 @@ CHEM.Games.titration = (function () {
       const inRange = pH > sc.lo && pH < sc.hi;
       if (inRange && !wasInRange) CHEM.Sound.colourChange();
       wasInRange = inRange;
+      // Remember the last reading with the indicator still untouched and the first
+      // with it moving: that pair is the bracket the trial run exists to produce.
+      if (pH <= sc.lo) lastBelow = vb;
+      else if (turnedAt === null) turnedAt = vb;
       volChip.textContent = vb.toFixed(2) + " mL";
       // The burette starts full at 50.00 mL and empties as titrant is delivered.
       buretFill.style.height = U.clamp((1 - vb / 50) * 100, 0, 100) + "%";
@@ -169,10 +204,61 @@ CHEM.Games.titration = (function () {
     }
     paint();
 
+    /* The trial's whole product is a bracket, so report exactly that and nothing
+       more: where the colour was last untouched and where it first moved. The true
+       equivalence volume stays hidden until the accurate run has been declared —
+       handing it over here would leave nothing to titrate for. */
+    function finishTrial() {
+      trialTitre = vb;
+      ended = true;
+      setTaps(false);
+      endBtn.disabled = true;
+      skipBtn.remove();
+      runChip.textContent = "Trial: " + vb.toFixed(2) + " mL";
+
+      const missed = turnedAt === null;
+      resultSlot.innerHTML = "";
+      resultSlot.appendChild(U.el("div", { class: "feedback " + (missed ? "no" : "ok"), html:
+        `<b>Trial titre: ${vb.toFixed(2)} mL.</b> ` +
+        (missed
+          ? `The indicator never turned, so the end point is somewhere past ${vb.toFixed(2)} mL. ` +
+            `Take the accurate run further than this one.`
+          : `The colour was still untouched at ${lastBelow.toFixed(2)} mL and had started to turn by ` +
+            `${turnedAt.toFixed(2)} mL, so the end point is between the two. In the accurate run, ` +
+            `run in ${lastBelow.toFixed(2)} mL quickly, then go drop by drop.`) }));
+
+      const go = U.el("button", {
+        class: "btn btn-primary btn-block", text: "Refill burette · start accurate run →",
+        on: { click: () => startAccurate() }
+      });
+      resultSlot.appendChild(U.el("div", { style: "margin-top:14px" }, [go]));
+      go.focus();
+    }
+
+    /* Fresh aliquot, burette back to 50.00 mL. The unknown is unchanged — it is the
+       same sample being titrated again, which is the point of running a duplicate. */
+    function startAccurate() {
+      phase = "accurate";
+      ended = false;
+      vb = 0;
+      wasInRange = false; turnedAt = null; lastBelow = 0;
+      resultSlot.innerHTML = "";
+      setTaps(true);
+      endBtn.disabled = false;
+      endBtn.textContent = "Declare end point";
+      skipBtn.remove();
+      runChip.textContent = trialTitre === null ? "Accurate run" : "Trial: " + trialTitre.toFixed(2) + " mL";
+      runNote.textContent = trialTitre === null
+        ? "Accurate run — this is the one that counts."
+        : `Accurate run — the trial put the end point near ${trialTitre.toFixed(2)} mL. This is the one that counts.`;
+      paint();
+    }
+
     function declare() {
       if (ended) return;
+      if (phase === "trial") { finishTrial(); return; }
       ended = true;
-      controls.querySelectorAll("button").forEach(b => (b.disabled = true));
+      setTaps(false);
       endBtn.disabled = true;
 
       const error = Math.abs(vb - vEq);
@@ -283,6 +369,7 @@ CHEM.Games.titration = (function () {
         extraStats: [
           ["Titre", vb.toFixed(2) + " mL"],
           ["Error", error.toFixed(2) + " mL"],
+          ["Trial", trialTitre === null ? "skipped" : trialTitre.toFixed(2) + " mL"],
           ["pH meter", usedMeter ? "used" : "no"]
         ],
         onAgain: () => UI.handleRoute()

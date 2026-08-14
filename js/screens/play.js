@@ -28,7 +28,7 @@ CHEM.Screens.play = (function () {
       desc: "Fill a solubility grid before the clock runs out.",
       tag: "Timed", minLevel: 3 },
     { id: "titration", icon: "🧪", name: "Titration Lab", colour: "#ff6a4d",
-      desc: "A real simulated titration — find the end point, then do the maths.",
+      desc: "A rough trial to bracket the end point, then the accurate run and the maths.",
       tag: "Simulation", minLevel: 4 },
     { id: "pathway", icon: "🔗", name: "Pathway Puzzle", colour: "#b8f03a",
       desc: "Build organic synthesis routes by picking the right reagents.",

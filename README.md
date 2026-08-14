@@ -58,7 +58,7 @@ save files. Use Settings → *Export save* / *Import save* to move one across.
 | 🏷️ **Name That Compound** | IUPAC nomenclature — structure→name *and* name→structure |
 | 🔢 **Calculation Crunch** | Procedurally generated moles, pH, dilution, Ksp, calorimetry problems |
 | 🌧️ **Precipitation Panic** | Fill a solubility grid against the clock |
-| 🧪 **Titration Lab** | A simulated titration: find the end point, then do the calculation |
+| 🧪 **Titration Lab** | A simulated titration: rough trial, accurate run, then the calculation |
 | 🔗 **Pathway Puzzle** | Build organic synthesis routes by choosing reagents — 5 routes a game |
 | 💀 **Survival** | One life, tightening clock, escalating difficulty — how deep can you go? |
 | 🩹 **Mistake Rehab** | Only the questions you've previously missed |
